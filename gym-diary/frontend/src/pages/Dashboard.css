@@ -1,0 +1,345 @@
+/* src/pages/Dashboard.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+
+.dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  background: #0a0c0f;
+  font-family: 'Roboto Condensed', sans-serif;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+/* Fundo industrial */
+.industrial-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(30, 35, 40, 0.6) 0px,
+    rgba(30, 35, 40, 0.6) 2px,
+    rgba(20, 25, 30, 0.4) 2px,
+    rgba(20, 25, 30, 0.4) 8px
+  );
+  z-index: 0;
+}
+
+/* Engrenagens animadas (versão dashboard) */
+.gear-dash-1,
+.gear-dash-2,
+.gear-dash-3 {
+  position: fixed;
+  background: radial-gradient(circle, #3a3f44, #1e2227);
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.gear-dash-1::before,
+.gear-dash-2::before,
+.gear-dash-3::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30%;
+  height: 30%;
+  background: #2c3138;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 0 5px #000;
+}
+
+.gear-dash-1::after,
+.gear-dash-2::after,
+.gear-dash-3::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 15px,
+    rgba(255,255,255,0.05) 15px,
+    rgba(255,255,255,0.05) 30px
+  );
+  border-radius: 50%;
+}
+
+.gear-dash-1 {
+  width: 180px;
+  height: 180px;
+  bottom: 5%;
+  left: -60px;
+  animation: spin 30s linear infinite;
+}
+
+.gear-dash-2 {
+  width: 120px;
+  height: 120px;
+  top: 20%;
+  right: -40px;
+  animation: spin 20s linear infinite reverse;
+}
+
+.gear-dash-3 {
+  width: 90px;
+  height: 90px;
+  top: 60%;
+  right: 10%;
+  animation: spin 15s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Conteúdo principal */
+.dashboard-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cabeçalho */
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.dashboard-header h1 {
+  font-size: 2rem;
+  letter-spacing: 4px;
+  color: #e0e0e0;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-rivets {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 10px 0;
+}
+
+.header-rivets .rivet {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 30% 30%, #b0b0b0, #4a4a4a);
+  border-radius: 50%;
+  box-shadow: 0 0 2px #000;
+}
+
+.user-greeting {
+  font-family: monospace;
+  color: #ff6b35;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.5);
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 2px;
+  margin-top: 5px;
+}
+
+/* Grid de cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+/* Card industrial */
+.industrial-card {
+  position: relative;
+  background: rgba(18, 22, 28, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.industrial-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.card-corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  border-top: 2px solid #ff6b35;
+  border-left: 2px solid #ff6b35;
+  pointer-events: none;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.card-icon {
+  font-size: 1.5rem;
+}
+
+.card-header h2 {
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  color: #ccc;
+  margin: 0;
+  font-weight: 500;
+}
+
+.card-body {
+  padding: 20px;
+  color: #ddd;
+}
+
+.workout-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ff6b35;
+  margin-bottom: 8px;
+}
+
+.workout-date,
+.workout-stats {
+  font-size: 0.9rem;
+  font-family: monospace;
+  margin-bottom: 5px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  color: #ff6b35;
+  font-weight: bold;
+}
+
+.progress-bar-container {
+  background: rgba(0,0,0,0.5);
+  border-radius: 2px;
+  height: 8px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.progress-fill {
+  background: #ff6b35;
+  width: 0%;
+  height: 100%;
+  transition: width 0.3s;
+}
+
+/* Botões industriais */
+.industrial-btn {
+  background: linear-gradient(135deg, #2c3138, #1e2227);
+  border: none;
+  border-radius: 2px;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.industrial-btn.small {
+  padding: 5px 12px;
+  font-size: 0.7rem;
+}
+
+.industrial-btn:hover {
+  background: linear-gradient(135deg, #3a3f44, #2c3138);
+  box-shadow: 0 0 8px rgba(255,107,53,0.4);
+}
+
+.industrial-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
+  transition: left 0.4s;
+}
+
+.industrial-btn:hover::after {
+  left: 100%;
+}
+
+/* Acesso rápido */
+.quick-access {
+  margin-top: 20px;
+}
+
+.quick-access .industrial-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 22, 28, 0.7);
+}
+
+.quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.quick-buttons .industrial-btn {
+  margin: 0;
+  min-width: 120px;
+}
+
+/* Mensagem de sem treino */
+.no-workout {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.no-workout .industrial-btn {
+  margin-top: 15px;
+}
+
+/* Loading */
+.dashboard-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #fff;
+  font-family: monospace;
+  background: #0a0c0f;
+}
