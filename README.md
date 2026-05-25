@@ -336,6 +336,23 @@ As contribuições são bem-vindas. Para contribuir:
 Para reportar bugs ou sugerir features, abra uma issue no repositório GitHub.
 
 ---
+## Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes completos.
+
+A Licença MIT é uma licença de software de código aberto permissiva que permite:
+
+- Uso comercial
+- Modificação
+- Distribuição
+- Uso privado
+
+Com as seguintes obrigações:
+
+- Incluir aviso de licença e copyright
+- Incluir uma cópia da licença
+
+---
 
 
 **Última atualização:** Maio 2026
