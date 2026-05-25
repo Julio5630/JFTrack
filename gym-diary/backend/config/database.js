@@ -2,7 +2,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-console.log('📡 Conectando ao MySQL local...');
+console.log(' Conectando ao MySQL local...');
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -22,10 +22,10 @@ const pool = mysql.createPool({
 (async () => {
     try {
         const connection = await pool.getConnection();
-        console.log('✅ Conectado ao MySQL local com sucesso!');
+        console.log(' Conectado ao MySQL local com sucesso!');
         connection.release();
     } catch (error) {
-        console.error('❌ Erro ao conectar ao MySQL local:', error.message);
+        console.error(' Erro ao conectar ao MySQL local:', error.message);
     }
 })();
 

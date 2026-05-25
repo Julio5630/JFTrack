@@ -14,17 +14,17 @@ const config = {
 async function initDatabase() {
     let connection;
     try {
-        console.log('🔌 Conectando ao MySQL local...');
+        console.log(' Conectando ao MySQL local...');
         connection = await mysql.createConnection(config);
-        console.log('✅ Conectado!');
+        console.log(' Conectado!');
 
         // Criar banco se não existir
         await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
         await connection.query(`USE ${process.env.DB_NAME}`);
-        console.log(`📁 Usando banco: ${process.env.DB_NAME}`);
+        console.log(` Usando banco: ${process.env.DB_NAME}`);
 
         // Criar tabelas
-        console.log('📝 Criando tabelas...');
+        console.log(' Criando tabelas...');
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -113,7 +113,7 @@ async function initDatabase() {
             )
         `);
 
-        console.log('✅ Todas as tabelas criadas com sucesso!');
+        console.log(' Todas as tabelas criadas com sucesso!');
 
         // Verificar se já existe admin
         const [admins] = await connection.query('SELECT * FROM users WHERE email = ?', ['admin@treino.com']);
@@ -127,19 +127,19 @@ async function initDatabase() {
                 'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
                 ['Admin', 'admin@treino.com', hashedPassword, true]
             );
-            console.log('👑 Usuário admin criado! (email: admin@treino.com, senha: admin123)');
+            console.log(' Usuário admin criado! (email: admin@treino.com, senha: admin123)');
         } else {
-            console.log('👑 Usuário admin já existe');
+            console.log(' Usuário admin já existe');
         }
 
-        console.log('\n🎉 Banco de dados inicializado com sucesso!');
-        console.log('📊 Detalhes da conexão:');
+        console.log('\n Banco de dados inicializado com sucesso!');
+        console.log(' Detalhes da conexão:');
         console.log(`   Host: ${config.host}:${config.port}`);
         console.log(`   Banco: ${process.env.DB_NAME}`);
         console.log(`   Usuário: ${config.user}`);
 
     } catch (error) {
-        console.error('❌ Erro ao inicializar banco:', error.message);
+        console.error(' Erro ao inicializar banco:', error.message);
         if (error.code === 'ER_ACCESS_DENIED_ERROR') {
             console.error('   Verifique se o usuário e senha estão corretos');
             console.error('   Padrão MySQL: usuário "root", senha vazia ou a que você configurou');

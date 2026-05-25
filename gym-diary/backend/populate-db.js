@@ -14,7 +14,7 @@ async function populateDatabase() {
         };
 
         connection = await mysql.createConnection(config);
-        console.log('✅ Conectado ao banco para popular dados!');
+        console.log(' Conectado ao banco para popular dados!');
 
         // Buscar ID do usuário admin
         const [admins] = await connection.query('SELECT id FROM users WHERE email = ?', ['admin@treino.com']);
@@ -22,10 +22,10 @@ async function populateDatabase() {
             throw new Error('Usuário admin não encontrado');
         }
         const adminId = admins[0].id;
-        console.log(`👑 Usando ID do admin: ${adminId}`);
+        console.log(` Usando ID do admin: ${adminId}`);
 
         // Inserir exercícios
-        console.log('🏋️ Inserindo exercícios...');
+        console.log(' Inserindo exercícios...');
         const exercises = [
             ['Supino Reto', 'Peito'],
             ['Supino Inclinado', 'Peito'],
@@ -50,7 +50,7 @@ async function populateDatabase() {
                 [adminId, name, category]
             );
         }
-        console.log('✅ Exercícios inseridos!');
+        console.log(' Exercícios inseridos!');
 
         // Buscar IDs dos exercícios inseridos
         const [exerciseRows] = await connection.query('SELECT id, name FROM exercises WHERE user_id = ?', [adminId]);
@@ -60,7 +60,7 @@ async function populateDatabase() {
         });
 
         // Inserir templates de treino
-        console.log('📋 Inserindo templates de treino...');
+        console.log(' Inserindo templates de treino...');
         const templates = [
             'Treino A - Peito e Tríceps',
             'Treino B - Costas e Bíceps',
@@ -77,10 +77,10 @@ async function populateDatabase() {
             const [inserted] = await connection.query('SELECT id FROM workout_templates WHERE user_id = ? AND name = ?', [adminId, name]);
             templateIds.push(inserted[0].id);
         }
-        console.log('✅ Templates inseridos!');
+        console.log(' Templates inseridos!');
 
         // Inserir exercícios nos templates
-        console.log('🔗 Vinculando exercícios aos templates...');
+        console.log(' Vinculando exercícios aos templates...');
 
         // Template A: Peito e Tríceps
         const templateAExercises = [
@@ -140,10 +140,10 @@ async function populateDatabase() {
                 [templateIds[3], exerciseMap[exercise.name], exercise.position]
             );
         }
-        console.log('✅ Exercícios vinculados aos templates!');
+        console.log(' Exercícios vinculados aos templates!');
 
         // Inserir rotina semanal
-        console.log('📅 Inserindo rotina semanal...');
+        console.log(' Inserindo rotina semanal...');
         const weeklyRoutines = [
             { day: 0, template: 'Treino A - Peito e Tríceps' }, // Domingo
             { day: 1, template: 'Treino B - Costas e Bíceps' }, // Segunda
@@ -158,10 +158,10 @@ async function populateDatabase() {
                 [adminId, routine.day, templateId]
             );
         }
-        console.log('✅ Rotina semanal inserida!');
+        console.log(' Rotina semanal inserida!');
 
         // Inserir alguns treinos históricos de exemplo
-        console.log('📊 Inserindo treinos históricos de exemplo...');
+        console.log(' Inserindo treinos históricos de exemplo...');
 
         // Treino de exemplo - Supino
         const [workoutResult] = await connection.query(
@@ -190,17 +190,17 @@ async function populateDatabase() {
                 [workoutId, exerciseMap[set.exercise], set.position, set.set, set.reps, set.weight, true]
             );
         }
-        console.log('✅ Treino histórico inserido!');
+        console.log(' Treino histórico inserido!');
 
-        console.log('\n🎉 Banco de dados populado com sucesso!');
-        console.log('📊 Dados inseridos para o usuário admin@treino.com:');
+        console.log('\n Banco de dados populado com sucesso!');
+        console.log(' Dados inseridos para o usuário admin@treino.com:');
         console.log(`   - ${exercises.length} exercícios`);
         console.log(`   - ${templates.length} templates de treino`);
         console.log('   - Rotina semanal configurada');
         console.log('   - 1 treino histórico com sets');
 
     } catch (error) {
-        console.error('❌ Erro ao popular banco:', error.message);
+        console.error(' Erro ao popular banco:', error.message);
         throw error;
     } finally {
         if (connection) await connection.end();

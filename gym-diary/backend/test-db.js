@@ -12,14 +12,14 @@ async function testConnection() {
             database: process.env.DB_NAME,
         });
         
-        console.log('✅ Conectado ao MySQL local!');
+        console.log(' Conectado ao MySQL local!');
         
         const [rows] = await connection.execute('SELECT VERSION() as version');
         console.log('Versão:', rows[0].version);
         
         await connection.end();
     } catch (error) {
-        console.error('❌ Erro de conexão:', error.message);
+        console.error(' Erro de conexão:', error.message);
     }
 }
 

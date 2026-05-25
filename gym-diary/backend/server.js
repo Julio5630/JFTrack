@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
             console.log(` API disponível em http://localhost:${PORT}/api`);
         });
     } catch (error) {
-        console.error('❌ Erro ao inicializar banco de dados:', error);
+        console.error(' Erro ao inicializar banco de dados:', error);
         process.exit(1);
     }
 })();
