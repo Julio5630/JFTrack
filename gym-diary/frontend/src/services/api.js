@@ -55,6 +55,17 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ name, email, password, isAdmin }),
     }),
+    getMe: () => request('/me'),
+    getUsers: () => request('/users'),
+    createUser: (name, email, password, isAdmin = false) => request('/users', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password, isAdmin }),
+    }),
+    updateUser: (id, updates) => request(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+    }),
+    deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
     getExercises: () => request('/exercises'),
     createExercise: (name, category) => request('/exercises', {
         method: 'POST',

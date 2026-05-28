@@ -1,0 +1,51 @@
+.animated-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  transform-origin: center;
+  transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+  animation: icon-float 2.8s ease-in-out infinite;
+}
+
+.mode-toggle,
+.record-badge,
+.set-detail,
+.nav-icon,
+.card-icon,
+.search-icon,
+.pb-icon,
+.crown-icon,
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+button:hover .animated-icon,
+a:hover .animated-icon,
+.card-icon:hover .animated-icon,
+.calendar-day:hover .animated-icon {
+  transform: translateY(-1px) scale(1.08);
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+button:active .animated-icon,
+a:active .animated-icon {
+  transform: scale(0.94);
+}
+
+@keyframes icon-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-icon {
+    animation: none;
+  }
+}

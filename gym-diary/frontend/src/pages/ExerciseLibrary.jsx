@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { api } from '../services/api';
+import Icon from '../components/Icon';
 import './ExerciseLibrary.css';
 
 export default function ExerciseLibrary() {
@@ -113,7 +114,7 @@ export default function ExerciseLibrary() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Icon name="search" size={18} /></span>
           </div>
           <div className="filter-box">
             <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
@@ -140,8 +141,8 @@ export default function ExerciseLibrary() {
                   <span className="category-badge">{ex.category}</span>
                 </div>
                 <div className="card-actions">
-                  <button className="action-btn edit" onClick={() => openEditModal(ex)} disabled={loading}>✎</button>
-                  <button className="action-btn delete" onClick={() => handleDelete(ex.id, ex.name)} disabled={loading}>🗑</button>
+                  <button className="action-btn edit" onClick={() => openEditModal(ex)} disabled={loading} aria-label="Editar exercicio"><Icon name="edit" size={17} /></button>
+                  <button className="action-btn delete" onClick={() => handleDelete(ex.id, ex.name)} disabled={loading} aria-label="Excluir exercicio"><Icon name="trash" size={17} /></button>
                 </div>
               </div>
             ))
@@ -155,7 +156,7 @@ export default function ExerciseLibrary() {
           <div className="industrial-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingExercise ? 'EDITAR EXERCÍCIO' : 'NOVO EXERCÍCIO'}</h2>
-              <button className="close-modal" onClick={() => setModalOpen(false)}>✕</button>
+              <button className="close-modal" onClick={() => setModalOpen(false)} aria-label="Fechar"><Icon name="close" size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">

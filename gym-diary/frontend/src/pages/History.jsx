@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import Icon from '../components/Icon';
 import './History.css';
 
 export default function History() {
@@ -126,9 +127,9 @@ export default function History() {
         <div className="calendar-card">
           <div className="card-corner"></div>
           <div className="calendar-nav">
-            <button onClick={prevMonth} className="nav-btn">◀</button>
+            <button onClick={prevMonth} className="nav-btn" aria-label="Mes anterior"><Icon name="chevronLeft" size={20} /></button>
             <h2>{monthNames[month]} {year}</h2>
-            <button onClick={nextMonth} className="nav-btn">▶</button>
+            <button onClick={nextMonth} className="nav-btn" aria-label="Proximo mes"><Icon name="chevronRight" size={20} /></button>
           </div>
           <div className="calendar-weekdays">
             {weekDays.map((day, idx) => (
@@ -147,9 +148,9 @@ export default function History() {
                 {!cell.blank && (
                   <>
                     <span className="day-number">{cell.date.getDate()}</span>
-                    {cell.hasRecord && <span className="crown-icon">👑</span>}
-                    {cell.status === 'completed' && !cell.hasRecord && <span className="indicator">✓</span>}
-                    {cell.status === 'missed' && <span className="indicator">!</span>}
+                    {cell.hasRecord && <span className="crown-icon"><Icon name="trophy" size={16} /></span>}
+                    {cell.status === 'completed' && !cell.hasRecord && <span className="indicator"><Icon name="check" size={14} /></span>}
+                    {cell.status === 'missed' && <span className="indicator"><Icon name="alert" size={14} /></span>}
                   </>
                 )}
               </motion.div>
@@ -182,7 +183,7 @@ export default function History() {
             >
               <div className="modal-header">
                 <h2>{selectedDay.date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h2>
-                <button className="close-modal" onClick={closeModal}>✕</button>
+                <button className="close-modal" onClick={closeModal} aria-label="Fechar"><Icon name="close" size={18} /></button>
               </div>
               <div className="modal-body">
                 {selectedDay.workouts.length === 0 ? (
@@ -200,10 +201,10 @@ export default function History() {
                         });
                         return (
                           <div key={ex.exerciseId} className="exercise-detail">
-                            <strong>{exName} {isRecord && <span className="record-badge">👑 RECORDE</span>}</strong>
+                            <strong>{exName} {isRecord && <span className="record-badge"><Icon name="trophy" size={14} /> RECORDE</span>}</strong>
                             {ex.sets.map((set, idx) => (
                               <div key={idx} className="set-detail">
-                                • Série {idx + 1}: {set.reps} reps x {set.weight}kg {set.completed ? '✔' : ''}
+<Icon name="check" size={13} /> Serie {idx + 1}: {set.reps} reps x {set.weight}kg {set.completed ? <Icon name="check" size={13} /> : null}
                               </div>
                             ))}
                           </div>

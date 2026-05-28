@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Icon from './Icon';
 
 export default function TrainingModeToggle() {
   const [active, setActive] = useState(false);
@@ -19,7 +20,8 @@ export default function TrainingModeToggle() {
 
   return (
     <button onClick={toggle} className="mode-toggle">
-      {active ? '🔙 Sair do Modo Treino' : '🏋️ Modo Treino'}
+      <Icon name={active ? 'logout' : 'dumbbell'} size={18} />
+      <span>{active ? 'Sair do Modo Treino' : 'Modo Treino'}</span>
     </button>
   );
 }

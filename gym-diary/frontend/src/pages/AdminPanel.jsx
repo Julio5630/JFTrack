@@ -1,6 +1,6 @@
-// src/pages/AdminPanel.jsx
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import Icon from '../components/Icon';
 import './AdminPanel.css';
 
 export default function AdminPanel() {
@@ -16,20 +16,20 @@ export default function AdminPanel() {
   const [editIsAdmin, setEditIsAdmin] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-  const handleCreateUser = (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
       setMessage('Preencha todos os campos');
       return;
     }
-    const success = createUser(name, email, password);
+    const success = await createUser(name, email, password);
     if (success) {
-      setMessage('Usuário criado com sucesso!');
+      setMessage('Usuario criado com sucesso!');
       setName('');
       setEmail('');
       setPassword('');
     } else {
-      setMessage('Erro ao criar usuário');
+      setMessage('Erro ao criar usuario');
     }
     setTimeout(() => setMessage(''), 3000);
   };
@@ -50,9 +50,9 @@ export default function AdminPanel() {
     setEditIsAdmin(false);
   };
 
-  const handleUpdateUser = () => {
+  const handleUpdateUser = async () => {
     if (!editName || !editEmail) {
-      setMessage('Nome e email são obrigatórios');
+      setMessage('Nome e email sao obrigatorios');
       return;
     }
     const updates = {
@@ -63,9 +63,9 @@ export default function AdminPanel() {
     if (editPassword) {
       updates.password = editPassword;
     }
-    const success = updateUser(editUserId, updates);
+    const success = await updateUser(editUserId, updates);
     if (success) {
-      setMessage('Usuário atualizado');
+      setMessage('Usuario atualizado');
       cancelEdit();
     } else {
       setMessage('Erro ao atualizar');
@@ -77,13 +77,13 @@ export default function AdminPanel() {
     setShowDeleteConfirm(userId);
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (showDeleteConfirm) {
-      const success = deleteUser(showDeleteConfirm);
+      const success = await deleteUser(showDeleteConfirm);
       if (success) {
-        setMessage('Usuário removido');
+        setMessage('Usuario removido');
       } else {
-        setMessage('Não é possível remover o próprio usuário');
+        setMessage('Nao e possivel remover o proprio usuario');
       }
       setShowDeleteConfirm(null);
       setTimeout(() => setMessage(''), 3000);
@@ -98,7 +98,7 @@ export default function AdminPanel() {
 
       <div className="admin-content">
         <div className="admin-header">
-          <h1>PAINEL DE ADMINISTRAÇÃO</h1>
+          <h1>PAINEL DE ADMINISTRACAO</h1>
           <div className="header-rivets">
             <span className="rivet"></span>
             <span className="rivet"></span>
@@ -109,12 +109,11 @@ export default function AdminPanel() {
         {message && <div className="admin-message">{message}</div>}
 
         <div className="admin-grid">
-          {/* Formulário de criação */}
           <div className="industrial-card">
             <div className="card-corner"></div>
             <div className="card-header">
-              <span className="card-icon">👤+</span>
-              <h2>CRIAR NOVO USUÁRIO</h2>
+              <span className="card-icon"><Icon name="userPlus" size={28} /></span>
+              <h2>CRIAR NOVO USUARIO</h2>
             </div>
             <div className="card-body">
               <form onSubmit={handleCreateUser}>
@@ -146,24 +145,22 @@ export default function AdminPanel() {
                   <span className="input-highlight"></span>
                 </div>
                 <button type="submit" className="industrial-btn">
-                  CRIAR USUÁRIO
+                  CRIAR USUARIO
                 </button>
               </form>
             </div>
           </div>
 
-          {/* Lista de usuários */}
           <div className="industrial-card users-list-card">
             <div className="card-corner"></div>
             <div className="card-header">
-              <span className="card-icon">📋</span>
-              <h2>USUÁRIOS CADASTRADOS</h2>
+              <span className="card-icon"><Icon name="clipboard" size={28} /></span>
+              <h2>USUARIOS CADASTRADOS</h2>
             </div>
             <div className="card-body users-list">
               {users.map(user => (
                 <div key={user.id} className="user-item">
                   {editUserId === user.id ? (
-                    // Modo edição
                     <div className="user-edit-form">
                       <input
                         type="text"
@@ -204,29 +201,28 @@ export default function AdminPanel() {
                         {user.isAdmin && <span className="admin-badge">ADMIN</span>}
                       </div>
                       <div className="user-actions">
-                        <button onClick={() => startEdit(user)} className="industrial-btn small">✏️</button>
-                        <button onClick={() => confirmDelete(user.id)} className="industrial-btn small danger">🗑️</button>
+                        <button onClick={() => startEdit(user)} className="industrial-btn small" aria-label="Editar usuario"><Icon name="edit" size={17} /></button>
+                        <button onClick={() => confirmDelete(user.id)} className="industrial-btn small danger" aria-label="Excluir usuario"><Icon name="trash" size={17} /></button>
                       </div>
                     </>
                   )}
                 </div>
               ))}
-              {users.length === 0 && <div className="no-users">Nenhum usuário cadastrado</div>}
+              {users.length === 0 && <div className="no-users">Nenhum usuario cadastrado</div>}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de confirmação de exclusão */}
       {showDeleteConfirm && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h3>CONFIRMAR EXCLUSÃO</h3>
+              <h3>CONFIRMAR EXCLUSAO</h3>
             </div>
             <div className="modal-body">
-              <p>Tem certeza que deseja excluir este usuário?</p>
-              <p>Esta ação não pode ser desfeita.</p>
+              <p>Tem certeza que deseja excluir este usuario?</p>
+              <p>Esta acao nao pode ser desfeita.</p>
             </div>
             <div className="modal-actions">
               <button onClick={handleDeleteUser} className="industrial-btn danger">EXCLUIR</button>

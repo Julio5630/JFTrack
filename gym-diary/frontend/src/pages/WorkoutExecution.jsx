@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
+import Icon from '../components/Icon';
 import './WorkoutExecution.css';
 
 export default function WorkoutExecution() {
-  const { data, updatePartial } = useData();
+  const { data, updatePartial, refreshData } = useData();
   const navigate = useNavigate();
   const [currentWorkout, setCurrentWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,10 +105,9 @@ export default function WorkoutExecution() {
     updateWorkout(newWorkout);
   };
 
-  const finishWorkout = () => {
+  const finishWorkout = async () => {
     if (!currentWorkout) return;
     const historyEntry = {
-      id: Date.now(),
       name: currentWorkout.name,
       date: new Date().toISOString().slice(0, 10),
       exercises: currentWorkout.exercises.map(ex => ({
@@ -114,9 +115,14 @@ export default function WorkoutExecution() {
         sets: ex.sets.map(s => ({ reps: s.reps, weight: s.weight, completed: s.completed })),
       })),
     };
-    const newHistory = [historyEntry, ...(data.workoutHistory || [])];
-    updatePartial({ workoutHistory: newHistory, currentWorkout: null });
-    navigate('/history');
+    try {
+      await api.saveWorkout(historyEntry);
+      updatePartial({ currentWorkout: null });
+      await refreshData();
+      navigate('/history');
+    } catch (error) {
+      alert(error.message || 'Erro ao finalizar treino');
+    }
   };
 
   const selectTemplate = (templateId) => {
@@ -216,7 +222,7 @@ export default function WorkoutExecution() {
                       updateWorkout(newWorkout);
                     }}
                   >
-                    ✖
+                    <Icon name="close" size={16} />
                   </button>
                 </div>
                 <div className="sets-container">
@@ -249,7 +255,7 @@ export default function WorkoutExecution() {
                           <button className="control-btn" onClick={() => incrementWeight(exIdx, setIdx)}>+</button>
                           <span className="label">PESO</span>
                         </div>
-                        <button className="remove-set" onClick={() => removeSet(exIdx, setIdx)}>✖</button>
+                        <button className="remove-set" onClick={() => removeSet(exIdx, setIdx)} aria-label="Remover serie"><Icon name="close" size={16} /></button>
                       </div>
                     </div>
                   ))}

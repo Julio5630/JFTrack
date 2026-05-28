@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import Icon from '../components/Icon';
 import './Progress.css';
 
 export default function Progress() {
@@ -20,7 +21,7 @@ export default function Progress() {
     if (!selectedExerciseId) return [];
     const entries = [];
     sortedHistory.forEach(workout => {
-      const exerciseLog = workout.exercises?.find(e => e.exerciseId === selectedExerciseId);
+      const exerciseLog = workout.exercises?.find(e => Number(e.exerciseId) === Number(selectedExerciseId));
       if (exerciseLog && exerciseLog.sets?.length) {
         const lastSet = exerciseLog.sets[exerciseLog.sets.length - 1];
         entries.push({
@@ -40,7 +41,7 @@ export default function Progress() {
     if (!selectedExerciseId) return null;
     let best = { weight: 0, reps: 0, volume: 0, date: null };
     sortedHistory.forEach(workout => {
-      const exerciseLog = workout.exercises?.find(e => e.exerciseId === selectedExerciseId);
+      const exerciseLog = workout.exercises?.find(e => Number(e.exerciseId) === Number(selectedExerciseId));
       if (exerciseLog && exerciseLog.sets?.length) {
         exerciseLog.sets.forEach(set => {
           const volume = set.weight * set.reps;
@@ -130,7 +131,7 @@ export default function Progress() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <div className="pb-icon">👑</div>
+                  <div className="pb-icon"><Icon name="trophy" size={30} /></div>
                   <div className="pb-text">
                     <strong>RECORDE PESSOAL</strong>
                     <span>{personalBest.weight} kg x {personalBest.reps} reps</span>

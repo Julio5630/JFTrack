@@ -17,12 +17,14 @@ import TrainingModeToggle from './components/TrainingModeToggle';
 import './App.css';
 
 function PrivateRoute({ children }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    if (loading) return null;
     return user ? children : <Navigate to="/login" />;
 }
 
 function AdminRoute({ children }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    if (loading) return null;
     return user?.isAdmin ? children : <Navigate to="/dashboard" />;
 }
 

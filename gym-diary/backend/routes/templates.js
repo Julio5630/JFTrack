@@ -4,6 +4,7 @@ const router = express.Router();
 const {
     createTemplate,
     getTemplates,
+    updateTemplate,
     addExerciseToTemplate,
     getTemplateDetails,
     deleteTemplate
@@ -13,6 +14,7 @@ const {
 router.get('/', getTemplates);
 router.post('/', createTemplate);
 router.get('/:id', getTemplateDetails);
+router.put('/:id', updateTemplate);
 router.delete('/:id', deleteTemplate);
 
 // Adicionar exercício ao template

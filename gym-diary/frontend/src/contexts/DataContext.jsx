@@ -1,5 +1,4 @@
-// src/contexts/DataContext.jsx
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { api } from '../services/api';
 
@@ -11,7 +10,7 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const loadAllData = async () => {
+    const loadAllData = useCallback(async () => {
         if (!token) {
             setData(null);
             setLoading(false);
@@ -20,54 +19,48 @@ export const DataProvider = ({ children }) => {
 
         setLoading(true);
         setError(null);
-        
+
         try {
-            console.log('[DataContext] Carregando dados da API...');
-            
             const [exercises, templates, routine, history] = await Promise.all([
                 api.getExercises().catch(err => { console.error('Erro exercises:', err); return []; }),
                 api.getTemplates().catch(err => { console.error('Erro templates:', err); return []; }),
                 api.getRoutine().catch(err => { console.error('Erro routine:', err); return []; }),
                 api.getHistory().catch(err => { console.error('Erro history:', err); return []; }),
             ]);
-            
-            console.log('[DataContext] Dados carregados:', { exercises, templates, routine, history });
-            
-            setData({
+
+            setData(previous => ({
                 exercises: exercises || [],
                 workoutTemplates: templates || [],
-                weeklyRoutine: routine || new Array(7).fill(null),
+                weeklyRoutine: routine || new Array(7).fill(''),
                 workoutHistory: history || [],
-            });
+                currentWorkout: previous?.currentWorkout || null,
+            }));
         } catch (err) {
             console.error('[DataContext] Erro ao carregar dados:', err);
             setError(err.message);
-            // Fallback para dados vazios
-            setData({
+            setData(previous => ({
                 exercises: [],
                 workoutTemplates: [],
-                weeklyRoutine: new Array(7).fill(null),
+                weeklyRoutine: new Array(7).fill(''),
                 workoutHistory: [],
-            });
+                currentWorkout: previous?.currentWorkout || null,
+            }));
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         loadAllData();
-    }, [token]);
+    }, [loadAllData]);
 
-    const refreshData = () => {
+    const refreshData = useCallback(() => {
         loadAllData();
-    };
+    }, [loadAllData]);
 
-    const updatePartial = async (updates) => {
-        if (data) {
-            setData({ ...data, ...updates });
-        }
-        await loadAllData();
-    };
+    const updatePartial = useCallback((updates) => {
+        setData(previous => previous ? { ...previous, ...updates } : previous);
+    }, []);
 
     return (
         <DataContext.Provider value={{ data, loading, error, refreshData, updatePartial }}>

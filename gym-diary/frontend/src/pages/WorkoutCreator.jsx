@@ -1,17 +1,20 @@
 // src/pages/WorkoutCreator.jsx
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { api } from '../services/api';
+import Icon from '../components/Icon';
 import './WorkoutCreator.css';
 
 export default function WorkoutCreator() {
-  const { data, updatePartial } = useData();
+  const { data, refreshData } = useData();
   const [workoutName, setWorkoutName] = useState('');
-  const [availableExercises, setAvailableExercises] = useState(data?.exercises || []);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
   const [defaultSets, setDefaultSets] = useState(3);
 
   if (!data) return <div className="creator-loading">Carregando...</div>;
+
+  const availableExercises = data.exercises || [];
 
   const addExercise = (exerciseId) => {
     const exercise = availableExercises.find(e => e.id === exerciseId);
@@ -47,7 +50,7 @@ export default function WorkoutCreator() {
     setSelectedExercises(newSelected);
   };
 
-  const saveWorkout = () => {
+  const saveWorkout = async () => {
     if (!workoutName.trim()) {
       alert('Digite um nome para o treino');
       return;
@@ -58,7 +61,6 @@ export default function WorkoutCreator() {
     }
 
     const newTemplate = {
-      id: Date.now().toString(),
       name: workoutName.trim(),
       exercises: selectedExercises.map(ex => ({
         id: ex.id,
@@ -66,8 +68,8 @@ export default function WorkoutCreator() {
       }))
     };
 
-    const updatedTemplates = [...(data.workoutTemplates || []), newTemplate];
-    updatePartial({ workoutTemplates: updatedTemplates });
+    await api.createTemplate(newTemplate.name, newTemplate.exercises);
+    await refreshData();
 
     // Limpar formulário
     setWorkoutName('');
@@ -161,9 +163,9 @@ export default function WorkoutCreator() {
                           </div>
                         </div>
                         <div className="item-actions">
-                          <button className="move-up" onClick={() => moveUp(idx)} disabled={idx === 0}>↑</button>
-                          <button className="move-down" onClick={() => moveDown(idx)} disabled={idx === selectedExercises.length - 1}>↓</button>
-                          <button className="remove-btn" onClick={() => removeExercise(idx)}>✖</button>
+                          <button className="move-up" onClick={() => moveUp(idx)} disabled={idx === 0} aria-label="Mover para cima"><Icon name="chevronUp" size={16} /></button>
+                          <button className="move-down" onClick={() => moveDown(idx)} disabled={idx === selectedExercises.length - 1} aria-label="Mover para baixo"><Icon name="chevronDown" size={16} /></button>
+                          <button className="remove-btn" onClick={() => removeExercise(idx)} aria-label="Remover exercicio"><Icon name="close" size={16} /></button>
                         </div>
                       </div>
                     ))}

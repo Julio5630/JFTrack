@@ -1,10 +1,12 @@
 // src/pages/Routines.jsx
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { api } from '../services/api';
+import Icon from '../components/Icon';
 import './Routines.css';
 
 export default function Routines() {
-  const { data, updatePartial } = useData();
+  const { data, updatePartial, refreshData } = useData();
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -26,22 +28,32 @@ export default function Routines() {
   });
 
   const routine = data.weeklyRoutine || ['', '', '', '', '', '', ''];
+  const toRoutineIndex = (displayIndex) => (displayIndex + 1) % 7;
 
   const handleDayClick = (index) => {
     setSelectedDay(index);
     setModalOpen(true);
   };
 
-  const assignWorkout = (workoutId) => {
+  const assignWorkout = async (workoutId) => {
+    const routineIndex = toRoutineIndex(selectedDay);
     const newRoutine = [...routine];
-    newRoutine[selectedDay] = workoutId;
+    newRoutine[routineIndex] = workoutId;
     updatePartial({ weeklyRoutine: newRoutine });
     setModalOpen(false);
+
+    try {
+      await api.updateRoutineDay(routineIndex, workoutId || null);
+      await refreshData();
+    } catch (error) {
+      alert(error.message || 'Erro ao atualizar rotina');
+      await refreshData();
+    }
   };
 
   const getWorkoutName = (workoutId) => {
     const workout = data.workoutTemplates?.find(w => w.id === workoutId);
-    return workout ? workout.name : '—';
+    return workout ? workout.name : 'Sem treino';
   };
 
   return (
@@ -65,7 +77,7 @@ export default function Routines() {
           {weekdays.map((day, idx) => (
             <div 
               key={idx} 
-              className={`calendar-day-card ${routine[idx] ? 'has-workout' : ''}`}
+              className={`calendar-day-card ${routine[toRoutineIndex(idx)] ? 'has-workout' : ''}`}
               onClick={() => handleDayClick(idx)}
             >
               <div className="day-header">
@@ -75,10 +87,10 @@ export default function Routines() {
                 </span>
               </div>
               <div className="day-workout">
-                {routine[idx] ? (
+                {routine[toRoutineIndex(idx)] ? (
                   <>
-                    <span className="workout-badge">{getWorkoutName(routine[idx])}</span>
-                    <button className="edit-btn" onClick={(e) => { e.stopPropagation(); handleDayClick(idx); }}>✎</button>
+                    <span className="workout-badge">{getWorkoutName(routine[toRoutineIndex(idx)])}</span>
+                    <button className="edit-btn" onClick={(e) => { e.stopPropagation(); handleDayClick(idx); }} aria-label="Editar rotina"><Icon name="edit" size={15} /></button>
                   </>
                 ) : (
                   <button className="assign-btn">+ Atribuir treino</button>
@@ -107,14 +119,14 @@ export default function Routines() {
           <div className="industrial-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Selecionar treino</h2>
-              <button className="close-modal" onClick={() => setModalOpen(false)}>✕</button>
+              <button className="close-modal" onClick={() => setModalOpen(false)} aria-label="Fechar"><Icon name="close" size={18} /></button>
             </div>
             <div className="modal-body">
               <button 
                 className="workout-option" 
                 onClick={() => assignWorkout('')}
               >
-                <span>— Nenhum —</span>
+                <span>Sem treino</span>
               </button>
               {data.workoutTemplates?.map(workout => (
                 <button 
@@ -123,7 +135,7 @@ export default function Routines() {
                   onClick={() => assignWorkout(workout.id)}
                 >
                   <span>{workout.name}</span>
-                  <span className="workout-exercises">{workout.exercises.length} exercícios</span>
+                  <span className="workout-exercises">{workout.exercises?.length || 0} exercícios</span>
                 </button>
               ))}
             </div>

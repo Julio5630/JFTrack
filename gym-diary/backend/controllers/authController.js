@@ -4,6 +4,13 @@ const { hashPassword, comparePassword } = require('../utils/hash');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
+const toUserDto = (user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    isAdmin: Boolean(user.is_admin)
+});
+
 // LOGIN
 const login = async (req, res) => {
     try {
@@ -34,12 +41,7 @@ const login = async (req, res) => {
 
         res.json({
             token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                is_admin: user.is_admin
-            }
+            user: toUserDto(user)
         });
     } catch (error) {
         console.error(error);
@@ -71,4 +73,4 @@ const register = async (req, res) => {
     }
 };
 
-module.exports = { login, register };
+module.exports = { login, register, toUserDto };

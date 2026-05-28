@@ -6,8 +6,10 @@ const exerciseRoutes = require('./exercises');
 const templateRoutes = require('./templates');
 const routineRoutes = require('./routines');
 const historyRoutes = require('./history');
+const userRoutes = require('./users');
 
-const { authenticateToken } = require('../middlewares/auth');
+const { authenticateToken, isAdmin } = require('../middlewares/auth');
+const { toUserDto } = require('../controllers/authController');
 
 // Públicas
 router.use('/auth', authRoutes);
@@ -17,10 +19,11 @@ router.use('/exercises', authenticateToken, exerciseRoutes);
 router.use('/templates', authenticateToken, templateRoutes);
 router.use('/routines', authenticateToken, routineRoutes);
 router.use('/history', authenticateToken, historyRoutes);
+router.use('/users', authenticateToken, isAdmin, userRoutes);
 
 // Usuário logado
 router.get('/me', authenticateToken, (req, res) => {
-    res.json({ user: req.user });
+    res.json({ user: toUserDto(req.user) });
 });
 
 // Health

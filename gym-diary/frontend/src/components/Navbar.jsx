@@ -1,7 +1,7 @@
-// src/components/Navbar.jsx
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Icon from './Icon';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -21,7 +21,6 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    // Fechar menu ao mudar de rota
     setIsMenuOpen(false);
   }, [location]);
 
@@ -32,28 +31,26 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/execution', label: 'Execução', icon: '🏋️' },
-    { path: '/create', label: 'Criar Treino', icon: '✏️' },
-    { path: '/routines', label: 'Rotinas', icon: '📅' },
-    { path: '/library', label: 'Biblioteca', icon: '📚' },
-    { path: '/history', label: 'Histórico', icon: '📜' },
-    { path: '/progress', label: 'Progresso', icon: '📊' },
-    ...(user?.isAdmin ? [{ path: '/admin', label: 'Admin', icon: '👑' }] : [])
+    { path: '/dashboard', label: 'Dashboard', icon: 'home' },
+    { path: '/execution', label: 'Execucao', icon: 'dumbbell' },
+    { path: '/create', label: 'Criar Treino', icon: 'pencil' },
+    { path: '/routines', label: 'Rotinas', icon: 'calendar' },
+    { path: '/library', label: 'Biblioteca', icon: 'book' },
+    { path: '/history', label: 'Historico', icon: 'history' },
+    { path: '/progress', label: 'Progresso', icon: 'chart' },
+    ...(user?.isAdmin ? [{ path: '/admin', label: 'Admin', icon: 'shield' }] : [])
   ];
 
   return (
     <nav className="industrial-navbar">
       <div className="nav-container">
-        {/* Logo / marca */}
         <div className="nav-brand">
-          <span className="brand-icon">⚙️</span>
+          <span className="brand-icon"><Icon name="settings" size={22} title="Gym Diary" /></span>
           <span className="brand-text">GYM<span>DIARY</span></span>
           <div className="brand-rivet"></div>
         </div>
 
-        {/* Botão hamburguer (mobile) */}
-        <button 
+        <button
           className={`hamburger ${isMenuOpen ? 'active' : ''}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Menu"
@@ -63,7 +60,6 @@ export default function Navbar() {
           <span className="hamburger-line"></span>
         </button>
 
-        {/* Menu de navegação */}
         <div className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
           <div className="nav-links-inner">
             {navItems.map(item => (
@@ -73,13 +69,13 @@ export default function Navbar() {
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-icon"><Icon name={item.icon} size={19} /></span>
                 <span className="nav-label">{item.label}</span>
                 <div className="nav-link-rivet"></div>
               </NavLink>
             ))}
             <button onClick={handleLogout} className="logout-link">
-              <span className="nav-icon">🚪</span>
+              <span className="nav-icon"><Icon name="logout" size={19} /></span>
               <span className="nav-label">Sair</span>
             </button>
           </div>

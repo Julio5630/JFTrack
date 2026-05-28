@@ -6,6 +6,18 @@ const setRoutine = async (req, res) => {
         const userId = req.user.id;
         const { day_of_week, template_id } = req.body;
 
+        if (day_of_week < 0 || day_of_week > 6) {
+            return res.status(400).json({ error: 'Dia da semana invalido' });
+        }
+
+        if (!template_id) {
+            await query(
+                'DELETE FROM weekly_routines WHERE user_id = ? AND day_of_week = ?',
+                [userId, day_of_week]
+            );
+            return res.json({ message: 'Rotina removida' });
+        }
+
         await query(
             `INSERT INTO weekly_routines (user_id, day_of_week, template_id)
              VALUES (?, ?, ?)
@@ -34,7 +46,12 @@ const getRoutine = async (req, res) => {
             [userId]
         );
 
-        res.json(routine);
+        const weeklyRoutine = new Array(7).fill('');
+        routine.forEach(day => {
+            weeklyRoutine[day.day_of_week] = day.template_id;
+        });
+
+        res.json(weeklyRoutine);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar rotina' });
