@@ -13,15 +13,19 @@ export default function TrainingModeToggle() {
     }
   }, [active, navigate, location]);
 
+  useEffect(() => {
+    document.body.classList.toggle('training-mode', active);
+    return () => document.body.classList.remove('training-mode');
+  }, [active]);
+
   const toggle = () => {
-    setActive(!active);
-    document.body.classList.toggle('training-mode', !active);
+    setActive((current) => !current);
   };
 
   return (
-    <button onClick={toggle} className="mode-toggle">
+    <button onClick={toggle} className={`mode-toggle ${active ? 'active' : ''}`} aria-pressed={active}>
       <Icon name={active ? 'logout' : 'dumbbell'} size={18} />
-      <span>{active ? 'Sair do Modo Treino' : 'Modo Treino'}</span>
+      <span>{active ? 'Sair do modo' : 'Modo Treino'}</span>
     </button>
   );
 }

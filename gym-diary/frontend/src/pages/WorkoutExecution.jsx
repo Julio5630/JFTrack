@@ -36,6 +36,7 @@ export default function WorkoutExecution() {
         return {
           exerciseId: exItem.id,
           exerciseName: exercise ? exercise.name : 'Exercício',
+          gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
           sets,
         };
       });
@@ -135,6 +136,7 @@ export default function WorkoutExecution() {
         return {
           exerciseId: exItem.id,
           exerciseName: exercise ? exercise.name : 'Exercício',
+          gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
           sets,
         };
       });
@@ -184,6 +186,13 @@ export default function WorkoutExecution() {
     );
   }
 
+  const totalSets = currentWorkout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0);
+  const completedSets = currentWorkout.exercises.reduce(
+    (total, exercise) => total + exercise.sets.filter(set => set.completed).length,
+    0
+  );
+  const progressPercent = totalSets ? Math.round((completedSets / totalSets) * 100) : 0;
+
   return (
     <div className="execution-container">
       <div className="industrial-bg"></div>
@@ -203,17 +212,27 @@ export default function WorkoutExecution() {
         <div className="execution-card">
           <div className="card-corner"></div>
           <div className="workout-header">
-            <h2>{currentWorkout.name}</h2>
+            <div>
+              <h2>{currentWorkout.name}</h2>
+              <p>{completedSets} de {totalSets} series concluidas</p>
+            </div>
             <button className="finish-btn" onClick={finishWorkout}>
               FINALIZAR TREINO
             </button>
+          </div>
+
+          <div className="execution-progress" aria-label={`Progresso do treino: ${progressPercent}%`}>
+            <div className="execution-progress-fill" style={{ width: `${progressPercent}%` }}></div>
           </div>
 
           <div className="exercises-list">
             {currentWorkout.exercises.map((exercise, exIdx) => (
               <div key={exIdx} className="exercise-block">
                 <div className="exercise-header">
-                  <h3>{exercise.exerciseName}</h3>
+                  <div>
+                    <h3>{exercise.exerciseName}</h3>
+                    <span>{exercise.sets.filter(set => set.completed).length}/{exercise.sets.length} series</span>
+                  </div>
                   <button
                     className="remove-exercise"
                     onClick={() => {
@@ -225,9 +244,17 @@ export default function WorkoutExecution() {
                     <Icon name="close" size={16} />
                   </button>
                 </div>
+                <div className={`exercise-gif-slot ${exercise.gifUrl ? 'has-gif' : ''}`}>
+                  {exercise.gifUrl ? (
+                    <img src={exercise.gifUrl} alt={`GIF de execucao de ${exercise.exerciseName}`} />
+                  ) : (
+                    <span>Espaco para GIF de execucao</span>
+                  )}
+                </div>
                 <div className="sets-container">
                   {exercise.sets.map((set, setIdx) => (
                     <div key={setIdx} className="set-row">
+                      <span className="set-number">Serie {setIdx + 1}</span>
                       {/* Checkbox estilizado SVG */}
                       <label className="checkbox-wrapper">
                         <input

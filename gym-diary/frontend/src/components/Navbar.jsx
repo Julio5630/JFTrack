@@ -45,7 +45,7 @@ export default function Navbar() {
     <nav className="industrial-navbar">
       <div className="nav-container">
         <div className="nav-brand">
-          <span className="brand-icon"><Icon name="settings" size={22} title="Gym Diary" /></span>
+          <span className="brand-icon"><Icon name="gymLogo" size={26} title="Gym Diary" /></span>
           <span className="brand-text">GYM<span>DIARY</span></span>
           <div className="brand-rivet"></div>
         </div>

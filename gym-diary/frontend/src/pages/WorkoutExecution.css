@@ -177,6 +177,29 @@
   color: #ff6b35;
 }
 
+.workout-header p {
+  margin: 4px 0 0;
+  color: #d7dde5;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.execution-progress {
+  width: 100%;
+  height: 10px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.execution-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b35, #2ecc71);
+  transition: width 0.25s ease;
+}
+
 .finish-btn {
   background: #059669;
   border: none;
@@ -225,6 +248,41 @@
   color: #fff;
 }
 
+.exercise-header span {
+  display: inline-block;
+  margin-top: 4px;
+  color: #ffaa88;
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+
+.exercise-gif-slot {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  margin-bottom: 14px;
+  background: rgba(0,0,0,0.35);
+  border: 1px dashed rgba(255,255,255,0.22);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d7dde5;
+  font-family: monospace;
+  font-size: 0.8rem;
+  overflow: hidden;
+}
+
+.exercise-gif-slot.has-gif {
+  border-style: solid;
+}
+
+.exercise-gif-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #050607;
+}
+
 .remove-exercise {
   background: none;
   border: none;
@@ -253,6 +311,14 @@
   padding: 10px;
   border-radius: 4px;
   flex-wrap: wrap;
+}
+
+.set-number {
+  min-width: 64px;
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 /* Checkbox estilizado em laranja */
@@ -330,7 +396,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 6px 12px;
   border-radius: 40px;
 }
@@ -450,7 +517,7 @@
 }
 
 /* Modo treino */
-body.training-mode .navbar {
+body.training-mode .industrial-navbar {
   display: none;
 }
 
@@ -542,6 +609,10 @@ body.training-mode .remove-set {
   .set-row {
     flex-direction: column;
     align-items: stretch;
+  }
+  .set-number {
+    text-align: center;
+    min-width: 0;
   }
   .checkbox-wrapper {
     align-self: center;

@@ -179,6 +179,11 @@ npm run build
 ```
 
 ---
+## Dados de acesso
+| Usuario | Senha |
+|:----------:|:-----------:|
+| admin@treino.com | admin123 |
+
 
 ## Estrutura de Diretórios
 
@@ -356,3 +361,54 @@ Com as seguintes obrigações:
 
 
 **Última atualização:** Maio 2026
+
+
+```mermaid
+flowchart TD
+    A[Início do App] --> B[Login como Personal]
+    B --> C[Home do Personal]
+
+    C --> D[Menu Lateral]
+
+    D --> E[Início]
+    D --> F[Alunos]
+    D --> G[Treinos]
+    D --> H[Avaliações]
+    D --> I[Sair]
+
+    F --> J[Listar alunos vinculados]
+    F --> K[Adicionar aluno por e-mail]
+
+    K --> L[Personal informa e-mail do aluno]
+    L --> M{Aluno já possui conta?}
+
+    M -->|Sim| N[Vincular aluno à academia/personal]
+    M -->|Não| O[Enviar convite para cadastro]
+
+    N --> P[Perfil do aluno]
+    O --> P
+
+    P --> Q[Ver histórico do aluno]
+    P --> R[Ver treinos do aluno]
+    P --> S[Realizar avaliação física]
+    P --> T[Criar ou editar treino do aluno]
+
+    H --> U[Listar avaliações]
+    U --> V[Nova avaliação]
+    V --> W[Questionário inicial / Anamnese]
+    W --> X[Dados físicos e medidas]
+    X --> Y[Sistema gera sugestão de treino]
+    Y --> Z[Personal revisa e adapta]
+    Z --> AA[Salvar avaliação e treino sugerido]
+
+    G --> AB[Modelos de treino]
+    AB --> AC[Criar treino modelo]
+    AB --> AD[Editar treino modelo]
+    AB --> AE[Atribuir treino a aluno]
+
+    T --> AF[Selecionar aluno]
+    AF --> AG[Montar treino personalizado]
+    AG --> AH[Salvar e liberar para o aluno]
+
+    I --> AI[Logout]
+```

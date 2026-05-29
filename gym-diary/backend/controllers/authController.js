@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 const { hashPassword, comparePassword } = require('../utils/hash');
+const { seedDefaultExercises } = require('../utils/defaultExercises');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
@@ -56,10 +57,11 @@ const register = async (req, res) => {
 
         const hashed = await hashPassword(password);
 
-        await query(
+        const result = await query(
             'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
             [name, email, hashed]
         );
+        await seedDefaultExercises(query, result.insertId);
 
         res.status(201).json({ message: 'Usuário criado' });
     } catch (error) {

@@ -67,13 +67,13 @@ export const api = {
     }),
     deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
     getExercises: () => request('/exercises'),
-    createExercise: (name, category) => request('/exercises', {
+    createExercise: (name, category, gifUrl = '') => request('/exercises', {
         method: 'POST',
-        body: JSON.stringify({ name, category }),
+        body: JSON.stringify({ name, category, gifUrl }),
     }),
-    updateExercise: (id, name, category) => request(`/exercises/${id}`, {
+    updateExercise: (id, name, category, gifUrl = '') => request(`/exercises/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ name, category }),
+        body: JSON.stringify({ name, category, gifUrl }),
     }),
     deleteExercise: (id) => request(`/exercises/${id}`, { method: 'DELETE' }),
     getTemplates: () => request('/templates'),

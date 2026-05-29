@@ -24,6 +24,7 @@ const icons = {
   check: <path d="m5 12 4 4 10-10" />,
   trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0Z" /><path d="M8 6H5a3 3 0 0 0 3 5" /><path d="M16 6h3a3 3 0 0 1-3 5" /><path d="M12 13v4" /><path d="M9 21h6" /><path d="M10 17h4" /></>,
   alert: <><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z" /></>,
+  gymLogo: <><path d="M5 8v8" /><path d="M19 8v8" /><path d="M2.5 10v4" /><path d="M21.5 10v4" /><path d="M5 12h14" /><path d="M8 5.5 12 3l4 2.5" /><path d="M8 18.5 12 21l4-2.5" /></>,
 };
 
 export default function Icon({ name, className = '', title, size = 20 }) {

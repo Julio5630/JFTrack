@@ -11,11 +11,11 @@ export default function ExerciseLibrary() {
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState(null);
-  const [formData, setFormData] = useState({ name: '', category: 'Peito' });
+  const [formData, setFormData] = useState({ name: '', category: 'Peito', gifUrl: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const categories = ['Peito', 'Costas', 'Perna', 'Ombro', 'Bíceps', 'Tríceps', 'Outros'];
+  const categories = ['Peito', 'Costas', 'Perna', 'Ombro', 'Biceps', 'Triceps', 'Outros'];
 
   if (!data) return <div className="library-loading">Carregando...</div>;
 
@@ -27,13 +27,13 @@ export default function ExerciseLibrary() {
 
   const openCreateModal = () => {
     setEditingExercise(null);
-    setFormData({ name: '', category: 'Peito' });
+    setFormData({ name: '', category: 'Peito', gifUrl: '' });
     setModalOpen(true);
   };
 
   const openEditModal = (exercise) => {
     setEditingExercise(exercise);
-    setFormData({ name: exercise.name, category: exercise.category });
+    setFormData({ name: exercise.name, category: exercise.category, gifUrl: exercise.gifUrl || exercise.gif_url || '' });
     setModalOpen(true);
   };
 
@@ -49,16 +49,16 @@ export default function ExerciseLibrary() {
     try {
       if (editingExercise) {
         // Editar exercício existente
-        await api.updateExercise(editingExercise.id, formData.name.trim(), formData.category);
+        await api.updateExercise(editingExercise.id, formData.name.trim(), formData.category, formData.gifUrl.trim());
       } else {
         // Criar novo exercício
-        await api.createExercise(formData.name.trim(), formData.category);
+        await api.createExercise(formData.name.trim(), formData.category, formData.gifUrl.trim());
       }
       
       // Recarregar os dados
       await refreshData();
       setModalOpen(false);
-      setFormData({ name: '', category: 'Peito' });
+      setFormData({ name: '', category: 'Peito', gifUrl: '' });
     } catch (err) {
       console.error('Erro ao salvar exercício:', err);
       setError(err.message || 'Erro ao salvar exercício');
@@ -139,6 +139,9 @@ export default function ExerciseLibrary() {
                 <div className="exercise-info">
                   <h3>{ex.name}</h3>
                   <span className="category-badge">{ex.category}</span>
+                  <span className={`gif-status ${(ex.gifUrl || ex.gif_url) ? 'ready' : ''}`}>
+                    {(ex.gifUrl || ex.gif_url) ? 'GIF cadastrado' : 'Espaco para GIF'}
+                  </span>
                 </div>
                 <div className="card-actions">
                   <button className="action-btn edit" onClick={() => openEditModal(ex)} disabled={loading} aria-label="Editar exercicio"><Icon name="edit" size={17} /></button>
@@ -176,6 +179,20 @@ export default function ExerciseLibrary() {
                 >
                   {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
+              </div>
+              <div className="form-group">
+                <label>GIF DE EXECUCAO</label>
+                <input
+                  type="url"
+                  value={formData.gifUrl}
+                  onChange={(e) => setFormData({ ...formData, gifUrl: e.target.value })}
+                  placeholder="Cole aqui o link do GIF do exercicio"
+                />
+                {formData.gifUrl && (
+                  <div className="gif-preview">
+                    <img src={formData.gifUrl} alt={`GIF de execucao de ${formData.name || 'exercicio'}`} />
+                  </div>
+                )}
               </div>
             </div>
             <div className="modal-footer">

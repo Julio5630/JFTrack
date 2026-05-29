@@ -10,13 +10,12 @@ export default function History() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  if (!data) return <div className="history-loading">Carregando...</div>;
+  const safeData = data || { workoutHistory: [], weeklyRoutine: [], workoutTemplates: [], exercises: [] };
 
   // Calcular recordes por exercício (maior volume = peso * reps)
   const records = useMemo(() => {
     const rec = {};
-    data.workoutHistory?.forEach(workout => {
+    safeData.workoutHistory?.forEach(workout => {
       workout.exercises?.forEach(ex => {
         ex.sets?.forEach(set => {
           const volume = (set.weight || 0) * (set.reps || 0);
@@ -33,7 +32,9 @@ export default function History() {
       });
     });
     return rec;
-  }, [data.workoutHistory]);
+  }, [safeData.workoutHistory]);
+
+  if (!data) return <div className="history-loading">Carregando...</div>;
 
   // Verificar se um dia possui algum recorde
   const dayHasRecord = (dateStr, workouts) => {
@@ -51,6 +52,8 @@ export default function History() {
   // Mesmo código de calendário anterior, mas com classe "record" quando dia tem recorde
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const firstDayOfMonth = new Date(year, month, 1);
   const lastDayOfMonth = new Date(year, month + 1, 0);
   const daysInMonth = lastDayOfMonth.getDate();
@@ -60,12 +63,13 @@ export default function History() {
   for (let i = 1; i <= daysInMonth; i++) {
     const date = new Date(year, month, i);
     const dateStr = date.toISOString().slice(0, 10);
-    const workoutsOnDay = data.workoutHistory?.filter(w => w.date === dateStr) || [];
+    const workoutsOnDay = safeData.workoutHistory?.filter(w => w.date === dateStr) || [];
     const hasWorkout = workoutsOnDay.length > 0;
-    const routineId = data.weeklyRoutine?.[date.getDay()];
-    const hasRoutine = routineId && data.workoutTemplates?.some(t => t.id === routineId);
-    let status = 'none';
+    const routineId = safeData.weeklyRoutine?.[date.getDay()];
+    const hasRoutine = routineId && safeData.workoutTemplates?.some(t => t.id === routineId);
+    let status = '';
     if (hasWorkout) status = 'completed';
+    else if (hasRoutine && date >= today) status = 'planned';
     else if (hasRoutine) status = 'missed';
 
     const hasRecord = dayHasRecord(dateStr, workoutsOnDay);
@@ -151,6 +155,7 @@ export default function History() {
                     {cell.hasRecord && <span className="crown-icon"><Icon name="trophy" size={16} /></span>}
                     {cell.status === 'completed' && !cell.hasRecord && <span className="indicator"><Icon name="check" size={14} /></span>}
                     {cell.status === 'missed' && <span className="indicator"><Icon name="alert" size={14} /></span>}
+                    {cell.status === 'planned' && <span className="indicator"><Icon name="calendar" size={14} /></span>}
                   </>
                 )}
               </motion.div>
@@ -159,7 +164,7 @@ export default function History() {
           <div className="legend">
             <div className="legend-item"><div className="legend-color completed"></div><span>Treino realizado</span></div>
             <div className="legend-item"><div className="legend-color missed"></div><span>Treino perdido</span></div>
-            <div className="legend-item"><div className="legend-color none"></div><span>Descanso / Sem treino</span></div>
+            <div className="legend-item"><div className="legend-color planned"></div><span>Treino futuro</span></div>
             <div className="legend-item"><div className="legend-color record"></div><span>Recorde pessoal!</span></div>
           </div>
         </div>
@@ -193,7 +198,7 @@ export default function History() {
                     <div key={workout.id} className="workout-detail">
                       <h3>{workout.name}</h3>
                       {workout.exercises.map(ex => {
-                        const exName = data.exercises?.find(e => e.id === ex.exerciseId)?.name || 'Exercício';
+                        const exName = safeData.exercises?.find(e => e.id === ex.exerciseId)?.name || 'Exercício';
                         const isRecord = ex.sets.some(set => {
                           const volume = (set.weight || 0) * (set.reps || 0);
                           const record = records[ex.exerciseId];

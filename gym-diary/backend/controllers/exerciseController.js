@@ -3,12 +3,12 @@ const { query } = require('../config/database');
 // 📌 Criar exercício
 const createExercise = async (req, res) => {
     try {
-        const { name, category } = req.body;
+        const { name, category, gifUrl = '' } = req.body;
         const userId = req.user.id;
 
         await query(
-            'INSERT INTO exercises (user_id, name, category) VALUES (?, ?, ?)',
-            [userId, name, category]
+            'INSERT INTO exercises (user_id, name, category, gif_url) VALUES (?, ?, ?, ?)',
+            [userId, name, category, gifUrl]
         );
 
         res.status(201).json({ message: 'Exercício criado com sucesso' });
@@ -44,12 +44,12 @@ const getExercises = async (req, res) => {
 const updateExercise = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, category } = req.body;
+        const { name, category, gifUrl = '' } = req.body;
         const userId = req.user.id;
 
         const result = await query(
-            'UPDATE exercises SET name = ?, category = ? WHERE id = ? AND user_id = ?',
-            [name, category, id, userId]
+            'UPDATE exercises SET name = ?, category = ?, gif_url = ? WHERE id = ? AND user_id = ?',
+            [name, category, gifUrl, id, userId]
         );
 
         if (result.affectedRows === 0) {

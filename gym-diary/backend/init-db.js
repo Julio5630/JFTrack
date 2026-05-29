@@ -1,6 +1,7 @@
 // init-db.js
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const { seedDefaultExercises } = require('./utils/defaultExercises');
 
 const config = {
     host: process.env.DB_HOST || 'localhost',
@@ -43,11 +44,17 @@ async function initDatabase() {
                 user_id INT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 category VARCHAR(50) NOT NULL,
+                gif_url VARCHAR(500) DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 UNIQUE KEY unique_user_exercise (user_id, name)
             )
         `);
+
+        const [exerciseColumns] = await connection.query("SHOW COLUMNS FROM exercises LIKE 'gif_url'");
+        if (exerciseColumns.length === 0) {
+            await connection.query("ALTER TABLE exercises ADD COLUMN gif_url VARCHAR(500) DEFAULT '' AFTER category");
+        }
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS workout_templates (
@@ -131,6 +138,12 @@ async function initDatabase() {
         } else {
             console.log(' Usuário admin já existe');
         }
+
+        const [users] = await connection.query('SELECT id FROM users');
+        for (const user of users) {
+            await seedDefaultExercises(connection.query.bind(connection), user.id);
+        }
+        console.log(' Exercícios padrão garantidos para todos os usuários');
 
         console.log('\n Banco de dados inicializado com sucesso!');
         console.log(' Detalhes da conexão:');

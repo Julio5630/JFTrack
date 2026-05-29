@@ -271,9 +271,13 @@
   color: #ff6b6b;
 }
 
-.calendar-day.none {
-  background: rgba(128, 128, 128, 0.2);
-  border-color: #6c757d;
+.calendar-day.planned {
+  background: rgba(52, 152, 219, 0.24);
+  border-color: #3498db;
+}
+
+.calendar-day.planned .day-number {
+  color: #9bd3ff;
 }
 
 /* Legenda */
@@ -314,9 +318,9 @@
   border: 1px solid #dc3545;
 }
 
-.legend-color.none {
-  background: rgba(128, 128, 128, 0.4);
-  border: 1px solid #6c757d;
+.legend-color.planned {
+  background: rgba(52, 152, 219, 0.55);
+  border: 1px solid #3498db;
 }
 
 /* Modal */

@@ -1,6 +1,7 @@
 const { query } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
 const { toUserDto } = require('./authController');
+const { seedDefaultExercises } = require('../utils/defaultExercises');
 
 const getUsers = async (req, res) => {
     try {
@@ -28,6 +29,7 @@ const createUser = async (req, res) => {
             'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
             [name, email, hashed, Boolean(isAdmin)]
         );
+        await seedDefaultExercises(query, result.insertId);
 
         res.status(201).json({
             user: {
