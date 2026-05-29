@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 const { hashPassword, comparePassword } = require('../utils/hash');
 const { seedDefaultExercises } = require('../utils/defaultExercises');
+const { ensureUserProfiles, getUserProfiles, normalizeProfiles } = require('../utils/profiles');
+const { applyPendingGymInvites } = require('../utils/gymMemberships');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
@@ -9,7 +11,8 @@ const toUserDto = (user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
-    isAdmin: Boolean(user.is_admin)
+    isAdmin: Boolean(user.is_admin),
+    profiles: normalizeProfiles(user.profiles || (user.is_admin ? ['student', 'admin'] : ['student']))
 });
 
 // LOGIN
@@ -40,9 +43,11 @@ const login = async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        const profiles = await getUserProfiles(query, user.id, Boolean(user.is_admin));
+
         res.json({
             token,
-            user: toUserDto(user)
+            user: toUserDto({ ...user, profiles })
         });
     } catch (error) {
         console.error(error);
@@ -61,6 +66,8 @@ const register = async (req, res) => {
             'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
             [name, email, hashed]
         );
+        await ensureUserProfiles(query, result.insertId);
+        await applyPendingGymInvites(query, result.insertId, email);
         await seedDefaultExercises(query, result.insertId);
 
         res.status(201).json({ message: 'Usuário criado' });

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
+const { getUserProfiles } = require('../utils/profiles');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
@@ -25,6 +26,7 @@ const authenticateToken = async (req, res, next) => {
         }
 
         req.user = users[0];
+        req.user.profiles = await getUserProfiles(query, req.user.id, Boolean(req.user.is_admin));
         next();
     } catch (error) {
         return res.status(403).json({ error: 'Token inválido' });

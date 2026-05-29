@@ -180,9 +180,11 @@ npm run build
 
 ---
 ## Dados de acesso
-| Usuario | Senha |
-|:----------:|:-----------:|
-| admin@treino.com | admin123 |
+Aluno: aluno@teste.com
+Personal: personal@teste.com
+Academia: academia@teste.com
+Admin: admin.teste@teste.com
+Senha para todos: 123456
 
 
 ## Estrutura de Diretórios

@@ -5,7 +5,7 @@ import Icon from './Icon';
 import './Navbar.css';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, activeProfile, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,16 +30,34 @@ export default function Navbar() {
     setIsMenuOpen(false);
   };
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: 'home' },
-    { path: '/execution', label: 'Execucao', icon: 'dumbbell' },
-    { path: '/create', label: 'Criar Treino', icon: 'pencil' },
-    { path: '/routines', label: 'Rotinas', icon: 'calendar' },
-    { path: '/library', label: 'Biblioteca', icon: 'book' },
-    { path: '/history', label: 'Historico', icon: 'history' },
-    { path: '/progress', label: 'Progresso', icon: 'chart' },
-    ...(user?.isAdmin ? [{ path: '/admin', label: 'Admin', icon: 'shield' }] : [])
-  ];
+  const navByProfile = {
+    student: [
+      { path: '/dashboard', label: 'Dashboard', icon: 'home' },
+      { path: '/execution', label: 'Execucao', icon: 'dumbbell' },
+      { path: '/create', label: 'Criar Treino', icon: 'pencil' },
+      { path: '/library', label: 'Biblioteca', icon: 'book' },
+      { path: '/history', label: 'Historico', icon: 'history' },
+      { path: '/progress', label: 'Progresso', icon: 'chart' },
+      { path: '/gym/setup', label: 'Academia', icon: 'gymLogo' }
+    ],
+    personal: [
+      { path: '/dashboard', label: 'Inicio', icon: 'home' },
+      { path: '/personal/alunos', label: 'Alunos', icon: 'userPlus' },
+      { path: '/personal/treinos', label: 'Treinos', icon: 'dumbbell' },
+      { path: '/personal/avaliacoes', label: 'Avaliacoes', icon: 'clipboard' }
+    ],
+    gym: [
+      { path: '/dashboard', label: 'Inicio', icon: 'home' },
+      { path: '/gym/alunos', label: 'Alunos', icon: 'userPlus' },
+      { path: '/gym/personais', label: 'Personais', icon: 'clipboard' },
+      { path: '/gym/relatorios', label: 'Relatorios', icon: 'chart' }
+    ],
+    admin: [
+      { path: '/dashboard', label: 'Admin', icon: 'shield' }
+    ]
+  };
+  const navItems = navByProfile[activeProfile] || navByProfile.student;
+  const currentProfile = user?.profiles?.find(profile => profile.type === activeProfile)?.label;
 
   return (
     <nav className="industrial-navbar">
@@ -47,6 +65,7 @@ export default function Navbar() {
         <div className="nav-brand">
           <span className="brand-icon"><Icon name="gymLogo" size={26} title="Gym Diary" /></span>
           <span className="brand-text">GYM<span>DIARY</span></span>
+          {currentProfile && <span className="profile-pill">{currentProfile}</span>}
           <div className="brand-rivet"></div>
         </div>
 

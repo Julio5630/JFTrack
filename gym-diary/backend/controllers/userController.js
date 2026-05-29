@@ -2,6 +2,8 @@ const { query } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
 const { toUserDto } = require('./authController');
 const { seedDefaultExercises } = require('../utils/defaultExercises');
+const { ensureUserProfiles } = require('../utils/profiles');
+const { applyPendingGymInvites } = require('../utils/gymMemberships');
 
 const getUsers = async (req, res) => {
     try {
@@ -29,14 +31,18 @@ const createUser = async (req, res) => {
             'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
             [name, email, hashed, Boolean(isAdmin)]
         );
+        await ensureUserProfiles(query, result.insertId, Boolean(isAdmin));
+        await applyPendingGymInvites(query, result.insertId, email);
         await seedDefaultExercises(query, result.insertId);
+        const profiles = await ensureUserProfiles(query, result.insertId, Boolean(isAdmin));
 
         res.status(201).json({
             user: {
                 id: result.insertId,
                 name,
                 email,
-                isAdmin: Boolean(isAdmin)
+                isAdmin: Boolean(isAdmin),
+                profiles
             }
         });
     } catch (error) {

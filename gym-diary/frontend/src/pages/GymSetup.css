@@ -1,0 +1,143 @@
+.gym-setup-container {
+  position: relative;
+  min-height: 100vh;
+  background: #0a0c0f;
+  font-family: 'Roboto Condensed', sans-serif;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+.gym-setup-content {
+  position: relative;
+  z-index: 2;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.gym-form {
+  background: rgba(18, 22, 28, 0.9);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-left: 3px solid #ff6b35;
+  border-radius: 6px;
+  padding: 24px;
+  color: #f4f7fb;
+}
+
+.gym-form-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  color: #ff6b35;
+}
+
+.gym-form-title h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.gym-form-title p {
+  margin: 4px 0 0;
+  color: #cbd2dc;
+}
+
+.gym-message {
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,107,53,0.35);
+  background: rgba(255,107,53,0.12);
+  color: #ffd5c4;
+}
+
+.gym-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.gym-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #d7dde5;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.gym-form-grid label.wide {
+  grid-column: 1 / -1;
+}
+
+.gym-form-grid input,
+.gym-form-grid select {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid #3a3f44;
+  border-radius: 3px;
+  color: #fff;
+  font-family: monospace;
+}
+
+.gym-form-grid input:focus,
+.gym-form-grid select:focus {
+  border-color: #ff6b35;
+  outline: none;
+}
+
+.gym-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.primary-action,
+.secondary-action {
+  border: none;
+  border-radius: 3px;
+  padding: 10px 16px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.primary-action {
+  background: #ff6b35;
+}
+
+.primary-action:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.secondary-action {
+  background: #2c3138;
+}
+
+.gym-setup-loading {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: #0a0c0f;
+  color: #fff;
+  font-family: monospace;
+}
+
+@media (max-width: 680px) {
+  .gym-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gym-actions {
+    flex-direction: column-reverse;
+  }
+
+  .primary-action,
+  .secondary-action {
+    width: 100%;
+  }
+}

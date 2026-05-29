@@ -563,3 +563,69 @@ Ao final da refatoração, o JFTrack deve deixar de ser apenas um diário de tre
 - Permissões por perfil
 
 O sistema deve continuar simples para o aluno, mas mais poderoso para o personal e para a academia.
+
+==============================================================================================================
+
+Projeto: JFTrack
+
+Objetivo:
+Refatorar o JFTrack de diário de treino para plataforma fitness com perfis:
+- Aluno
+- Personal
+- Academia
+- Admin
+
+Etapa 1 feita:
+- Criada estrutura de múltiplos perfis.
+- Perfis: student, personal, gym, admin.
+- Criada tabela user_profiles.
+- Login agora retorna profiles.
+- Frontend tem activeProfile.
+- Se usuário tem mais de um perfil, vai para tela ProfileSelect.
+- Navbar muda conforme perfil ativo.
+- Criadas telas ProfileSelect e ProfileWorkspace.
+
+Etapa 2 feita:
+- Criada estrutura de Academia.
+- Criada tabela gyms.
+- Academia possui nome, telefone, e-mail, endereço, responsável, status, created_at e updated_at.
+- Qualquer usuário pode transformar conta em academia pela rota /gym/setup.
+- APIs criadas:
+  GET /api/gyms/me
+  PUT /api/gyms/me
+- Ao criar academia, usuário ganha perfil gym.
+- Painel da academia mostra resumo dos dados.
+
+Etapa 3 feita:
+- Criada estrutura de vínculo entre academia e usuários.
+- Criada tabela gym_memberships.
+- Campos: gym_id, user_id, invited_email, role, status, created_at, updated_at.
+- Roles: student e personal.
+- Status: active, pending, removed.
+- Academia pode adicionar aluno/personal por e-mail.
+- Se usuário existe, vínculo fica active.
+- Se usuário não existe, convite fica pending.
+- Quando usuário se cadastra depois com o e-mail convidado, convite vira active.
+- APIs criadas:
+  GET /api/gyms/me/members?role=student
+  GET /api/gyms/me/members?role=personal
+  POST /api/gyms/me/members
+  DELETE /api/gyms/me/members/:id
+- Frontend do painel da academia agora tem formulários para adicionar alunos e personais e listas com status ativo/pendente.
+
+Usuários de teste:
+- aluno@teste.com / 123456
+- personal@teste.com / 123456
+- academia@teste.com / 123456
+- admin.teste@teste.com / 123456
+- admin@treino.com / admin123
+
+Última etapa concluída:
+Etapa 3: Vincular Alunos e Personais à Academia.
+
+Próxima etapa sugerida:
+Etapa 4: Refatorar fluxo do aluno.
+- Aluno treino próprio: Início, Meus Treinos, Histórico, Sair.
+- Aluno academia: Início, Treinos, Histórico, Avaliação Física, Sair.
+- Aluno academia não pode criar/editar treino.
+- Aluno treino próprio mantém criação de treino e biblioteca, mas unificadas em Meus Treinos.

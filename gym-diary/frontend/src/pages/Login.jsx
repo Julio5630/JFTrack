@@ -11,11 +11,11 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = login(email, password);
-    if (success) {
-      navigate('/dashboard');
+    const result = await login(email, password);
+    if (result.success) {
+      navigate(result.nextPath);
     } else {
       setError('Credenciais inválidas');
     }

@@ -52,6 +52,17 @@
   color: #ff6b35;
 }
 
+.profile-pill {
+  padding: 3px 8px;
+  border: 1px solid rgba(255,107,53,0.38);
+  border-radius: 999px;
+  color: #ffb08d;
+  background: rgba(255,107,53,0.12);
+  font-family: monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+}
+
 .brand-rivet {
   position: absolute;
   bottom: -5px;

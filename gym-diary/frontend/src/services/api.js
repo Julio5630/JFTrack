@@ -97,4 +97,15 @@ export const api = {
         body: JSON.stringify(workoutData),
     }),
     getWorkoutDetail: (id) => request(`/history/${id}`),
+    getMyGym: () => request('/gyms/me'),
+    saveMyGym: (gymData) => request('/gyms/me', {
+        method: 'PUT',
+        body: JSON.stringify(gymData),
+    }),
+    getGymMembers: (role) => request(`/gyms/me/members?role=${encodeURIComponent(role)}`),
+    addGymMember: (email, role) => request('/gyms/me/members', {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+    }),
+    removeGymMember: (id) => request(`/gyms/me/members/${id}`, { method: 'DELETE' }),
 };

@@ -2,6 +2,7 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 const { seedDefaultExercises } = require('./utils/defaultExercises');
+const { ensureUserProfiles } = require('./utils/profiles');
 
 const config = {
     host: process.env.DB_HOST || 'localhost',
@@ -35,6 +36,52 @@ async function initDatabase() {
                 password VARCHAR(255) NOT NULL,
                 is_admin BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS user_profiles (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                profile_type ENUM('student', 'personal', 'gym', 'admin') NOT NULL,
+                status ENUM('active', 'pending', 'inactive') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_user_profile (user_id, profile_type)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS gyms (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                owner_user_id INT NOT NULL,
+                name VARCHAR(140) NOT NULL,
+                phone VARCHAR(40) DEFAULT '',
+                email VARCHAR(120) DEFAULT '',
+                address VARCHAR(255) DEFAULT '',
+                responsible VARCHAR(120) DEFAULT '',
+                status ENUM('active', 'inactive') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_gym_owner (owner_user_id)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS gym_memberships (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                gym_id INT NOT NULL,
+                user_id INT,
+                invited_email VARCHAR(120) NOT NULL,
+                role ENUM('student', 'personal') NOT NULL,
+                status ENUM('active', 'pending', 'removed') DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                UNIQUE KEY unique_gym_user_role (gym_id, user_id, role),
+                UNIQUE KEY unique_gym_email_role (gym_id, invited_email, role)
             )
         `);
 
@@ -144,6 +191,12 @@ async function initDatabase() {
             await seedDefaultExercises(connection.query.bind(connection), user.id);
         }
         console.log(' Exercícios padrão garantidos para todos os usuários');
+
+        const [profileUsers] = await connection.query('SELECT id, is_admin FROM users');
+        for (const user of profileUsers) {
+            await ensureUserProfiles(connection.query.bind(connection), user.id, Boolean(user.is_admin));
+        }
+        console.log(' Perfis de usuário garantidos');
 
         console.log('\n Banco de dados inicializado com sucesso!');
         console.log(' Detalhes da conexão:');
