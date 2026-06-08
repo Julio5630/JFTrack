@@ -1,6 +1,7 @@
 // init-db.js
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const { getDatabaseConfig } = require('./config/dbConfig');
 const { seedDefaultExercises } = require('./utils/defaultExercises');
 const { ensureUserProfiles } = require('./utils/profiles');
 
@@ -90,19 +91,12 @@ const toNumberOrNull = (value) => {
     return Number.isFinite(number) ? number : null;
 };
 
-const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'senac',
-    // Removido o SSL para MySQL local
-    // ssl: { rejectUnauthorized: true }
-};
+const config = getDatabaseConfig(false);
 
 async function initDatabase() {
     let connection;
     try {
-        console.log(' Conectando ao MySQL local...');
+        console.log(' Conectando ao MySQL...');
         connection = await mysql.createConnection(config);
         console.log(' Conectado!');
 

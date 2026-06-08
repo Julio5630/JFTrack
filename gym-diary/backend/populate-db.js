@@ -1,17 +1,12 @@
 // populate-db.js
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const { getDatabaseConfig } = require('./config/dbConfig');
 
 async function populateDatabase() {
     let connection;
     try {
-        const config = {
-            host: process.env.DB_HOST || 'localhost',
-            port: parseInt(process.env.DB_PORT) || 3306,
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || 'senac',
-            database: process.env.DB_NAME || 'gym_diary'
-        };
+        const config = getDatabaseConfig(true);
 
         connection = await mysql.createConnection(config);
         console.log(' Conectado ao banco para popular dados!');
