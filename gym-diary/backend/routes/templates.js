@@ -9,15 +9,16 @@ const {
     getTemplateDetails,
     deleteTemplate
 } = require('../controllers/templateController');
+const { canManageOwnTraining } = require('../middlewares/permissions');
 
 // Templates
 router.get('/', getTemplates);
-router.post('/', createTemplate);
+router.post('/', canManageOwnTraining, createTemplate);
 router.get('/:id', getTemplateDetails);
-router.put('/:id', updateTemplate);
-router.delete('/:id', deleteTemplate);
+router.put('/:id', canManageOwnTraining, updateTemplate);
+router.delete('/:id', canManageOwnTraining, deleteTemplate);
 
 // Adicionar exercício ao template
-router.post('/:templateId/exercises', addExerciseToTemplate);
+router.post('/:templateId/exercises', canManageOwnTraining, addExerciseToTemplate);
 
 module.exports = router;

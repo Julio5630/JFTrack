@@ -1,6 +1,7 @@
 // src/pages/WorkoutExecution.jsx
 import { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import Icon from '../components/Icon';
@@ -8,6 +9,7 @@ import './WorkoutExecution.css';
 
 export default function WorkoutExecution() {
   const { data, updatePartial, refreshData } = useData();
+  const { isAcademyStudent } = useAuth();
   const navigate = useNavigate();
   const [currentWorkout, setCurrentWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,18 +23,16 @@ export default function WorkoutExecution() {
       return;
     }
 
-    const today = new Date().getDay();
-    const routineId = data.weeklyRoutine?.[today];
-    let template = null;
-    if (routineId) {
-      template = data.workoutTemplates?.find(w => w.id === routineId);
-    }
+    setCurrentWorkout(null);
+    setLoading(false);
+  }, [data, updatePartial]);
 
-    if (template) {
-      const workoutExercises = template.exercises.map(exItem => {
-        const exercise = data.exercises?.find(e => e.id === exItem.id);
-        const defaultSets = exItem.defaultSets || 3;
-        const sets = Array(defaultSets).fill().map(() => ({ reps: 8, weight: 0, completed: false }));
+  const createWorkoutFromTemplate = (template) => {
+    const workoutExercises = template.exercises.map(exItem => {
+      const exercise = data.exercises?.find(e => e.id === exItem.id);
+      const defaultSets = exItem.defaultSets || 3;
+      const suggestedReps = parseInt(String(exItem.defaultReps || '').match(/\d+/)?.[0], 10) || 8;
+      const sets = Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, completed: false }));
         return {
           exerciseId: exItem.id,
           exerciseName: exercise ? exercise.name : 'Exercício',
@@ -42,16 +42,13 @@ export default function WorkoutExecution() {
       });
       const newWorkout = {
         id: Date.now(),
+        templateId: template.id,
         name: template.name,
         exercises: workoutExercises,
       };
       setCurrentWorkout(newWorkout);
       updatePartial({ currentWorkout: newWorkout });
-    } else {
-      setCurrentWorkout(null);
-    }
-    setLoading(false);
-  }, [data, updatePartial]);
+  };
 
   const updateWorkout = (updatedWorkout) => {
     setCurrentWorkout(updatedWorkout);
@@ -110,6 +107,10 @@ export default function WorkoutExecution() {
     if (!currentWorkout) return;
     const historyEntry = {
       name: currentWorkout.name,
+      template_id: currentWorkout.templateId || null,
+      assignment_id: currentWorkout.assignmentId || null,
+      gym_id: currentWorkout.gymId || null,
+      source_type: currentWorkout.sourceType || (isAcademyStudent ? 'academy' : 'own'),
       date: new Date().toISOString().slice(0, 10),
       exercises: currentWorkout.exercises.map(ex => ({
         exerciseId: ex.exerciseId,
@@ -142,6 +143,11 @@ export default function WorkoutExecution() {
       });
       const newWorkout = {
         id: Date.now(),
+        templateId: template.id,
+        assignmentId: template.assignmentId,
+        gymId: template.gymId || null,
+        sourceType: isAcademyStudent ? 'academy' : 'own',
+        scopeKey: isAcademyStudent ? `academy:${template.gymId || 'selected'}` : 'own:own',
         name: template.name,
         exercises: workoutExercises,
       };
@@ -168,7 +174,7 @@ export default function WorkoutExecution() {
               <span className="rivet"></span>
               <span className="rivet"></span>
             </div>
-            <p className="user-greeting">NENHUM TREINO PROGRAMADO PARA HOJE</p>
+            <p className="user-greeting">ESCOLHA UM TREINO PARA INICIAR</p>
           </div>
           <div className="selector-card">
             <div className="card-corner"></div>
@@ -233,16 +239,18 @@ export default function WorkoutExecution() {
                     <h3>{exercise.exerciseName}</h3>
                     <span>{exercise.sets.filter(set => set.completed).length}/{exercise.sets.length} series</span>
                   </div>
-                  <button
-                    className="remove-exercise"
-                    onClick={() => {
-                      const newWorkout = { ...currentWorkout };
-                      newWorkout.exercises.splice(exIdx, 1);
-                      updateWorkout(newWorkout);
-                    }}
-                  >
-                    <Icon name="close" size={16} />
-                  </button>
+                  {!isAcademyStudent && (
+                    <button
+                      className="remove-exercise"
+                      onClick={() => {
+                        const newWorkout = { ...currentWorkout };
+                        newWorkout.exercises.splice(exIdx, 1);
+                        updateWorkout(newWorkout);
+                      }}
+                    >
+                      <Icon name="close" size={16} />
+                    </button>
+                  )}
                 </div>
                 <div className={`exercise-gif-slot ${exercise.gifUrl ? 'has-gif' : ''}`}>
                   {exercise.gifUrl ? (

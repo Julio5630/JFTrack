@@ -1,10 +1,44 @@
 const { pool, query } = require('../config/database');
 
+const toTemplateDto = (template, exercises = [], currentUserId = null) => ({
+    id: template.id,
+    user_id: template.user_id,
+    ownerUserId: template.user_id,
+    creatorName: template.creator_name || template.owner_name || null,
+    name: template.name,
+    frequency: template.frequency || '',
+    splitType: template.split_type || '',
+    split_type: template.split_type || '',
+    notes: template.notes || '',
+    createdByProfile: template.created_by_profile || 'student',
+    assignedStudentUserId: template.assigned_student_user_id || null,
+    gymId: template.gym_id || null,
+    status: template.status || 'active',
+    editableByStudent: template.editable_by_student === undefined
+        ? true
+        : Boolean(template.editable_by_student),
+    created_at: template.created_at,
+    canEdit: currentUserId ? Number(template.user_id) === Number(currentUserId) : false,
+    exercises
+});
+
 const createTemplate = async (req, res) => {
     const connection = await pool.getConnection();
     try {
-        const { name, exercises = [] } = req.body;
+        const {
+            name,
+            exercises = [],
+            frequency = '',
+            splitType = '',
+            notes = '',
+            assignedStudentUserId = null,
+            gymId = null,
+            status = 'active'
+        } = req.body;
         const userId = req.user.id;
+        const createdByProfile = req.activeProfile || (req.user.is_admin ? 'admin' : 'student');
+        const normalizedStatus = status === 'inactive' ? 'inactive' : 'active';
+        const editableByStudent = createdByProfile === 'student';
 
         if (!name || !Array.isArray(exercises) || exercises.length === 0) {
             return res.status(400).json({ error: 'Nome e exercicios sao obrigatorios' });
@@ -13,15 +47,28 @@ const createTemplate = async (req, res) => {
         await connection.beginTransaction();
 
         const [result] = await connection.execute(
-            'INSERT INTO workout_templates (user_id, name) VALUES (?, ?)',
-            [userId, name]
+            `INSERT INTO workout_templates
+             (user_id, name, frequency, split_type, notes, created_by_profile, assigned_student_user_id, gym_id, status, editable_by_student)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                name,
+                frequency,
+                splitType,
+                notes,
+                createdByProfile,
+                assignedStudentUserId || null,
+                gymId || null,
+                normalizedStatus,
+                editableByStudent
+            ]
         );
 
         for (const [index, exercise] of exercises.entries()) {
             await connection.execute(
-                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets)
-                 VALUES (?, ?, ?, ?)`,
-                [result.insertId, exercise.id, index, exercise.defaultSets || 3]
+                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [result.insertId, exercise.id, index, exercise.defaultSets || 3, exercise.defaultReps || '8-12']
             );
         }
 
@@ -45,13 +92,17 @@ const getTemplates = async (req, res) => {
         const userId = req.user.id;
 
         const templates = await query(
-            'SELECT * FROM workout_templates WHERE user_id = ? ORDER BY created_at DESC',
+            `SELECT wt.*, u.name AS creator_name
+             FROM workout_templates wt
+             JOIN users u ON u.id = wt.user_id
+             WHERE wt.user_id = ?
+             ORDER BY wt.created_at DESC`,
             [userId]
         );
 
         const exercises = templates.length > 0
             ? await query(
-                `SELECT te.template_id, te.exercise_id AS id, te.default_sets AS defaultSets, te.position
+                `SELECT te.template_id, te.exercise_id AS id, te.default_sets AS defaultSets, te.default_reps AS defaultReps, te.position
                  FROM template_exercises te
                  JOIN workout_templates wt ON wt.id = te.template_id
                  WHERE wt.user_id = ?
@@ -60,12 +111,13 @@ const getTemplates = async (req, res) => {
             )
             : [];
 
-        res.json(templates.map(template => ({
-            ...template,
-            exercises: exercises
+        res.json(templates.map(template => toTemplateDto(
+            template,
+            exercises
                 .filter(exercise => exercise.template_id === template.id)
-                .map(({ template_id, position, ...exercise }) => exercise)
-        })));
+                .map(({ template_id, position, ...exercise }) => exercise),
+            userId
+        )));
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar templates' });
@@ -76,8 +128,9 @@ const updateTemplate = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const { id } = req.params;
-        const { name, exercises = [] } = req.body;
+        const { name, exercises = [], frequency = '', splitType = '', notes = '', status = 'active' } = req.body;
         const userId = req.user.id;
+        const normalizedStatus = status === 'inactive' ? 'inactive' : 'active';
 
         if (!name || !Array.isArray(exercises) || exercises.length === 0) {
             return res.status(400).json({ error: 'Nome e exercicios sao obrigatorios' });
@@ -86,8 +139,8 @@ const updateTemplate = async (req, res) => {
         await connection.beginTransaction();
 
         const [result] = await connection.execute(
-            'UPDATE workout_templates SET name = ? WHERE id = ? AND user_id = ?',
-            [name, id, userId]
+            'UPDATE workout_templates SET name = ?, frequency = ?, split_type = ?, notes = ?, status = ? WHERE id = ? AND user_id = ?',
+            [name, frequency, splitType, notes, normalizedStatus, id, userId]
         );
 
         if (result.affectedRows === 0) {
@@ -99,9 +152,9 @@ const updateTemplate = async (req, res) => {
 
         for (const [index, exercise] of exercises.entries()) {
             await connection.execute(
-                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets)
-                 VALUES (?, ?, ?, ?)`,
-                [id, exercise.id, index, exercise.defaultSets || 3]
+                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [id, exercise.id, index, exercise.defaultSets || 3, exercise.defaultReps || '8-12']
             );
         }
 
@@ -119,7 +172,7 @@ const updateTemplate = async (req, res) => {
 const addExerciseToTemplate = async (req, res) => {
     try {
         const { templateId } = req.params;
-        const { exercise_id, position, default_sets } = req.body;
+        const { exercise_id, position, default_sets, default_reps } = req.body;
         const userId = req.user.id;
 
         const template = await query(
@@ -132,9 +185,9 @@ const addExerciseToTemplate = async (req, res) => {
         }
 
         await query(
-            `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets)
-             VALUES (?, ?, ?, ?)`,
-            [templateId, exercise_id, position, default_sets || 3]
+            `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
+             VALUES (?, ?, ?, ?, ?)`,
+            [templateId, exercise_id, position, default_sets || 3, default_reps || '8-12']
         );
 
         res.status(201).json({ message: 'Exercicio adicionado ao template' });
@@ -150,7 +203,10 @@ const getTemplateDetails = async (req, res) => {
         const userId = req.user.id;
 
         const template = await query(
-            'SELECT * FROM workout_templates WHERE id = ? AND user_id = ?',
+            `SELECT wt.*, u.name AS creator_name
+             FROM workout_templates wt
+             JOIN users u ON u.id = wt.user_id
+             WHERE wt.id = ? AND wt.user_id = ?`,
             [id, userId]
         );
 
@@ -159,7 +215,7 @@ const getTemplateDetails = async (req, res) => {
         }
 
         const exercises = await query(
-            `SELECT te.*, e.name, e.category
+            `SELECT te.*, te.default_reps AS defaultReps, e.name, e.category
              FROM template_exercises te
              JOIN exercises e ON e.id = te.exercise_id
              WHERE te.template_id = ?
@@ -168,8 +224,7 @@ const getTemplateDetails = async (req, res) => {
         );
 
         res.json({
-            template: template[0],
-            exercises
+            template: toTemplateDto(template[0], exercises, userId)
         });
     } catch (error) {
         console.error(error);

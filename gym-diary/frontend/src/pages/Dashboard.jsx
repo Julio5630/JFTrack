@@ -5,15 +5,13 @@ import Icon from '../components/Icon';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAcademyStudent } = useAuth();
   const { data } = useData();
   const navigate = useNavigate();
 
   if (!data) return <div className="dashboard-loading">Carregando...</div>;
 
-  const today = new Date().getDay();
-  const todayWorkoutId = data.weeklyRoutine?.[today];
-  const todayWorkout = data.workoutTemplates?.find(w => w.id === todayWorkoutId);
+  const availableWorkouts = data.workoutTemplates?.length || 0;
   const lastWorkout = data.workoutHistory?.[0];
 
   const weekAgo = new Date();
@@ -54,30 +52,30 @@ export default function Dashboard() {
             <div className="card-corner"></div>
             <div className="card-header">
               <span className="card-icon"><Icon name="flame" size={28} /></span>
-              <h2>TREINO DE HOJE</h2>
+              <h2>{isAcademyStudent ? 'TREINOS RECEBIDOS' : 'MEUS TREINOS'}</h2>
             </div>
             <div className="card-body">
-              {todayWorkout ? (
+              {availableWorkouts > 0 ? (
                 <>
-                  <div className="workout-name">{todayWorkout.name}</div>
+                  <div className="workout-name">{availableWorkouts} treino{availableWorkouts === 1 ? '' : 's'} disponive{availableWorkouts === 1 ? 'l' : 'is'}</div>
                   <div className="workout-stats">
-                    {todayWorkout.exercises?.length || 0} exercicios
+                    Escolha um treino para executar
                   </div>
                   <button
                     className="industrial-btn"
-                    onClick={() => navigate('/execution')}
+                    onClick={() => navigate(isAcademyStudent ? '/student/workouts' : '/my-workouts')}
                   >
-                    INICIAR TREINO
+                    {isAcademyStudent ? 'VER TREINOS' : 'ABRIR MEUS TREINOS'}
                   </button>
                 </>
               ) : (
                 <div className="no-workout">
-                  Nenhum treino programado para hoje
+                  {isAcademyStudent ? 'Nenhum treino recebido ainda' : 'Nenhum treino criado ainda'}
                   <button
                     className="industrial-btn small"
-                    onClick={() => navigate('/routines')}
+                    onClick={() => navigate(isAcademyStudent ? '/student/workouts' : '/my-workouts')}
                   >
-                    CONFIGURAR ROTINA
+                    {isAcademyStudent ? 'VER TREINOS' : 'MEUS TREINOS'}
                   </button>
                 </div>
               )}
@@ -145,10 +143,18 @@ export default function Dashboard() {
               <h2>ACESSO RAPIDO</h2>
             </div>
             <div className="quick-buttons">
-              <button onClick={() => navigate('/execution')} className="industrial-btn">EXECUCAO</button>
-              <button onClick={() => navigate('/create')} className="industrial-btn">CRIAR TREINO</button>
-              <button onClick={() => navigate('/library')} className="industrial-btn">BIBLIOTECA</button>
-              <button onClick={() => navigate('/progress')} className="industrial-btn">PROGRESSO</button>
+              {isAcademyStudent ? (
+                <>
+                  <button onClick={() => navigate('/student/workouts')} className="industrial-btn">TREINOS</button>
+                  <button onClick={() => navigate('/history')} className="industrial-btn">HISTORICO</button>
+                  <button onClick={() => navigate('/student/assessment')} className="industrial-btn">AVALIACAO FISICA</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => navigate('/my-workouts')} className="industrial-btn">MEUS TREINOS</button>
+                  <button onClick={() => navigate('/history')} className="industrial-btn">HISTORICO</button>
+                </>
+              )}
             </div>
           </div>
         </div>

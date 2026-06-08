@@ -7,11 +7,12 @@ const {
     updateExercise,
     deleteExercise
 } = require('../controllers/exerciseController');
+const { canManageOwnTraining } = require('../middlewares/permissions');
 
 // Todas protegidas
 router.get('/', getExercises);
-router.post('/', createExercise);
-router.put('/:id', updateExercise);
-router.delete('/:id', deleteExercise);
+router.post('/', canManageOwnTraining, createExercise);
+router.put('/:id', canManageOwnTraining, updateExercise);
+router.delete('/:id', canManageOwnTraining, deleteExercise);
 
 module.exports = router;

@@ -63,17 +63,6 @@
   letter-spacing: 0.5px;
 }
 
-.brand-rivet {
-  position: absolute;
-  bottom: -5px;
-  right: -8px;
-  width: 8px;
-  height: 8px;
-  background: radial-gradient(circle at 30% 30%, #b0b0b0, #4a4a4a);
-  border-radius: 50%;
-  box-shadow: 0 0 2px #000;
-}
-
 /* Hamburger button */
 .hamburger {
   display: none;
@@ -122,7 +111,7 @@
 }
 
 /* Links individuais */
-.nav-link, .logout-link {
+.nav-link, .logout-link, .mode-switch-link {
   position: relative;
   display: flex;
   align-items: center;
@@ -141,7 +130,7 @@
   border-radius: 2px;
 }
 
-.nav-link::before, .logout-link::before {
+.nav-link::before, .logout-link::before, .mode-switch-link::before {
   content: '';
   position: absolute;
   bottom: 0;
@@ -152,7 +141,7 @@
   transition: width 0.2s;
 }
 
-.nav-link:hover::before, .logout-link:hover::before {
+.nav-link:hover::before, .logout-link:hover::before, .mode-switch-link:hover::before {
   width: 100%;
 }
 
@@ -232,7 +221,7 @@
     gap: 0;
   }
 
-  .nav-link, .logout-link {
+  .nav-link, .logout-link, .mode-switch-link {
     width: 100%;
     padding: 14px 20px;
     border-radius: 0;
@@ -244,7 +233,7 @@
     background: rgba(255,107,53,0.15);
   }
 
-  .nav-link::before, .logout-link::before {
+  .nav-link::before, .logout-link::before, .mode-switch-link::before {
     display: none;
   }
 
@@ -261,7 +250,7 @@
 
 /* Desktop ajustes */
 @media (min-width: 769px) {
-  .nav-link:hover, .logout-link:hover {
+  .nav-link:hover, .logout-link:hover, .mode-switch-link:hover {
     transform: translateY(-1px);
   }
 }

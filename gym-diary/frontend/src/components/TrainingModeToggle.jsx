@@ -25,7 +25,7 @@ export default function TrainingModeToggle() {
   return (
     <button onClick={toggle} className={`mode-toggle ${active ? 'active' : ''}`} aria-pressed={active}>
       <Icon name={active ? 'logout' : 'dumbbell'} size={18} />
-      <span>{active ? 'Sair do modo' : 'Modo Treino'}</span>
+      <span>{active ? 'Sair do treino' : 'Iniciar treino'}</span>
     </button>
   );
 }

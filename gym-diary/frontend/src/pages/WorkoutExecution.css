@@ -522,32 +522,91 @@ body.training-mode .industrial-navbar {
 }
 
 body.training-mode .execution-container {
-  padding: 0;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(255,107,53,0.12), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(46,204,113,0.08), transparent 32%),
+    #0a0c0f;
 }
 
 body.training-mode .execution-card {
-  margin: 0;
-  border-radius: 0;
-  min-height: 100vh;
-  background: rgba(18, 22, 28, 0.98) !important;
+  max-width: 1180px;
+  margin: 0 auto 18px;
+  border-radius: 12px;
+  min-height: auto;
+  background: rgba(18, 22, 28, 0.94) !important;
+  border-color: rgba(255,107,53,0.24);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.38);
 }
 
 body.training-mode .execution-content {
-  max-width: 100%;
+  max-width: 1180px;
   margin: 0;
+  margin-inline: auto;
 }
 
 body.training-mode .dashboard-header {
-  margin-top: 10px;
+  margin: 0 auto 14px;
+  max-width: 1180px;
+}
+
+body.training-mode .dashboard-header h1 {
+  font-size: 1.45rem;
+}
+
+body.training-mode .workout-header {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(10,12,15,0.92);
+  backdrop-filter: blur(12px);
+}
+
+body.training-mode .execution-progress {
+  height: 12px;
+  margin: 8px 0 20px;
+}
+
+body.training-mode .exercises-list {
+  max-height: none;
+  overflow: visible;
+  gap: 18px;
 }
 
 body.training-mode .exercise-block {
-  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(220px, 310px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.34) !important;
+  border-color: rgba(255,255,255,0.14);
+}
+
+body.training-mode .exercise-header {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+body.training-mode .exercise-gif-slot {
+  height: 100%;
+  min-height: 220px;
+  aspect-ratio: auto;
+  margin-bottom: 0;
 }
 
 body.training-mode .set-row {
-  padding: 15px;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: 82px 58px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.42) !important;
 }
 
 body.training-mode .checkbox-wrapper {
@@ -556,7 +615,8 @@ body.training-mode .checkbox-wrapper {
 }
 
 body.training-mode .control-group {
-  padding: 8px 16px;
+  justify-content: center;
+  padding: 8px 12px;
 }
 
 body.training-mode .control-btn {
@@ -580,6 +640,20 @@ body.training-mode .remove-exercise,
 body.training-mode .remove-set {
   font-size: 1.2rem;
   padding: 6px;
+}
+
+body.training-mode .sets-container {
+  margin-bottom: 0;
+}
+
+body.training-mode .set-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(145px, 1fr)) 36px;
+  gap: 10px;
+}
+
+body.training-mode .add-set-btn {
+  grid-column: 2;
 }
 
 /* Responsividade */
@@ -655,6 +729,30 @@ body.training-mode .remove-set {
   }
   .exercises-list {
     max-height: calc(100vh - 200px);
+  }
+
+  body.training-mode .execution-container {
+    padding: 10px;
+  }
+
+  body.training-mode .exercise-block {
+    grid-template-columns: 1fr;
+  }
+
+  body.training-mode .exercise-gif-slot {
+    min-height: 180px;
+  }
+
+  body.training-mode .set-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.training-mode .set-controls {
+    grid-template-columns: 1fr;
+  }
+
+  body.training-mode .add-set-btn {
+    grid-column: auto;
   }
 }
 

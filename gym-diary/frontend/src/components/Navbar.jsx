@@ -5,7 +5,14 @@ import Icon from './Icon';
 import './Navbar.css';
 
 export default function Navbar() {
-  const { user, activeProfile, logout } = useAuth();
+  const {
+    user,
+    activeProfile,
+    isAcademyStudent,
+    studentContext,
+    requestStudentModeSelection,
+    logout
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,13 +39,17 @@ export default function Navbar() {
 
   const navByProfile = {
     student: [
-      { path: '/dashboard', label: 'Dashboard', icon: 'home' },
-      { path: '/execution', label: 'Execucao', icon: 'dumbbell' },
-      { path: '/create', label: 'Criar Treino', icon: 'pencil' },
-      { path: '/library', label: 'Biblioteca', icon: 'book' },
-      { path: '/history', label: 'Historico', icon: 'history' },
-      { path: '/progress', label: 'Progresso', icon: 'chart' },
-      { path: '/gym/setup', label: 'Academia', icon: 'gymLogo' }
+      { path: '/dashboard', label: 'Inicio', icon: 'home' },
+      ...(isAcademyStudent
+        ? [
+            { path: '/student/workouts', label: 'Treinos', icon: 'dumbbell' },
+            { path: '/history', label: 'Historico', icon: 'history' },
+            { path: '/student/assessment', label: 'Avaliacao Fisica', icon: 'clipboard' }
+          ]
+        : [
+            { path: '/my-workouts', label: 'Meus Treinos', icon: 'dumbbell' },
+            { path: '/history', label: 'Historico', icon: 'history' }
+          ])
     ],
     personal: [
       { path: '/dashboard', label: 'Inicio', icon: 'home' },
@@ -50,14 +61,33 @@ export default function Navbar() {
       { path: '/dashboard', label: 'Inicio', icon: 'home' },
       { path: '/gym/alunos', label: 'Alunos', icon: 'userPlus' },
       { path: '/gym/personais', label: 'Personais', icon: 'clipboard' },
-      { path: '/gym/relatorios', label: 'Relatorios', icon: 'chart' }
+      { path: '/gym/treinos', label: 'Treinos', icon: 'dumbbell' },
+      { path: '/gym/avaliacoes', label: 'Avaliacoes', icon: 'clipboard' },
+      { path: '/gym/relatorios', label: 'Relatorios', icon: 'chart' },
+      { path: '/gym/configuracoes', label: 'Configuracoes', icon: 'settings' }
     ],
     admin: [
       { path: '/dashboard', label: 'Admin', icon: 'shield' }
     ]
   };
+
+  const handleChangeStudentMode = () => {
+    requestStudentModeSelection();
+    setIsMenuOpen(false);
+    navigate('/profile-select');
+  };
+
+  const handleChangePersonalGym = () => {
+    localStorage.removeItem('selectedPersonalGymId');
+    localStorage.setItem('personalGymSelectionRequested', 'true');
+    window.dispatchEvent(new Event('personalGymSelectionReset'));
+    setIsMenuOpen(false);
+    navigate('/profile-select?personalGym=1');
+  };
+
   const navItems = navByProfile[activeProfile] || navByProfile.student;
   const currentProfile = user?.profiles?.find(profile => profile.type === activeProfile)?.label;
+  const canSwitchStudentMode = activeProfile === 'student' && (studentContext.memberships || []).length > 0;
 
   return (
     <nav className="industrial-navbar">
@@ -66,7 +96,6 @@ export default function Navbar() {
           <span className="brand-icon"><Icon name="gymLogo" size={26} title="Gym Diary" /></span>
           <span className="brand-text">GYM<span>DIARY</span></span>
           {currentProfile && <span className="profile-pill">{currentProfile}</span>}
-          <div className="brand-rivet"></div>
         </div>
 
         <button
@@ -93,6 +122,18 @@ export default function Navbar() {
                 <div className="nav-link-rivet"></div>
               </NavLink>
             ))}
+            {canSwitchStudentMode && (
+              <button onClick={handleChangeStudentMode} className="mode-switch-link">
+                <span className="nav-icon"><Icon name="dumbbell" size={19} /></span>
+                <span className="nav-label">Alterar modo</span>
+              </button>
+            )}
+            {activeProfile === 'personal' && (
+              <button onClick={handleChangePersonalGym} className="mode-switch-link">
+                <span className="nav-icon"><Icon name="gymLogo" size={19} /></span>
+                <span className="nav-label">Trocar academia</span>
+              </button>
+            )}
             <button onClick={handleLogout} className="logout-link">
               <span className="nav-icon"><Icon name="logout" size={19} /></span>
               <span className="nav-label">Sair</span>

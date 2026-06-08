@@ -25,6 +25,21 @@ async function request(endpoint, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const activeProfile = localStorage.getItem('activeProfile');
+    if (activeProfile) {
+        headers['X-Active-Profile'] = activeProfile;
+    }
+
+    const selectedStudentGymId = localStorage.getItem('selectedStudentGymId');
+    if (selectedStudentGymId) {
+        headers['X-Selected-Student-Gym-Id'] = selectedStudentGymId;
+    }
+
+    const studentTrainingMode = localStorage.getItem('studentTrainingMode');
+    if (studentTrainingMode) {
+        headers['X-Student-Training-Mode'] = studentTrainingMode;
+    }
+
     const url = `${API_URL}${endpoint}`;
     
     try {
@@ -51,9 +66,9 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     }),
-    register: (name, email, password, isAdmin = false) => request('/auth/register', {
+    register: (name, email, password, accountType = 'student', gymName = '') => request('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password, isAdmin }),
+        body: JSON.stringify({ name, email, password, accountType, gymName }),
     }),
     getMe: () => request('/me'),
     getUsers: () => request('/users'),
@@ -77,20 +92,15 @@ export const api = {
     }),
     deleteExercise: (id) => request(`/exercises/${id}`, { method: 'DELETE' }),
     getTemplates: () => request('/templates'),
-    createTemplate: (name, exercises) => request('/templates', {
+    createTemplate: (name, exercises, options = {}) => request('/templates', {
         method: 'POST',
-        body: JSON.stringify({ name, exercises }),
+        body: JSON.stringify({ name, exercises, ...options }),
     }),
-    updateTemplate: (id, name, exercises) => request(`/templates/${id}`, {
+    updateTemplate: (id, name, exercises, options = {}) => request(`/templates/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ name, exercises }),
+        body: JSON.stringify({ name, exercises, ...options }),
     }),
     deleteTemplate: (id) => request(`/templates/${id}`, { method: 'DELETE' }),
-    getRoutine: () => request('/routines'),
-    updateRoutineDay: (dayOfWeek, templateId) => request('/routines', {
-        method: 'POST',
-        body: JSON.stringify({ day_of_week: dayOfWeek, template_id: templateId }),
-    }),
     getHistory: () => request('/history'),
     saveWorkout: (workoutData) => request('/history', {
         method: 'POST',
@@ -103,9 +113,51 @@ export const api = {
         body: JSON.stringify(gymData),
     }),
     getGymMembers: (role) => request(`/gyms/me/members?role=${encodeURIComponent(role)}`),
+    getGymReports: () => request('/gyms/me/reports'),
     addGymMember: (email, role) => request('/gyms/me/members', {
         method: 'POST',
         body: JSON.stringify({ email, role }),
     }),
     removeGymMember: (id) => request(`/gyms/me/members/${id}`, { method: 'DELETE' }),
+    getStudentContext: () => request('/gyms/student-context'),
+    getStudentWorkouts: () => request('/gyms/student-workouts'),
+    getStudentAssessments: () => request('/gyms/student-assessments'),
+    getPersonalSummary: (gymId = '') => request(`/personal/summary${gymId ? `?gymId=${encodeURIComponent(gymId)}` : ''}`),
+    getPersonalGyms: () => request('/personal/gyms'),
+    getPersonalStudents: (search = '', gymId = '') => {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (gymId) params.set('gymId', gymId);
+        const queryString = params.toString();
+        return request(`/personal/students${queryString ? `?${queryString}` : ''}`);
+    },
+    addPersonalStudent: (email, gymId = '') => request('/personal/students', {
+        method: 'POST',
+        body: JSON.stringify({ email, gymId }),
+    }),
+    getPersonalStudent: (id, gymId = '') => request(`/personal/students/${id}${gymId ? `?gymId=${encodeURIComponent(gymId)}` : ''}`),
+    getPersonalAssignments: (gymId = '') => request(`/personal/assignments${gymId ? `?gymId=${encodeURIComponent(gymId)}` : ''}`),
+    assignPersonalWorkout: (studentEmail, templateId, notes = '', gymId = '') => request('/personal/assignments', {
+        method: 'POST',
+        body: JSON.stringify({ studentEmail, templateId, notes, gymId }),
+    }),
+    updatePersonalAssignment: (id, updates) => request(`/personal/assignments/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+    }),
+    getPersonalAssessments: (studentId = '', gymId = '') => {
+        const params = new URLSearchParams();
+        if (studentId) params.set('studentId', studentId);
+        if (gymId) params.set('gymId', gymId);
+        const queryString = params.toString();
+        return request(`/personal/assessments${queryString ? `?${queryString}` : ''}`);
+    },
+    createPersonalAssessment: (assessment) => request('/personal/assessments', {
+        method: 'POST',
+        body: JSON.stringify(assessment),
+    }),
+    updatePersonalAssessment: (id, assessment) => request(`/personal/assessments/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(assessment),
+    }),
 };

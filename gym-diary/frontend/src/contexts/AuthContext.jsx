@@ -8,6 +8,10 @@ export const AuthProvider = ({ children }) => {
     const [users, setUsers] = useState([]);
     const [token, setToken] = useState(null);
     const [activeProfile, setActiveProfile] = useState(null);
+    const [studentTrainingMode, setStudentTrainingMode] = useState(() => localStorage.getItem('studentTrainingMode'));
+    const [selectedGymId, setSelectedGymId] = useState(() => localStorage.getItem('selectedStudentGymId'));
+    const [studentContext, setStudentContext] = useState({ isAcademyStudent: false, memberships: [] });
+    const [studentContextLoading, setStudentContextLoading] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const getProfileTypes = useCallback((userData) => (
@@ -17,14 +21,19 @@ export const AuthProvider = ({ children }) => {
     const applyUserSession = useCallback((userData, forceProfileSelection = false) => {
         const profileTypes = getProfileTypes(userData);
         const storedProfile = forceProfileSelection ? null : localStorage.getItem('activeProfile');
-        const nextProfile = storedProfile && profileTypes.includes(storedProfile)
+        const effectiveProfileTypes = profileTypes.includes('gym') && !profileTypes.includes('admin')
+            ? profileTypes.filter((profileType) => profileType !== 'student')
+            : profileTypes;
+
+        const nextProfile = storedProfile && effectiveProfileTypes.includes(storedProfile)
             ? storedProfile
-            : profileTypes.length === 1
-                ? profileTypes[0]
+            : effectiveProfileTypes.length === 1
+                ? effectiveProfileTypes[0]
                 : null;
 
         setUser(userData);
         setActiveProfile(nextProfile);
+        setStudentContextLoading(nextProfile === 'student');
 
         if (nextProfile) {
             localStorage.setItem('activeProfile', nextProfile);
@@ -54,7 +63,13 @@ export const AuthProvider = ({ children }) => {
                 setToken(null);
                 setUser(null);
                 setActiveProfile(null);
+                setStudentTrainingMode(null);
+                setSelectedGymId(null);
+                setStudentContext({ isAcademyStudent: false, memberships: [] });
                 localStorage.removeItem('activeProfile');
+                localStorage.removeItem('studentTrainingMode');
+                localStorage.removeItem('selectedStudentGymId');
+                localStorage.removeItem('selectedPersonalGymId');
             } finally {
                 setLoading(false);
             }
@@ -62,6 +77,62 @@ export const AuthProvider = ({ children }) => {
 
         restoreSession();
     }, [applyUserSession]);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadStudentContext = async () => {
+            if (!token || activeProfile !== 'student') {
+                setStudentContext({ isAcademyStudent: false, memberships: [] });
+                setStudentContextLoading(false);
+                return;
+            }
+
+            setStudentContextLoading(true);
+            try {
+                const response = await api.getStudentContext();
+                if (mounted) {
+                    setStudentContext({
+                        isAcademyStudent: Boolean(response.isAcademyStudent),
+                        memberships: response.memberships || []
+                    });
+
+                    const memberships = response.memberships || [];
+                    const hasMemberships = memberships.length > 0;
+                    const selectedMembershipExists = memberships.some(
+                        (membership) => String(membership.gymId) === String(localStorage.getItem('selectedStudentGymId'))
+                    );
+
+                    if (!hasMemberships && localStorage.getItem('studentTrainingMode') !== 'own') {
+                        setStudentTrainingMode('own');
+                        setSelectedGymId(null);
+                        localStorage.setItem('studentTrainingMode', 'own');
+                        localStorage.removeItem('selectedStudentGymId');
+                    }
+
+                    if (localStorage.getItem('studentTrainingMode') === 'academy' && !selectedMembershipExists) {
+                        setStudentTrainingMode(null);
+                        setSelectedGymId(null);
+                        localStorage.removeItem('studentTrainingMode');
+                        localStorage.removeItem('selectedStudentGymId');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar contexto do aluno:', error.message);
+                if (mounted) {
+                    setStudentContext({ isAcademyStudent: false, memberships: [] });
+                }
+            } finally {
+                if (mounted) setStudentContextLoading(false);
+            }
+        };
+
+        loadStudentContext();
+
+        return () => {
+            mounted = false;
+        };
+    }, [token, activeProfile]);
 
     const loadUsers = useCallback(async () => {
         if (!user?.isAdmin) {
@@ -106,7 +177,14 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setUsers([]);
         setActiveProfile(null);
+        setStudentTrainingMode(null);
+        setSelectedGymId(null);
+        setStudentContext({ isAcademyStudent: false, memberships: [] });
+        setStudentContextLoading(false);
         localStorage.removeItem('activeProfile');
+        localStorage.removeItem('studentTrainingMode');
+        localStorage.removeItem('selectedStudentGymId');
+        localStorage.removeItem('selectedPersonalGymId');
     };
 
     const refreshCurrentUser = useCallback(async (preferredProfile = null) => {
@@ -122,15 +200,97 @@ export const AuthProvider = ({ children }) => {
     }, [applyUserSession, getProfileTypes]);
 
     const selectProfile = (profileType) => {
+        if (!profileType) {
+            setActiveProfile(null);
+            setStudentTrainingMode(null);
+            setSelectedGymId(null);
+            localStorage.removeItem('activeProfile');
+            localStorage.removeItem('studentTrainingMode');
+            localStorage.removeItem('selectedStudentGymId');
+            localStorage.removeItem('selectedPersonalGymId');
+            return true;
+        }
+
         const profileTypes = getProfileTypes(user);
-        if (!profileTypes.includes(profileType)) {
+        const effectiveProfileTypes = profileTypes.includes('gym') && !profileTypes.includes('admin')
+            ? profileTypes.filter((type) => type !== 'student')
+            : profileTypes;
+        if (!effectiveProfileTypes.includes(profileType)) {
             return false;
         }
 
         setActiveProfile(profileType);
         localStorage.setItem('activeProfile', profileType);
+        if (profileType === 'student') {
+            setStudentContextLoading(true);
+        }
+        if (profileType !== 'student') {
+            setStudentTrainingMode(null);
+            setSelectedGymId(null);
+            localStorage.removeItem('studentTrainingMode');
+            localStorage.removeItem('selectedStudentGymId');
+            if (profileType !== 'personal') {
+                localStorage.removeItem('selectedPersonalGymId');
+            }
+        }
         return true;
     };
+
+    const register = async (name, email, password, accountType = 'student', gymName = '') => {
+        try {
+            await api.register(name, email, password, accountType, gymName);
+            return await login(email, password);
+        } catch (error) {
+            console.error('Erro ao registrar:', error.message);
+            return { success: false, error: error.message };
+        }
+    };
+
+    const selectStudentTrainingMode = (mode, gymId = null) => {
+        if (mode === 'academy' && !gymId) return false;
+        if (!['own', 'academy'].includes(mode)) return false;
+
+        setStudentTrainingMode(mode);
+        localStorage.setItem('studentTrainingMode', mode);
+
+        if (mode === 'academy') {
+            setSelectedGymId(String(gymId));
+            localStorage.setItem('selectedStudentGymId', String(gymId));
+        } else {
+            setSelectedGymId(null);
+            localStorage.removeItem('selectedStudentGymId');
+        }
+
+        return true;
+    };
+
+    const requestStudentModeSelection = () => {
+        if (!getProfileTypes(user).includes('student')) return false;
+
+        setActiveProfile('student');
+        setStudentTrainingMode(null);
+        setSelectedGymId(null);
+        setStudentContextLoading(false);
+        localStorage.setItem('activeProfile', 'student');
+        localStorage.removeItem('studentTrainingMode');
+        localStorage.removeItem('selectedStudentGymId');
+        return true;
+    };
+
+    const userProfileTypes = getProfileTypes(user);
+    const hasStudentProfile = userProfileTypes.includes('student') && !(userProfileTypes.includes('gym') && !userProfileTypes.includes('admin'));
+    const needsStudentModeSelection = Boolean(
+        user &&
+        activeProfile === 'student' &&
+        hasStudentProfile &&
+        !studentContextLoading &&
+        studentContext.memberships.length > 0 &&
+        !studentTrainingMode
+    );
+
+    const selectedGymMembership = studentContext.memberships.find(
+        (membership) => String(membership.gymId) === String(selectedGymId)
+    ) || null;
 
     const createUser = async (name, email, password, isAdmin = false) => {
         try {
@@ -171,12 +331,21 @@ export const AuthProvider = ({ children }) => {
             users,
             token,
             activeProfile,
+            studentTrainingMode,
+            selectedGymId,
+            selectedGymMembership,
+            studentContext,
+            studentContextLoading,
+            isAcademyStudent: Boolean(activeProfile === 'student' && studentTrainingMode === 'academy' && selectedGymMembership),
             loading,
-            needsProfileSelection: Boolean(user && getProfileTypes(user).length > 1 && !activeProfile),
+            needsProfileSelection: Boolean(user && (!activeProfile || needsStudentModeSelection)),
             login,
+            register,
             logout,
             refreshCurrentUser,
             selectProfile,
+            selectStudentTrainingMode,
+            requestStudentModeSelection,
             createUser,
             updateUser,
             deleteUser

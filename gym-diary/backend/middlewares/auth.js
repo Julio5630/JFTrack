@@ -27,6 +27,10 @@ const authenticateToken = async (req, res, next) => {
 
         req.user = users[0];
         req.user.profiles = await getUserProfiles(query, req.user.id, Boolean(req.user.is_admin));
+        const activeProfile = req.headers['x-active-profile'];
+        req.activeProfile = req.user.profiles.some((profile) => profile.type === activeProfile)
+            ? activeProfile
+            : null;
         next();
     } catch (error) {
         return res.status(403).json({ error: 'Token inválido' });

@@ -10,7 +10,7 @@ export default function History() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const safeData = data || { workoutHistory: [], weeklyRoutine: [], workoutTemplates: [], exercises: [] };
+  const safeData = data || { workoutHistory: [], workoutTemplates: [], exercises: [] };
 
   // Calcular recordes por exercício (maior volume = peso * reps)
   const records = useMemo(() => {
@@ -65,12 +65,8 @@ export default function History() {
     const dateStr = date.toISOString().slice(0, 10);
     const workoutsOnDay = safeData.workoutHistory?.filter(w => w.date === dateStr) || [];
     const hasWorkout = workoutsOnDay.length > 0;
-    const routineId = safeData.weeklyRoutine?.[date.getDay()];
-    const hasRoutine = routineId && safeData.workoutTemplates?.some(t => t.id === routineId);
     let status = '';
     if (hasWorkout) status = 'completed';
-    else if (hasRoutine && date >= today) status = 'planned';
-    else if (hasRoutine) status = 'missed';
 
     const hasRecord = dayHasRecord(dateStr, workoutsOnDay);
 
@@ -163,8 +159,6 @@ export default function History() {
           </div>
           <div className="legend">
             <div className="legend-item"><div className="legend-color completed"></div><span>Treino realizado</span></div>
-            <div className="legend-item"><div className="legend-color missed"></div><span>Treino perdido</span></div>
-            <div className="legend-item"><div className="legend-color planned"></div><span>Treino futuro</span></div>
             <div className="legend-item"><div className="legend-color record"></div><span>Recorde pessoal!</span></div>
           </div>
         </div>
@@ -197,8 +191,13 @@ export default function History() {
                   selectedDay.workouts.map(workout => (
                     <div key={workout.id} className="workout-detail">
                       <h3>{workout.name}</h3>
+                      <span className="history-source">
+                        {workout.source_type === 'academy'
+                          ? `Academia${workout.gym_name ? `: ${workout.gym_name}` : ''}`
+                          : 'Treino proprio'}
+                      </span>
                       {workout.exercises.map(ex => {
-                        const exName = safeData.exercises?.find(e => e.id === ex.exerciseId)?.name || 'Exercício';
+                        const exName = ex.exerciseName || safeData.exercises?.find(e => e.id === ex.exerciseId)?.name || 'Exercicio';
                         const isRecord = ex.sets.some(set => {
                           const volume = (set.weight || 0) * (set.reps || 0);
                           const record = records[ex.exerciseId];

@@ -1,21 +1,77 @@
 const { pool, query } = require('../config/database');
+const { isAcademyStudent } = require('../middlewares/permissions');
+
+const getStudentScope = (req) => ({
+    mode: req.get('X-Student-Training-Mode') === 'academy' ? 'academy' : 'own',
+    gymId: req.get('X-Selected-Student-Gym-Id') || null
+});
 
 const startWorkout = async (req, res) => {
     const connection = await pool.getConnection();
     try {
         const userId = req.user.id;
         const { template_id, name, date, exercises = [] } = req.body;
+        const { mode, gymId } = getStudentScope(req);
+        let assignmentId = null;
 
         if (!name || !date || !Array.isArray(exercises) || exercises.length === 0) {
             return res.status(400).json({ error: 'Treino invalido' });
         }
 
+        if (mode === 'academy') {
+            if (!template_id) {
+                return res.status(403).json({ error: 'Aluno de academia so pode executar treinos atribuidos' });
+            }
+
+            if (!gymId) {
+                return res.status(400).json({ error: 'Selecione a academia antes de executar este treino' });
+            }
+
+            const [assignments] = await connection.execute(
+                `SELECT id, gym_id
+                 FROM personal_workout_assignments
+                 WHERE student_user_id = ? AND template_id = ? AND gym_id = ? AND status = 'active'
+                 LIMIT 1`,
+                [userId, template_id, gymId]
+            );
+
+            if (assignments.length === 0) {
+                return res.status(403).json({ error: 'Treino nao atribuido ao aluno' });
+            }
+
+            assignmentId = assignments[0].id;
+        }
+
+        if (mode === 'own' && await isAcademyStudent(userId)) {
+            const templates = template_id
+                ? await connection.execute(
+                    `SELECT id
+                     FROM workout_templates
+                     WHERE id = ? AND user_id = ? AND COALESCE(created_by_profile, 'student') = 'student'
+                     LIMIT 1`,
+                    [template_id, userId]
+                )
+                : [[]];
+
+            if (template_id && templates[0].length === 0) {
+                return res.status(403).json({ error: 'Este treino nao pertence ao seu fluxo proprio' });
+            }
+        }
+
         await connection.beginTransaction();
 
         const [result] = await connection.execute(
-            `INSERT INTO workout_history (user_id, template_id, name, date)
-             VALUES (?, ?, ?, ?)`,
-            [userId, template_id || null, name, date]
+            `INSERT INTO workout_history (user_id, template_id, gym_id, assignment_id, source_type, name, date)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                userId,
+                template_id || null,
+                mode === 'academy' ? gymId : null,
+                assignmentId,
+                mode,
+                name,
+                date
+            ]
         );
 
         for (const [position, exercise] of exercises.entries()) {
@@ -92,13 +148,17 @@ const addSet = async (req, res) => {
 const getHistory = async (req, res) => {
     try {
         const userId = req.user.id;
+        const params = [userId];
 
         const history = await query(
-            `SELECT id, user_id, template_id, name, DATE_FORMAT(date, '%Y-%m-%d') AS date, created_at
-             FROM workout_history
-             WHERE user_id = ?
+            `SELECT wh.id, wh.user_id, wh.template_id, wh.gym_id, wh.assignment_id, wh.source_type,
+                    wh.name, DATE_FORMAT(wh.date, '%Y-%m-%d') AS date, wh.created_at,
+                    g.name AS gym_name
+             FROM workout_history wh
+             LEFT JOIN gyms g ON g.id = wh.gym_id
+             WHERE wh.user_id = ?
              ORDER BY date DESC, created_at DESC`,
-            [userId]
+            params
         );
 
         if (history.length === 0) {
@@ -106,12 +166,13 @@ const getHistory = async (req, res) => {
         }
 
         const sets = await query(
-            `SELECT ws.*, wh.id AS history_id
+            `SELECT ws.*, wh.id AS history_id, e.name AS exercise_name, e.category AS exercise_category
              FROM workout_sets ws
              JOIN workout_history wh ON wh.id = ws.workout_id
+             LEFT JOIN exercises e ON e.id = ws.exercise_id
              WHERE wh.user_id = ?
              ORDER BY ws.position, ws.set_number`,
-            [userId]
+            params
         );
 
         res.json(history.map(workout => {
@@ -122,6 +183,8 @@ const getHistory = async (req, res) => {
                 if (!exercisesByPosition.has(set.position)) {
                     exercisesByPosition.set(set.position, {
                         exerciseId: set.exercise_id,
+                        exerciseName: set.exercise_name || 'Exercicio',
+                        exerciseCategory: set.exercise_category || '',
                         sets: []
                     });
                 }
@@ -151,7 +214,8 @@ const getWorkoutDetails = async (req, res) => {
         const userId = req.user.id;
 
         const workout = await query(
-            `SELECT id, user_id, template_id, name, DATE_FORMAT(date, '%Y-%m-%d') AS date, created_at
+            `SELECT id, user_id, template_id, gym_id, assignment_id, source_type,
+                    name, DATE_FORMAT(date, '%Y-%m-%d') AS date, created_at
              FROM workout_history
              WHERE id = ? AND user_id = ?`,
             [id, userId]

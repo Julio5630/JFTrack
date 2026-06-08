@@ -44,18 +44,6 @@
   color: #cbd2dc;
 }
 
-.gym-summary-card button {
-  border: none;
-  border-radius: 3px;
-  padding: 10px 16px;
-  background: #ff6b35;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-}
-
 .gym-summary-details {
   display: flex;
   flex-wrap: wrap;
@@ -94,6 +82,269 @@
 .workspace-card p {
   color: #cbd2dc;
   line-height: 1.45;
+}
+
+.workspace-card.full-width {
+  margin-top: 20px;
+}
+
+.workspace-action {
+  margin-top: 14px;
+  border: none;
+  border-radius: 3px;
+  padding: 10px 14px;
+  background: #ff6b35;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.gym-overview-section {
+  padding: 22px;
+  background: rgba(18, 22, 28, 0.88);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  color: #f4f7fb;
+}
+
+.gym-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.gym-overview-card {
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(0,0,0,0.18));
+}
+
+.gym-overview-card strong {
+  display: block;
+  margin: 12px 0 4px;
+  color: #fff;
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.gym-overview-card h3 {
+  margin: 0;
+  color: #ffb08d;
+  font-size: 0.98rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.gym-overview-card p {
+  margin: 8px 0 0;
+  color: #cbd2dc;
+  line-height: 1.4;
+}
+
+.reports-section {
+  padding: 22px;
+  background: rgba(18, 22, 28, 0.88);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  color: #f4f7fb;
+}
+
+.reports-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.reports-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.reports-chart-card {
+  min-height: 340px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at top right, rgba(255,107,53,0.16), transparent 34%),
+    linear-gradient(145deg, rgba(255,255,255,0.07), rgba(0,0,0,0.2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 18px 45px rgba(0,0,0,0.18);
+}
+
+.reports-chart-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
+}
+
+.reports-chart-card.wide {
+  grid-column: span 2;
+}
+
+.reports-chart-card h2 {
+  position: relative;
+  margin: 0;
+  color: #fff;
+  letter-spacing: 0.6px;
+}
+
+.reports-chart-card p {
+  position: relative;
+  margin: 6px 0 14px;
+  color: #aeb7c4;
+}
+
+.reports-panel {
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  background: rgba(0,0,0,0.18);
+}
+
+.reports-panel.compact h2 {
+  margin: 0 0 14px;
+  color: #fff;
+}
+
+.report-list,
+.personal-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  color: #f4f7fb;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.report-row:hover,
+.report-row.active {
+  border-color: rgba(255,107,53,0.55);
+  background: rgba(255,107,53,0.1);
+  transform: translateY(-1px);
+}
+
+.report-row strong,
+.report-row small {
+  display: block;
+}
+
+.report-row small {
+  margin-top: 3px;
+  color: #aeb7c4;
+  font-family: monospace;
+  font-size: 0.76rem;
+}
+
+.report-row em {
+  color: #ffb08d;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.student-report-detail {
+  margin-top: 14px;
+  padding: 14px;
+  border-left: 3px solid #ff6b35;
+  background: rgba(255,107,53,0.08);
+}
+
+.student-report-detail h3 {
+  margin: 0 0 10px;
+  color: #fff;
+}
+
+.student-report-detail p {
+  margin: 7px 0;
+  color: #d7dde5;
+}
+
+.personal-report-card {
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+}
+
+.personal-report-card h3 {
+  margin: 0;
+  color: #fff;
+}
+
+.personal-report-card span {
+  display: block;
+  margin-top: 4px;
+  color: #aeb7c4;
+  font-family: monospace;
+  font-size: 0.76rem;
+}
+
+.personal-report-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.personal-report-metrics p {
+  margin: 0;
+  padding: 8px;
+  color: #cbd2dc;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.16);
+}
+
+.personal-report-metrics strong {
+  color: #ffb08d;
+}
+
+.ranking-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.ranking-row:last-child {
+  border-bottom: none;
+}
+
+.ranking-row span {
+  color: #d7dde5;
+}
+
+.ranking-row strong {
+  color: #ffb08d;
+  font-family: monospace;
 }
 
 .gym-members-section {
@@ -271,18 +522,29 @@
     flex-direction: column;
   }
 
-  .gym-summary-card button {
-    width: 100%;
-  }
-
   .member-panels-grid {
     grid-template-columns: 1fr;
   }
 
+  .reports-two-column,
+  .reports-chart-grid,
+  .personal-report-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-chart-card.wide {
+    grid-column: span 1;
+  }
+
   .member-add-row,
-  .member-item {
+  .member-item,
+  .report-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .report-row em {
+    white-space: normal;
   }
 
   .member-actions {

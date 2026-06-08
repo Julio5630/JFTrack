@@ -37,7 +37,6 @@ export const getUserData = (userId) => {
         { id: 'w3', name: 'Treino C - Pernas', exercises: ['ex6'] },
       ],
       workoutHistory: [],
-      weeklyRoutine: ['', '', '', '', '', '', ''],
       currentWorkout: null,
     };
     localStorage.setItem(key, JSON.stringify(initial));

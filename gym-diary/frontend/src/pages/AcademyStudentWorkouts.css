@@ -1,0 +1,87 @@
+@import './Dashboard.css';
+
+.academy-workouts-container {
+  position: relative;
+  min-height: 100vh;
+  background: #0a0c0f;
+  font-family: 'Roboto Condensed', sans-serif;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+.academy-workouts-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.assigned-workouts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.assigned-workout-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 22px;
+  min-height: 210px;
+  background: rgba(18, 22, 28, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.assigned-workout-card h2 {
+  color: #fff;
+  margin: 8px 0;
+  font-size: 1.35rem;
+}
+
+.assigned-workout-card p {
+  color: #c7ced8;
+  margin: 0;
+  font-family: monospace;
+}
+
+.trainer-label {
+  display: inline-block;
+  color: #ffaa88;
+  border-left: 2px solid #ff6b35;
+  background: rgba(255,107,53,0.16);
+  padding: 3px 8px;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.assigned-workout-card .industrial-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.assigned-empty {
+  grid-column: 1 / -1;
+  background: rgba(18, 22, 28, 0.72);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 4px;
+  color: #d7dde5;
+  padding: 30px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.academy-workouts-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #fff;
+  font-family: monospace;
+  background: #0a0c0f;
+}

@@ -4,6 +4,92 @@ const mysql = require('mysql2/promise');
 const { seedDefaultExercises } = require('./utils/defaultExercises');
 const { ensureUserProfiles } = require('./utils/profiles');
 
+const questionnaireLabels = {
+    fullName: 'Nome completo',
+    birthDate: 'Data de nascimento',
+    phone: 'Telefone / WhatsApp',
+    email: 'E-mail',
+    mainGoal: 'Objetivo principal',
+    heartProblem: 'Algum medico ja disse que possui problema no coracao?',
+    chestPain: 'Sente dor no peito ao praticar atividade fisica?',
+    dizziness: 'Ja teve tontura ou perda de consciencia?',
+    highBloodPressure: 'Possui pressao alta?',
+    diabetes: 'Possui diabetes?',
+    highCholesterol: 'Possui colesterol alto?',
+    continuousMedication: 'Usa medicamento continuo?',
+    medicationName: 'Qual medicamento?',
+    recentSurgery: 'Fez cirurgia nos ultimos 2 anos?',
+    injuries: 'Possui lesoes?',
+    jointPain: 'Possui dores articulares?',
+    trainedBefore: 'Ja treinou em academia?',
+    trainingTime: 'Ha quanto tempo?',
+    currentLevel: 'Nivel atual',
+    hadPersonal: 'Ja teve acompanhamento com personal?',
+    likedExercises: 'Exercicios que gosta',
+    dislikedExercises: 'Exercicios que nao gosta',
+    smokes: 'Fuma?',
+    sleepHours: 'Horas de sono por noite',
+    stressLevel: 'Nivel de estresse',
+    workRoutine: 'Rotina de trabalho',
+    nutrition: 'Alimentacao',
+    availableDays: 'Dias disponiveis para treino',
+    idealTime: 'Horario ideal para treinar',
+    daysPerWeek: 'Quantos dias por semana pretende treinar?',
+    sessionDuration: 'Tempo disponivel por treino'
+};
+
+const riskQuestionKeys = new Set([
+    'heartProblem',
+    'chestPain',
+    'dizziness',
+    'highBloodPressure',
+    'diabetes',
+    'highCholesterol',
+    'continuousMedication',
+    'recentSurgery',
+    'injuries',
+    'jointPain'
+]);
+
+const measurementLabels = {
+    weight: { label: 'Peso', unit: 'kg' },
+    height: { label: 'Altura', unit: 'cm' },
+    bmi: { label: 'IMC calculado', unit: 'kg/m2' },
+    abdominalCircumference: { label: 'Circunferencia abdominal', unit: 'cm' },
+    chestCircumference: { label: 'Circunferencia toracica', unit: 'cm' },
+    rightArm: { label: 'Braco direito', unit: 'cm' },
+    leftArm: { label: 'Braco esquerdo', unit: 'cm' },
+    rightThigh: { label: 'Coxa direita', unit: 'cm' },
+    leftThigh: { label: 'Coxa esquerda', unit: 'cm' },
+    hip: { label: 'Quadril', unit: 'cm' },
+    bodyFat: { label: 'Percentual de gordura', unit: '%' },
+    generalObservations: { label: 'Observacoes gerais', unit: '' }
+};
+
+const parseJsonField = (value, fallback = {}) => {
+    if (!value) return fallback;
+    if (typeof value === 'object') return value;
+    try {
+        return JSON.parse(value);
+    } catch {
+        return fallback;
+    }
+};
+
+const serializeAnswer = (value) => {
+    if (value === null || value === undefined) return '';
+    if (Array.isArray(value)) return value.join(', ');
+    if (typeof value === 'object') return JSON.stringify(value);
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Nao';
+    return String(value);
+};
+
+const toNumberOrNull = (value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+};
+
 const config = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,
@@ -108,9 +194,67 @@ async function initDatabase() {
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 user_id INT NOT NULL,
                 name VARCHAR(100) NOT NULL,
+                frequency VARCHAR(80) DEFAULT '',
+                split_type VARCHAR(80) DEFAULT '',
+                notes TEXT,
+                created_by_profile ENUM('student', 'personal', 'gym', 'admin') DEFAULT 'student',
+                assigned_student_user_id INT,
+                gym_id INT,
+                status ENUM('active', 'inactive') DEFAULT 'active',
+                editable_by_student BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (assigned_student_user_id) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL
             )
+        `);
+
+        const [templateFrequencyColumns] = await connection.query("SHOW COLUMNS FROM workout_templates LIKE 'frequency'");
+        if (templateFrequencyColumns.length === 0) {
+            await connection.query("ALTER TABLE workout_templates ADD COLUMN frequency VARCHAR(80) DEFAULT '' AFTER name");
+        }
+
+        const [templateSplitColumns] = await connection.query("SHOW COLUMNS FROM workout_templates LIKE 'split_type'");
+        if (templateSplitColumns.length === 0) {
+            await connection.query("ALTER TABLE workout_templates ADD COLUMN split_type VARCHAR(80) DEFAULT '' AFTER frequency");
+        }
+
+        const [templateNotesColumns] = await connection.query("SHOW COLUMNS FROM workout_templates LIKE 'notes'");
+        if (templateNotesColumns.length === 0) {
+            await connection.query("ALTER TABLE workout_templates ADD COLUMN notes TEXT AFTER split_type");
+        }
+
+        const templateMetadataColumns = [
+            ['created_by_profile', "ENUM('student', 'personal', 'gym', 'admin') DEFAULT 'student' AFTER notes"],
+            ['assigned_student_user_id', 'INT AFTER created_by_profile'],
+            ['gym_id', 'INT AFTER assigned_student_user_id'],
+            ['status', "ENUM('active', 'inactive') DEFAULT 'active' AFTER gym_id"],
+            ['editable_by_student', 'BOOLEAN DEFAULT TRUE AFTER status']
+        ];
+
+        for (const [column, definition] of templateMetadataColumns) {
+            const [columns] = await connection.query(`SHOW COLUMNS FROM workout_templates LIKE '${column}'`);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE workout_templates ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
+        await connection.query(`
+            UPDATE workout_templates
+            SET created_by_profile = 'student'
+            WHERE created_by_profile IS NULL
+        `);
+
+        await connection.query(`
+            UPDATE workout_templates
+            SET status = 'active'
+            WHERE status IS NULL
+        `);
+
+        await connection.query(`
+            UPDATE workout_templates
+            SET editable_by_student = TRUE
+            WHERE editable_by_student IS NULL
         `);
 
         await connection.query(`
@@ -120,11 +264,17 @@ async function initDatabase() {
                 exercise_id INT NOT NULL,
                 position INT NOT NULL,
                 default_sets INT DEFAULT 3,
+                default_reps VARCHAR(40) DEFAULT '8-12',
                 FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE CASCADE,
                 FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE,
                 UNIQUE KEY unique_template_position (template_id, position)
             )
         `);
+
+        const [templateExerciseRepColumns] = await connection.query("SHOW COLUMNS FROM template_exercises LIKE 'default_reps'");
+        if (templateExerciseRepColumns.length === 0) {
+            await connection.query("ALTER TABLE template_exercises ADD COLUMN default_reps VARCHAR(40) DEFAULT '8-12' AFTER default_sets");
+        }
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS weekly_routines (
@@ -143,12 +293,35 @@ async function initDatabase() {
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 user_id INT NOT NULL,
                 template_id INT,
+                gym_id INT,
+                assignment_id INT,
+                source_type ENUM('own', 'academy') DEFAULT 'own',
                 name VARCHAR(100) NOT NULL,
                 date DATE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL
+                FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE SET NULL,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL
             )
+        `);
+
+        const historyScopeColumns = [
+            ['gym_id', 'INT AFTER template_id'],
+            ['assignment_id', 'INT AFTER gym_id'],
+            ['source_type', "ENUM('own', 'academy') DEFAULT 'own' AFTER assignment_id"]
+        ];
+
+        for (const [column, definition] of historyScopeColumns) {
+            const [columns] = await connection.query(`SHOW COLUMNS FROM workout_history LIKE '${column}'`);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE workout_history ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
+        await connection.query(`
+            UPDATE workout_history
+            SET source_type = 'own'
+            WHERE source_type IS NULL
         `);
 
         await connection.query(`
@@ -166,6 +339,239 @@ async function initDatabase() {
                 FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
             )
         `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS personal_workout_assignments (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                personal_user_id INT NOT NULL,
+                student_user_id INT NOT NULL,
+                gym_id INT,
+                template_id INT NOT NULL,
+                status ENUM('active', 'inactive') DEFAULT 'active',
+                editable_by_student BOOLEAN DEFAULT FALSE,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (personal_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (student_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL,
+                FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_active_assignment (personal_user_id, student_user_id, template_id)
+            )
+        `);
+
+        const assignmentColumns = [
+            ['gym_id', 'INT AFTER student_user_id'],
+            ['editable_by_student', 'BOOLEAN DEFAULT FALSE AFTER status']
+        ];
+
+        for (const [column, definition] of assignmentColumns) {
+            const [columns] = await connection.query(`SHOW COLUMNS FROM personal_workout_assignments LIKE '${column}'`);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE personal_workout_assignments ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
+        await connection.query(`
+            UPDATE personal_workout_assignments
+            SET editable_by_student = FALSE
+            WHERE editable_by_student IS NULL
+        `);
+
+        await connection.query(`
+            UPDATE personal_workout_assignments pwa
+            JOIN gym_memberships pm
+              ON pm.user_id = pwa.personal_user_id AND pm.role = 'personal' AND pm.status = 'active'
+            JOIN gym_memberships sm
+              ON sm.gym_id = pm.gym_id AND sm.user_id = pwa.student_user_id AND sm.role = 'student' AND sm.status = 'active'
+            SET pwa.gym_id = pm.gym_id
+            WHERE pwa.gym_id IS NULL
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS personal_student_links (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                personal_user_id INT NOT NULL,
+                student_user_id INT NOT NULL,
+                gym_id INT,
+                status ENUM('active', 'inactive', 'removed') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (personal_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (student_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL,
+                UNIQUE KEY unique_personal_student_gym (personal_user_id, student_user_id, gym_id)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS physical_assessments (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                personal_user_id INT NOT NULL,
+                student_user_id INT NOT NULL,
+                gym_id INT,
+                assessment_date DATE NOT NULL,
+                weight DECIMAL(5,2),
+                height DECIMAL(5,2),
+                body_fat DECIMAL(5,2),
+                goal VARCHAR(255) DEFAULT '',
+                questionnaire TEXT,
+                workout_suggestion TEXT,
+                personal_data TEXT,
+                medical_history TEXT,
+                activity_history TEXT,
+                lifestyle TEXT,
+                availability TEXT,
+                measurements TEXT,
+                bmi DECIMAL(5,2),
+                medical_alert BOOLEAN DEFAULT FALSE,
+                medical_alert_message VARCHAR(255) DEFAULT '',
+                status ENUM('draft', 'completed') DEFAULT 'completed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (personal_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (student_user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL
+            )
+        `);
+
+        const assessmentColumns = [
+            ['gym_id', 'INT AFTER student_user_id'],
+            ['personal_data', 'TEXT AFTER workout_suggestion'],
+            ['medical_history', 'TEXT AFTER personal_data'],
+            ['activity_history', 'TEXT AFTER medical_history'],
+            ['lifestyle', 'TEXT AFTER activity_history'],
+            ['availability', 'TEXT AFTER lifestyle'],
+            ['measurements', 'TEXT AFTER availability'],
+            ['bmi', 'DECIMAL(5,2) AFTER measurements'],
+            ['medical_alert', 'BOOLEAN DEFAULT FALSE AFTER bmi'],
+            ['medical_alert_message', "VARCHAR(255) DEFAULT '' AFTER medical_alert"]
+        ];
+
+        for (const [column, definition] of assessmentColumns) {
+            const [columns] = await connection.query(`SHOW COLUMNS FROM physical_assessments LIKE '${column}'`);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE physical_assessments ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS assessment_questionnaire_responses (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                assessment_id INT NOT NULL,
+                section VARCHAR(80) NOT NULL,
+                question_key VARCHAR(100) NOT NULL,
+                question_label VARCHAR(255) DEFAULT '',
+                answer TEXT,
+                risk_flag BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (assessment_id) REFERENCES physical_assessments(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_assessment_question (assessment_id, section, question_key)
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS physical_measurements (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                assessment_id INT NOT NULL,
+                measurement_key VARCHAR(100) NOT NULL,
+                label VARCHAR(120) DEFAULT '',
+                value DECIMAL(8,2),
+                unit VARCHAR(20) DEFAULT '',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (assessment_id) REFERENCES physical_assessments(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_assessment_measurement (assessment_id, measurement_key)
+            )
+        `);
+
+        await connection.query(`
+            INSERT INTO personal_student_links (personal_user_id, student_user_id, gym_id, status)
+            SELECT DISTINCT pm.user_id, sm.user_id, pm.gym_id, 'active'
+            FROM gym_memberships pm
+            JOIN gym_memberships sm ON sm.gym_id = pm.gym_id
+            WHERE pm.role = 'personal' AND pm.status = 'active' AND pm.user_id IS NOT NULL
+              AND sm.role = 'student' AND sm.status = 'active' AND sm.user_id IS NOT NULL
+            ON DUPLICATE KEY UPDATE status = 'active', updated_at = CURRENT_TIMESTAMP
+        `);
+
+        const [existingAssessments] = await connection.query(`
+            SELECT id, questionnaire, personal_data, medical_history, activity_history, lifestyle, availability,
+                   measurements, weight, height, body_fat, bmi
+            FROM physical_assessments
+        `);
+
+        for (const assessment of existingAssessments) {
+            const legacyQuestionnaire = parseJsonField(assessment.questionnaire);
+            const sections = {
+                personalData: parseJsonField(assessment.personal_data, legacyQuestionnaire.personalData || {}),
+                medicalHistory: parseJsonField(assessment.medical_history, legacyQuestionnaire.medicalHistory || {}),
+                activityHistory: parseJsonField(assessment.activity_history, legacyQuestionnaire.activityHistory || {}),
+                lifestyle: parseJsonField(assessment.lifestyle, legacyQuestionnaire.lifestyle || {}),
+                availability: parseJsonField(assessment.availability, legacyQuestionnaire.availability || {})
+            };
+
+            for (const [section, answers] of Object.entries(sections)) {
+                for (const [questionKey, answer] of Object.entries(answers || {})) {
+                    await connection.query(
+                        `INSERT INTO assessment_questionnaire_responses
+                         (assessment_id, section, question_key, question_label, answer, risk_flag)
+                         VALUES (?, ?, ?, ?, ?, ?)
+                         ON DUPLICATE KEY UPDATE
+                            question_label = VALUES(question_label),
+                            answer = VALUES(answer),
+                            risk_flag = VALUES(risk_flag),
+                            updated_at = CURRENT_TIMESTAMP`,
+                        [
+                            assessment.id,
+                            section,
+                            questionKey,
+                            questionnaireLabels[questionKey] || questionKey,
+                            serializeAnswer(answer),
+                            section === 'medicalHistory' && riskQuestionKeys.has(questionKey) && Boolean(answer)
+                        ]
+                    );
+                }
+            }
+
+            const measurements = {
+                ...parseJsonField(assessment.measurements, legacyQuestionnaire.measurements || {}),
+                weight: assessment.weight ?? parseJsonField(assessment.measurements).weight,
+                height: assessment.height ?? parseJsonField(assessment.measurements).height,
+                bodyFat: assessment.body_fat ?? parseJsonField(assessment.measurements).bodyFat,
+                bmi: assessment.bmi ?? parseJsonField(assessment.measurements).bmi
+            };
+
+            for (const [measurementKey, metadata] of Object.entries(measurementLabels)) {
+                const rawValue = measurements[measurementKey];
+                const numericValue = toNumberOrNull(rawValue);
+                const notes = measurementKey === 'generalObservations' ? String(rawValue || '').trim() : '';
+
+                if (numericValue === null && !notes) continue;
+
+                await connection.query(
+                    `INSERT INTO physical_measurements
+                     (assessment_id, measurement_key, label, value, unit, notes)
+                     VALUES (?, ?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                        label = VALUES(label),
+                        value = VALUES(value),
+                        unit = VALUES(unit),
+                        notes = VALUES(notes),
+                        updated_at = CURRENT_TIMESTAMP`,
+                    [
+                        assessment.id,
+                        measurementKey,
+                        metadata.label,
+                        numericValue,
+                        metadata.unit,
+                        notes
+                    ]
+                );
+            }
+        }
 
         console.log(' Todas as tabelas criadas com sucesso!');
 
@@ -192,9 +598,22 @@ async function initDatabase() {
         }
         console.log(' Exercícios padrão garantidos para todos os usuários');
 
-        const [profileUsers] = await connection.query('SELECT id, is_admin FROM users');
+        const [profileUsers] = await connection.query(`
+            SELECT u.id, u.is_admin, g.id AS owned_gym_id
+            FROM users u
+            LEFT JOIN gyms g ON g.owner_user_id = u.id
+        `);
         for (const user of profileUsers) {
-            await ensureUserProfiles(connection.query.bind(connection), user.id, Boolean(user.is_admin));
+            if (user.owned_gym_id && !Boolean(user.is_admin)) {
+                await connection.query(
+                    `INSERT INTO user_profiles (user_id, profile_type, status)
+                     VALUES (?, 'gym', 'active')
+                     ON DUPLICATE KEY UPDATE status = VALUES(status)`,
+                    [user.id]
+                );
+            } else {
+                await ensureUserProfiles(connection.query.bind(connection), user.id, Boolean(user.is_admin));
+            }
         }
         console.log(' Perfis de usuário garantidos');
 

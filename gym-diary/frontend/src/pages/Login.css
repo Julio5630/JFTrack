@@ -147,10 +147,43 @@
   margin: 10px auto 0;
 }
 
+.card-header p {
+  margin-top: 10px;
+  color: #cbd2dc;
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
 /* Inputs estilo industrial */
 .input-group {
   position: relative;
   margin-bottom: 1.8rem;
+}
+
+.account-type-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 1.4rem;
+}
+
+.account-type-switch button {
+  padding: 10px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid #3a3f44;
+  border-radius: 2px;
+  color: #cbd2dc;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.account-type-switch button.active,
+.account-type-switch button:hover {
+  border-color: #ff6b35;
+  color: #fff;
+  background: rgba(255,107,53,0.16);
 }
 
 .input-group input {
@@ -226,6 +259,25 @@
 .login-btn:hover {
   background: linear-gradient(135deg, #3a3f44, #2c3138);
   box-shadow: 0 0 12px rgba(255,107,53,0.5);
+}
+
+.auth-switch {
+  width: 100%;
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #ffb08d;
+  border-radius: 2px;
+  padding: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.auth-switch:hover {
+  border-color: #ff6b35;
+  color: #fff;
 }
 
 /* Mensagem de erro */

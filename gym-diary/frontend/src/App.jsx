@@ -6,12 +6,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Login from './pages/Login';
 import ProfileSelect from './pages/ProfileSelect';
 import ProfileWorkspace from './pages/ProfileWorkspace';
+import PersonalWorkspace from './pages/PersonalWorkspace';
 import GymSetup from './pages/GymSetup';
 import Dashboard from './pages/Dashboard';
 import WorkoutExecution from './pages/WorkoutExecution';
-import WorkoutCreator from './pages/WorkoutCreator';
-import Routines from './pages/Routines';
-import ExerciseLibrary from './pages/ExerciseLibrary';
+import MyWorkouts from './pages/MyWorkouts';
+import AcademyStudentWorkouts from './pages/AcademyStudentWorkouts';
+import PhysicalAssessment from './pages/PhysicalAssessment';
 import History from './pages/History';
 import Progress from './pages/Progress';
 import AdminPanel from './pages/AdminPanel';
@@ -19,11 +20,11 @@ import Navbar from './components/Navbar';
 import TrainingModeToggle from './components/TrainingModeToggle';
 import './App.css';
 
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, allowProfileSelection = false }) {
     const { user, loading, needsProfileSelection } = useAuth();
     if (loading) return null;
     if (!user) return <Navigate to="/login" />;
-    if (needsProfileSelection) return <Navigate to="/profile-select" />;
+    if (needsProfileSelection && !allowProfileSelection) return <Navigate to="/profile-select" />;
     return children;
 }
 
@@ -36,6 +37,19 @@ function AdminRoute({ children }) {
 function ProfileRoute({ profile, children }) {
     const { activeProfile } = useAuth();
     return activeProfile === profile ? children : <Navigate to="/dashboard" />;
+}
+
+function StudentModeRoute({ academy = false, children }) {
+    const { activeProfile, isAcademyStudent, studentContextLoading } = useAuth();
+    if (studentContextLoading) return null;
+    if (activeProfile !== 'student') return <Navigate to="/dashboard" />;
+    return isAcademyStudent === academy ? children : <Navigate to="/dashboard" />;
+}
+
+function StudentRoute({ children }) {
+    const { activeProfile, studentContextLoading } = useAuth();
+    if (studentContextLoading) return null;
+    return activeProfile === 'student' ? children : <Navigate to="/dashboard" />;
 }
 
 function HomeRedirect() {
@@ -57,6 +71,7 @@ function DashboardRoute() {
 
     if (activeProfile === 'student') return <Dashboard />;
     if (activeProfile === 'admin') return <AdminPanel />;
+    if (activeProfile === 'personal') return <PersonalWorkspace />;
     return <ProfileWorkspace />;
 }
 
@@ -95,7 +110,7 @@ function AnimatedRoutes() {
                     <PrivateRoute>
                         <ProfileRoute profile="personal">
                             <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                                <ProfileWorkspace />
+                                <PersonalWorkspace />
                             </motion.div>
                         </ProfileRoute>
                     </PrivateRoute>
@@ -111,51 +126,79 @@ function AnimatedRoutes() {
                 } />
                 <Route path="/gym/setup" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <GymSetup />
-                        </motion.div>
+                        <ProfileRoute profile="gym">
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <GymSetup />
+                            </motion.div>
+                        </ProfileRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/execution" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <WorkoutExecution />
-                        </motion.div>
+                        <StudentRoute>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <WorkoutExecution />
+                            </motion.div>
+                        </StudentRoute>
+                    </PrivateRoute>
+                } />
+                <Route path="/my-workouts" element={
+                    <PrivateRoute>
+                        <StudentModeRoute>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <MyWorkouts />
+                            </motion.div>
+                        </StudentModeRoute>
+                    </PrivateRoute>
+                } />
+                <Route path="/student/workouts" element={
+                    <PrivateRoute>
+                        <StudentModeRoute academy>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <AcademyStudentWorkouts />
+                            </motion.div>
+                        </StudentModeRoute>
+                    </PrivateRoute>
+                } />
+                <Route path="/student/assessment" element={
+                    <PrivateRoute>
+                        <StudentModeRoute academy>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <PhysicalAssessment />
+                            </motion.div>
+                        </StudentModeRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/create" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <WorkoutCreator />
-                        </motion.div>
-                    </PrivateRoute>
-                } />
-                <Route path="/routines" element={
-                    <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <Routines />
-                        </motion.div>
+                        <StudentModeRoute>
+                            <Navigate to="/my-workouts" />
+                        </StudentModeRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/library" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <ExerciseLibrary />
-                        </motion.div>
+                        <StudentModeRoute>
+                            <Navigate to="/my-workouts" />
+                        </StudentModeRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/history" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <History />
-                        </motion.div>
+                        <StudentRoute>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <History />
+                            </motion.div>
+                        </StudentRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/progress" element={
                     <PrivateRoute>
-                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                            <Progress />
-                        </motion.div>
+                        <StudentRoute>
+                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                                <Progress />
+                            </motion.div>
+                        </StudentRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/admin" element={
@@ -171,7 +214,7 @@ function AnimatedRoutes() {
 }
 
 function AppContent() {
-    const { user, activeProfile } = useAuth();
+    const { user, activeProfile, isAcademyStudent } = useAuth();
     const location = useLocation();
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
 
@@ -179,7 +222,7 @@ function AppContent() {
         <>
             {showShell && <Navbar />}
             <AnimatedRoutes />
-            {showShell && activeProfile === 'student' && <TrainingModeToggle />}
+            {showShell && activeProfile === 'student' && !isAcademyStudent && <TrainingModeToggle />}
         </>
     );
 }
