@@ -20,6 +20,8 @@
 .student-tabs { display: inline-flex; gap: 5px; margin-bottom: 20px; padding: 5px; border-radius: 17px; background: #e5ece9; }
 .student-tabs button { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border: 0; border-radius: 13px; color: #59635f; background: transparent; font: 700 .8rem 'Inter',sans-serif; cursor: pointer; }
 .student-tabs button.active { color: #fff; background: #004d40; box-shadow: 0 7px 15px rgba(0,77,64,.16); }
+.removed-exercise-tabs { display: none; }
+.my-workouts-container .removed-exercise-tabs { display: none !important; }
 .my-workouts-error { margin-bottom: 18px; padding: 12px 14px; border-radius: 14px; color: #93000a; background: #ffdad6; font-size: .82rem; }
 .workouts-layout { display: grid; gap: 20px; }
 
@@ -116,4 +118,42 @@
   .industrial-modal .modal-body { padding: 20px 18px; }
   .industrial-modal .modal-footer { padding: 15px 18px max(18px,env(safe-area-inset-bottom)); }
   .industrial-modal .industrial-btn.small { flex: 1; padding: 0 12px; }
+}
+.student-workout-studio { margin-top: 2px; }
+.student-workout-studio .workout-library-heading { align-items: flex-end; }
+.student-library-actions { display: grid; grid-template-columns: minmax(180px,1fr) auto; align-items: center; gap: 8px; width: min(430px,62%); }
+.student-library-actions .workout-exercise-search { width: auto; flex: 1; }
+.student-new-exercise { min-height: 39px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 0; border-radius: 12px; color: #fff; background: #29695b; box-shadow: 0 6px 14px rgba(0,77,64,.14); font-size: .64rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.student-saved-workouts { position: sticky; top: 18px; overflow: hidden; padding: 22px; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 12px 30px rgba(0,77,64,.075),0 3px 8px rgba(25,28,29,.04); }
+.student-saved-workouts > header { margin-bottom: 17px; }
+.student-saved-workouts > header > span { color: #2b7767; font-size: .62rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.student-saved-workouts h3 { margin: 6px 0 4px; color: #00342b; font-size: 1rem; }
+.student-saved-workouts header p { margin: 0; color: #77817d; font-size: .66rem; line-height: 1.45; }
+.student-saved-workout-list { display: grid; gap: 9px; }
+.student-saved-workout-list > article { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 11px; border-radius: 16px; background: #f3f6f4; box-shadow: 0 4px 12px rgba(0,77,64,.045); }
+.student-saved-workout-list > article.is-progress { background: #e8f3ef; }
+.student-saved-workout-list > article.is-completed { background: #edf7f0; }
+.saved-workout-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px; color: #29695b; background: #dcebe5; }
+.student-saved-workout-list article > div:nth-child(2) { min-width: 0; }
+.student-saved-workout-list strong, .student-saved-workout-list small, .student-saved-workout-list em { display: block; }
+.student-saved-workout-list strong { overflow: hidden; color: #26302c; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.student-saved-workout-list small { margin-top: 3px; color: #77817d; font-size: .58rem; }
+.student-saved-workout-list em { margin-top: 4px; color: #2b7767; font-size: .55rem; font-style: normal; font-weight: 800; }
+.saved-workout-actions { display: flex; gap: 5px; }
+.saved-workout-actions button { width: 31px; height: 31px; display: grid; place-items: center; border: 0; border-radius: 10px; color: #29695b; background: #fff; cursor: pointer; box-shadow: 0 3px 8px rgba(0,77,64,.07); }
+.saved-workout-actions button:last-child { color: #a8503d; }
+.industrial-modal .form-group input, .industrial-modal .form-group select { box-sizing: border-box; }
+
+@media (max-width: 760px) {
+  .student-workout-studio .workout-library-heading { display: grid; grid-template-columns: 1fr; align-items: stretch; }
+  .student-library-actions { width: 100%; display: grid; grid-template-columns: 1fr auto; }
+  .student-library-actions .workout-exercise-search { width: 100%; }
+  .student-saved-workouts { position: static; padding: 18px; border-radius: 21px; }
+  .student-saved-workout-list > article { grid-template-columns: 38px minmax(0,1fr); }
+  .saved-workout-actions { grid-column: 2; }
+}
+
+@media (max-width: 430px) {
+  .student-library-actions { grid-template-columns: 1fr; }
+  .student-new-exercise { width: 100%; }
 }

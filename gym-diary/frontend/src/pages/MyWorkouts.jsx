@@ -1,26 +1,66 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Reorder, useDragControls } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
+import ExerciseCreationModal from '../components/ExerciseCreationModal';
 import './MyWorkouts.css';
 
 const emptyExerciseForm = { name: '', category: 'Peito', videoUrl: '' };
-const categories = ['Peito', 'Costas', 'Perna', 'Ombro', 'Biceps', 'Triceps', 'Outros'];
+const categories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Core', 'Corpo Inteiro', 'Cardio', 'Outros'];
+
+function StudentWorkoutOrderCard({ exercise, index, onMove, onSetsChange, onDurationChange, onRemove }) {
+  const controls = useDragControls();
+  const isCardio = exercise.category === 'Cardio';
+
+  return (
+    <Reorder.Item
+      as="article"
+      value={exercise}
+      dragListener={false}
+      dragControls={controls}
+      className={`${isCardio ? 'cardio ' : ''}workout-sortable-card`}
+      whileDrag={{ scale: 1.02, zIndex: 20, boxShadow: '0 18px 35px rgba(0,77,64,.18)' }}
+      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+    >
+      <button
+        type="button"
+        className="workout-drag-handle"
+        onPointerDown={(event) => controls.start(event)}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp') onMove(index, index - 1);
+          if (event.key === 'ArrowDown') onMove(index, index + 1);
+        }}
+        aria-label={`Arrastar ${exercise.name} para mudar a ordem`}
+      >
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+      </button>
+      <span className="workout-order">{String(index + 1).padStart(2, '0')}</span>
+      <div className="workout-selected-copy"><strong>{exercise.name}</strong><small>{exercise.category || 'Geral'}</small></div>
+      <div className={`workout-set-control ${isCardio ? 'duration' : ''}`}>
+        <button type="button" onClick={() => isCardio ? onDurationChange(exercise.id, exercise.durationMinutes - 5) : onSetsChange(exercise.id, exercise.defaultSets - 1)}>−</button>
+        <span><strong>{isCardio ? exercise.durationMinutes : exercise.defaultSets}</strong><small>{isCardio ? 'minutos' : 'séries'}</small></span>
+        <button type="button" onClick={() => isCardio ? onDurationChange(exercise.id, exercise.durationMinutes + 5) : onSetsChange(exercise.id, exercise.defaultSets + 1)}>+</button>
+      </div>
+      <button type="button" className="workout-remove-exercise" onClick={() => onRemove(exercise.id)} aria-label={`Remover ${exercise.name}`}><Icon name="trash" size={16} /></button>
+    </Reorder.Item>
+  );
+}
 
 export default function MyWorkouts() {
   const { data, refreshData, updatePartial } = useData();
   const { notify, confirm } = useAlert();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('workouts');
   const [showWorkoutCreator, setShowWorkoutCreator] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [defaultSets, setDefaultSets] = useState(3);
   const [editingTemplateId, setEditingTemplateId] = useState(null);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
+  const [addCreatedExerciseToWorkout, setAddCreatedExerciseToWorkout] = useState(false);
   const [editingExercise, setEditingExercise] = useState(null);
   const [exerciseForm, setExerciseForm] = useState(emptyExerciseForm);
   const [filterCategory, setFilterCategory] = useState('todas');
@@ -69,7 +109,6 @@ export default function MyWorkouts() {
   };
 
   const openWorkoutCreator = () => {
-    setActiveTab('workouts');
     setShowWorkoutCreator(true);
     setEditingTemplateId(null);
     setWorkoutName('');
@@ -85,8 +124,39 @@ export default function MyWorkouts() {
       : { ...exercise, defaultSets }]);
   };
 
+  const toggleWorkoutExercise = (exerciseId) => {
+    if (selectedExercises.some((exercise) => exercise.id === exerciseId)) {
+      setSelectedExercises((current) => current.filter((exercise) => exercise.id !== exerciseId));
+      return;
+    }
+    addExerciseToWorkout(exerciseId);
+  };
+
+  const updateExerciseSets = (exerciseId, value) => {
+    const nextValue = Math.min(10, Math.max(1, Number(value) || 1));
+    setSelectedExercises((current) => current.map((exercise) => (
+      exercise.id === exerciseId ? { ...exercise, defaultSets: nextValue } : exercise
+    )));
+  };
+
+  const updateExerciseDuration = (exerciseId, value) => {
+    const nextValue = Math.min(180, Math.max(1, Number(value) || 1));
+    setSelectedExercises((current) => current.map((exercise) => (
+      exercise.id === exerciseId ? { ...exercise, durationMinutes: nextValue } : exercise
+    )));
+  };
+
+  const moveWorkoutExercise = (fromIndex, toIndex) => {
+    if (toIndex < 0 || toIndex >= selectedExercises.length || fromIndex === toIndex) return;
+    setSelectedExercises((current) => {
+      const ordered = [...current];
+      const [moved] = ordered.splice(fromIndex, 1);
+      ordered.splice(toIndex, 0, moved);
+      return ordered;
+    });
+  };
+
   const editWorkout = (template) => {
-    setActiveTab('workouts');
     setShowWorkoutCreator(true);
     setEditingTemplateId(template.id);
     setWorkoutName(template.name);
@@ -161,7 +231,8 @@ export default function MyWorkouts() {
       if (editingTemplateId) {
         await api.updateTemplate(editingTemplateId, workoutName.trim(), payload);
       } else {
-        await api.createTemplate(workoutName.trim(), payload);
+        const result = await api.createTemplate(workoutName.trim(), payload);
+        if (result?.offlinePending) notify('Treino salvo no aparelho. Ele será sincronizado quando a internet voltar.');
       }
       await refreshData();
       resetWorkoutForm();
@@ -187,8 +258,9 @@ export default function MyWorkouts() {
     }
   };
 
-  const openExerciseModal = (exercise = null) => {
+  const openExerciseModal = (exercise = null, addToWorkout = false) => {
     setEditingExercise(exercise);
+    setAddCreatedExerciseToWorkout(Boolean(!exercise && addToWorkout));
     setExerciseForm(exercise
       ? { name: exercise.name, category: exercise.category, videoUrl: exercise.videoUrl || exercise.video_url || '' }
       : emptyExerciseForm
@@ -200,6 +272,7 @@ export default function MyWorkouts() {
     setExerciseModalOpen(false);
     setEditingExercise(null);
     setExerciseForm(emptyExerciseForm);
+    setAddCreatedExerciseToWorkout(false);
     setError(null);
   };
 
@@ -216,7 +289,20 @@ export default function MyWorkouts() {
       if (editingExercise) {
         await api.updateExercise(editingExercise.id, exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
       } else {
-        await api.createExercise(exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
+        const result = await api.createExercise(exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
+        if (result?.offlinePending) notify('Exercício salvo no aparelho e adicionado à fila de sincronização.');
+        if (addCreatedExerciseToWorkout) {
+          const refreshedExercises = await api.getExercises();
+          const createdExercise = refreshedExercises.find((exercise) => exercise.name === exerciseForm.name.trim());
+          if (createdExercise) {
+            setSelectedExercises((current) => current.some((item) => item.id === createdExercise.id)
+              ? current
+              : [...current, createdExercise.category === 'Cardio'
+                ? { ...createdExercise, defaultSets: 1, durationMinutes: 20 }
+                : { ...createdExercise, defaultSets: 3 }]
+            );
+          }
+        }
       }
       await refreshData();
       closeExerciseModal();
@@ -248,6 +334,76 @@ export default function MyWorkouts() {
     return categoryMatches && searchMatches;
   });
 
+  const renderWorkoutStudio = () => (
+    <div className="workout-studio student-workout-studio">
+      <section className="workout-studio-hero">
+        <div><span>Estúdio de treinos</span><h2>Monte sua própria rotina</h2><p>Escolha os exercícios, organize a sequência e ajuste séries ou duração.</p></div>
+        <div className="workout-studio-stats">
+          <article><Icon name="book" size={19} /><strong>{templates.length}</strong><small>treinos salvos</small></article>
+          <article><Icon name="dumbbell" size={19} /><strong>{selectedExercises.length}</strong><small>exercícios escolhidos</small></article>
+        </div>
+      </section>
+
+      <div className="workout-studio-grid">
+        <section className="workout-builder-card">
+          <header className="workout-card-heading">
+            <span className="workout-step-number">1</span>
+            <div><h3>{editingTemplateId ? 'Editar treino' : 'Criar novo treino'}</h3><p>Defina um nome e monte a sequência de exercícios.</p></div>
+            {editingTemplateId && <button type="button" className="workout-text-button" onClick={resetWorkoutForm}>Criar novo</button>}
+          </header>
+
+          <label className="workout-name-field"><span>Nome do treino</span><input value={workoutName} onChange={(event) => setWorkoutName(event.target.value)} placeholder="Ex.: Treino A - Peito e tríceps" /></label>
+
+          <div className="workout-library-heading">
+            <div><strong>Biblioteca de exercícios</strong><small>{filteredExercises.length} disponíveis</small></div>
+            <div className="student-library-actions">
+              <div className="workout-exercise-search"><Icon name="search" size={17} /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar exercício" /></div>
+              <button type="button" className="student-new-exercise" onClick={() => openExerciseModal(null, true)}><Icon name="plus" size={16} /> Novo exercício</button>
+            </div>
+          </div>
+
+          <div className="workout-category-filter" aria-label="Categorias de exercícios">
+            {['todas', ...new Set(exercises.map((exercise) => exercise.category).filter(Boolean))].map((category) => (
+              <button type="button" key={category} className={filterCategory === category ? 'active' : ''} onClick={() => setFilterCategory(category)}>{category === 'todas' ? 'Todos' : category}</button>
+            ))}
+          </div>
+
+          <div className="workout-exercise-grid">
+            {filteredExercises.map((exercise) => {
+              const selected = selectedExercises.some((item) => item.id === exercise.id);
+              return <button type="button" key={exercise.id} className={selected ? 'selected' : ''} onClick={() => toggleWorkoutExercise(exercise.id)}><span><Icon name={selected ? 'check' : 'dumbbell'} size={18} /></span><div><strong>{exercise.name}</strong><small>{exercise.category || 'Geral'}</small></div><i>{selected ? 'Adicionado' : 'Adicionar'}</i></button>;
+            })}
+            {filteredExercises.length === 0 && <div className="workout-library-empty"><Icon name="search" size={22} /><span>Nenhum exercício encontrado.</span></div>}
+          </div>
+
+          <div className="workout-selected-section">
+            <div className="workout-library-heading"><div><strong>Sequência do treino</strong><small>Segure os pontos e arraste para mudar a ordem</small></div><span className="workout-count-badge">{selectedExercises.length} {selectedExercises.length === 1 ? 'exercício' : 'exercícios'}</span></div>
+            <Reorder.Group as="div" axis="y" className="workout-selected-list" values={selectedExercises} onReorder={setSelectedExercises}>
+              {selectedExercises.map((exercise, index) => <StudentWorkoutOrderCard key={exercise.id} exercise={exercise} index={index} onMove={moveWorkoutExercise} onSetsChange={updateExerciseSets} onDurationChange={updateExerciseDuration} onRemove={toggleWorkoutExercise} />)}
+              {selectedExercises.length === 0 && <div className="workout-selected-empty"><span><Icon name="dumbbell" size={24} /></span><strong>Seu treino começa aqui</strong><small>Adicione exercícios da biblioteca para montar a sequência.</small></div>}
+            </Reorder.Group>
+          </div>
+
+          <footer className="workout-builder-actions">
+            <div><strong>{selectedExercises.filter((item) => item.category !== 'Cardio').reduce((total, item) => total + (item.defaultSets || 3), 0)}</strong><span>séries</span>{selectedExercises.some((item) => item.category === 'Cardio') && <><strong>{selectedExercises.filter((item) => item.category === 'Cardio').reduce((total, item) => total + (item.durationMinutes || 20), 0)}</strong><span>min de cardio</span></>}</div>
+            <button type="button" onClick={saveWorkout} disabled={saving || !workoutName.trim() || selectedExercises.length === 0}><Icon name="check" size={18} /> {saving ? 'Salvando...' : editingTemplateId ? 'Salvar alterações' : 'Salvar treino'}</button>
+          </footer>
+        </section>
+
+        <aside className="student-saved-workouts">
+          <header><span>Seus treinos</span><h3>Treinos salvos</h3><p>Inicie uma sessão ou edite uma rotina existente.</p></header>
+          <div className="student-saved-workout-list">
+            {templates.map((template) => {
+              const status = getTemplateStatus(template);
+              return <article key={template.id} className={status ? `is-${status}` : ''}><span className="saved-workout-icon"><Icon name="dumbbell" size={19} /></span><div><strong>{template.name}</strong><small>{template.exercises?.length || 0} exercícios</small>{status && <em>{status === 'completed' ? 'Concluído hoje' : 'Em andamento'}</em>}</div><div className="saved-workout-actions"><button type="button" onClick={() => startWorkout(template)} aria-label={status === 'progress' ? 'Continuar treino' : 'Iniciar treino'}><Icon name={status === 'progress' ? 'chevronRight' : 'bolt'} size={16} /></button>{template.canEdit !== false && <><button type="button" onClick={() => editWorkout(template)} aria-label="Editar treino"><Icon name="edit" size={16} /></button><button type="button" onClick={() => deleteWorkout(template)} aria-label="Excluir treino"><Icon name="trash" size={16} /></button></>}</div></article>;
+            })}
+            {templates.length === 0 && <div className="workout-selected-empty"><span><Icon name="dumbbell" size={22} /></span><strong>Nenhum treino salvo</strong><small>Monte seu primeiro treino ao lado.</small></div>}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+
   return (
     <div className="my-workouts-container">
       <div className="my-workouts-content">
@@ -265,16 +421,18 @@ export default function MyWorkouts() {
           <article><span className="coral"><Icon name="book" size={19} /></span><div><strong>{exercises.length}</strong><small>Exercícios disponíveis</small></div></article>
         </section>
 
-        <div className="student-tabs" role="tablist" aria-label="Meus treinos">
-          <button className={activeTab === 'workouts' ? 'active' : ''} onClick={() => setActiveTab('workouts')}>
+        {false && <div className="student-tabs removed-exercise-tabs" role="tablist" aria-label="Meus treinos">
+          <button className="active">
             <Icon name="dumbbell" size={18} /> Treinos
           </button>
-          <button className={activeTab === 'exercises' ? 'active' : ''} onClick={() => setActiveTab('exercises')}>
+          <button>
             <Icon name="book" size={18} /> Exercícios
           </button>
-        </div>
+        </div>}
 
-        {activeTab === 'workouts' && (
+        {renderWorkoutStudio()}
+
+        {false && (
           <div className="workouts-layout">
             <section className="template-list-card">
               <div className="section-title-row">
@@ -396,7 +554,7 @@ export default function MyWorkouts() {
           </div>
         )}
 
-        {activeTab === 'exercises' && (
+        {false && (
           <>
             <div className="controls-bar">
               <div className="search-box">
@@ -432,7 +590,9 @@ export default function MyWorkouts() {
         )}
       </div>
 
-      {exerciseModalOpen && createPortal((
+      <ExerciseCreationModal open={exerciseModalOpen} form={exerciseForm} categories={categories} saving={saving} editing={Boolean(editingExercise)} onChange={setExerciseForm} onClose={closeExerciseModal} onSave={saveExercise} />
+
+      {false && exerciseModalOpen && createPortal((
         <div className="modal-overlay" onClick={closeExerciseModal}>
           <div className="industrial-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">

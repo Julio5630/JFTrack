@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
 import { api } from '../services/api';
 import Icon from '../components/Icon';
+import ExerciseCreationModal from '../components/ExerciseCreationModal';
 import './PersonalWorkspace.css';
 
 const emptyAssessment = {
@@ -67,6 +68,9 @@ const emptyAssessment = {
   workoutSuggestion: '',
   status: 'completed'
 };
+
+const emptyPersonalExercise = { name: '', category: 'Peito', videoUrl: '' };
+const personalExerciseCategories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Core', 'Corpo Inteiro', 'Cardio', 'Outros'];
 
 const medicalAlertMessage = 'Atenção: recomendada liberação médica antes de treinos intensos.';
 const medicalRiskFields = [
@@ -239,6 +243,9 @@ export default function PersonalWorkspace() {
   const [editingTemplateId, setEditingTemplateId] = useState(null);
   const [exerciseSearch, setExerciseSearch] = useState('');
   const [exerciseCategory, setExerciseCategory] = useState('Todos');
+  const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
+  const [exerciseForm, setExerciseForm] = useState(emptyPersonalExercise);
+  const [savingExercise, setSavingExercise] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [assigningWorkout, setAssigningWorkout] = useState(false);
   const [organizingStudent, setOrganizingStudent] = useState(null);
@@ -262,13 +269,14 @@ export default function PersonalWorkspace() {
   const selectedPersonalGym = gyms.find((gym) => String(gym.id) === String(selectedPersonalGymId)) || null;
 
   useEffect(() => {
-    if (!viewingAssessment && !viewingStudent && !organizingStudent) return undefined;
+    if (!viewingAssessment && !viewingStudent && !organizingStudent && !exerciseModalOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event) => {
       if (event.key === 'Escape') {
         setViewingAssessment(null);
         setViewingStudent(false);
         setOrganizingStudent(null);
+        setExerciseModalOpen(false);
       }
     };
     document.body.style.overflow = 'hidden';
@@ -277,7 +285,7 @@ export default function PersonalWorkspace() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', closeOnEscape);
     };
-  }, [viewingAssessment, viewingStudent, organizingStudent]);
+  }, [viewingAssessment, viewingStudent, organizingStudent, exerciseModalOpen]);
 
   const resolvePersonalGymId = (gymList, preferredGymId = '') => {
     if (!gymList.length) return '';
@@ -405,6 +413,38 @@ export default function PersonalWorkspace() {
             : { id: exerciseId, defaultSets: 3 }]
       };
     });
+  };
+
+  const createExerciseForWorkout = async () => {
+    if (!exerciseForm.name.trim()) {
+      setMessage('Informe o nome do exercício.');
+      return;
+    }
+
+    setSavingExercise(true);
+    try {
+      await api.createExercise(exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
+      const refreshedExercises = await api.getExercises();
+      const createdExercise = refreshedExercises.find((exercise) => exercise.name === exerciseForm.name.trim());
+      if (createdExercise) {
+        setTemplateForm((current) => ({
+          ...current,
+          exercises: current.exercises.some((item) => item.id === createdExercise.id)
+            ? current.exercises
+            : [...current.exercises, createdExercise.category === 'Cardio'
+              ? { id: createdExercise.id, defaultSets: 1, durationMinutes: 20 }
+              : { id: createdExercise.id, defaultSets: 3 }]
+        }));
+      }
+      await refreshData();
+      setExerciseForm(emptyPersonalExercise);
+      setExerciseModalOpen(false);
+      setMessage('Exercício criado e adicionado ao treino.');
+    } catch (error) {
+      setMessage(error.message || 'Não foi possível criar o exercício.');
+    } finally {
+      setSavingExercise(false);
+    }
   };
 
   const updateExerciseSets = (exerciseId, value) => {
@@ -1487,9 +1527,12 @@ export default function PersonalWorkspace() {
                 <strong>Biblioteca de exercícios</strong>
                 <small>{filteredExercises.length} disponíveis</small>
               </div>
-              <div className="workout-exercise-search">
+              <div className="personal-library-actions">
+                <div className="workout-exercise-search">
                 <Icon name="search" size={17} />
                 <input value={exerciseSearch} onChange={(event) => setExerciseSearch(event.target.value)} placeholder="Buscar exercício" />
+                </div>
+                <button type="button" className="personal-new-exercise" onClick={() => setExerciseModalOpen(true)}><Icon name="plus" size={16} /> Novo exercício</button>
               </div>
             </div>
 
@@ -2145,6 +2188,21 @@ export default function PersonalWorkspace() {
     {renderAssignmentOrganizer()}
     {renderStudentDetails()}
     {renderAssessmentDetails()}
+    <ExerciseCreationModal open={exerciseModalOpen} form={exerciseForm} categories={personalExerciseCategories} saving={savingExercise} onChange={setExerciseForm} onClose={() => setExerciseModalOpen(false)} onSave={createExerciseForWorkout} />
+    {false && exerciseModalOpen && createPortal(
+      <div className="personal-exercise-modal-overlay" onClick={() => setExerciseModalOpen(false)}>
+        <section className="personal-exercise-modal" onClick={(event) => event.stopPropagation()}>
+          <header><div><span>Novo movimento</span><h2>Criar exercício</h2><p>Cadastre um exercício que ainda não está na biblioteca.</p></div><button type="button" onClick={() => setExerciseModalOpen(false)} aria-label="Fechar"><Icon name="close" size={18} /></button></header>
+          <div className="personal-exercise-modal-body">
+            <label><span>Nome do exercício</span><input value={exerciseForm.name} onChange={(event) => setExerciseForm({ ...exerciseForm, name: event.target.value })} placeholder="Ex.: Supino reto com pausa" autoFocus /></label>
+            <label><span>Categoria</span><select value={exerciseForm.category} onChange={(event) => setExerciseForm({ ...exerciseForm, category: event.target.value })}>{personalExerciseCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+            <label><span>Vídeo do YouTube <small>opcional</small></span><input type="url" value={exerciseForm.videoUrl} onChange={(event) => setExerciseForm({ ...exerciseForm, videoUrl: event.target.value })} placeholder="https://youtube.com/..." /></label>
+          </div>
+          <footer><button type="button" onClick={() => setExerciseModalOpen(false)}>Cancelar</button><button type="button" className="primary" onClick={createExerciseForWorkout} disabled={savingExercise || !exerciseForm.name.trim()}><Icon name="check" size={17} /> {savingExercise ? 'Salvando...' : 'Criar e adicionar'}</button></footer>
+        </section>
+      </div>,
+      document.body
+    )}
     </>
   );
 }

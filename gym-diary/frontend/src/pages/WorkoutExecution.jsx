@@ -130,9 +130,10 @@ export default function WorkoutExecution() {
     };
 
     try {
-      await api.saveWorkout(historyEntry);
+      const result = await api.saveWorkout(historyEntry);
       updatePartial({ currentWorkout: null });
       await refreshData();
+      if (result?.offlinePending) notify('Treino concluído e salvo no aparelho. Ele será sincronizado quando a internet voltar.');
       navigate('/history');
     } catch (error) {
       notify(error.message || 'Erro ao finalizar treino');

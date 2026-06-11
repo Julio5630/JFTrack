@@ -1,0 +1,25 @@
+.exercise-creation-overlay { position: fixed; inset: 0; z-index: 3200; display: grid; place-items: center; overflow-y: auto; padding: 24px 18px; background: rgba(7,31,26,.54); backdrop-filter: blur(8px); }
+.exercise-creation-modal { width: min(580px,100%); overflow: hidden; border-radius: 27px; color: #202523; background: #fbfcfb; box-shadow: 0 35px 90px rgba(0,34,28,.32),0 8px 25px rgba(0,77,64,.14); }
+.exercise-creation-modal > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 23px 25px; background: radial-gradient(circle at 96% 0,rgba(175,239,221,.72),transparent 42%),#f8fbf9; }
+.exercise-creation-modal header span { color: #2b7767; font-size: .62rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.exercise-creation-modal h2 { margin: 6px 0 5px; color: #00342b; font-size: 1.25rem; }
+.exercise-creation-modal header p { margin: 0; color: #6f7975; font-size: .7rem; }
+.exercise-creation-modal header > button { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 14px; color: #004d40; background: #fff; cursor: pointer; box-shadow: 0 6px 16px rgba(0,77,64,.08); }
+.exercise-creation-body { display: grid; gap: 17px; padding: 23px 25px; }
+.exercise-creation-body label { min-width: 0; display: grid; gap: 8px; color: #52605a; font-size: .68rem; font-weight: 800; }
+.exercise-creation-body label span { display: flex; align-items: baseline; justify-content: space-between; }
+.exercise-creation-body label small { color: #89918e; font-size: .58rem; font-weight: 600; }
+.exercise-creation-body input, .exercise-creation-body select { width: 100%; min-width: 0; min-height: 49px; box-sizing: border-box; padding: 0 14px; border: 0; border-radius: 14px; outline: none; color: #202523; background: #eef3f0; font: .82rem 'Inter',sans-serif; }
+.exercise-creation-body input:focus, .exercise-creation-body select:focus { background: #fff; box-shadow: 0 0 0 3px rgba(148,211,193,.48); }
+.exercise-creation-modal > footer { display: flex; justify-content: flex-end; gap: 9px; padding: 17px 25px 21px; background: #f4f8f6; }
+.exercise-creation-modal footer button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 17px; border: 0; border-radius: 13px; color: #3d5d55; background: #e4ece8; font: 800 .7rem 'Inter',sans-serif; cursor: pointer; }
+.exercise-creation-modal footer button.primary { min-width: 150px; color: #fff; background: #004d40; box-shadow: 0 8px 18px rgba(0,77,64,.18); }
+.exercise-creation-modal footer button:disabled { opacity: .45; box-shadow: none; cursor: default; }
+
+@media (max-width: 680px) {
+  .exercise-creation-overlay { align-items: end; padding: 12px 0 0; }
+  .exercise-creation-modal { width: 100%; max-height: calc(100dvh - 12px); overflow-y: auto; border-radius: 27px 27px 0 0; }
+  .exercise-creation-modal > header, .exercise-creation-body { padding-left: 19px; padding-right: 19px; }
+  .exercise-creation-modal > footer { position: sticky; bottom: 0; padding: 15px 18px max(18px,env(safe-area-inset-bottom)); }
+  .exercise-creation-modal footer button { flex: 1; padding: 0 10px; }
+}

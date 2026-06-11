@@ -1,5 +1,6 @@
 // frontend/src/services/api.js
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { cacheApiResponse, getCachedApiResponse, queueOfflineMutation, syncOfflineQueue } from './offlineApi';
 
 let authToken = null;
 
@@ -42,6 +43,13 @@ async function request(endpoint, options = {}) {
 
     const url = `${API_URL}${endpoint}`;
     
+    const method = options.method || 'GET';
+
+    if (method !== 'GET' && typeof navigator !== 'undefined' && !navigator.onLine) {
+        const queued = queueOfflineMutation(endpoint, options);
+        if (queued) return queued;
+    }
+
     try {
         const response = await fetch(url, {
             ...options,
@@ -50,13 +58,23 @@ async function request(endpoint, options = {}) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Erro ${response.status}`);
+            const requestError = new Error(errorData.error || `Erro ${response.status}`);
+            requestError.isHttpError = true;
+            throw requestError;
         }
 
         if (response.status === 204) return null;
-        return await response.json();
+        const data = await response.json();
+        if (method === 'GET') cacheApiResponse(endpoint, data);
+        return data;
     } catch (error) {
         console.error(`[API] Erro:`, error.message);
+        if (!error.isHttpError && method === 'GET') {
+            const cached = getCachedApiResponse(endpoint);
+            if (cached !== null) return cached;
+        }
+        const queued = error.isHttpError ? null : queueOfflineMutation(endpoint, options);
+        if (queued) return queued;
         throw error;
     }
 }
@@ -173,3 +191,5 @@ export const api = {
         body: JSON.stringify(assessment),
     }),
 };
+
+export const syncPendingOfflineData = () => syncOfflineQueue(API_URL, getAuthToken());

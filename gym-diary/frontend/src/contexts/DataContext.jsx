@@ -121,6 +121,12 @@ export const DataProvider = ({ children }) => {
         loadAllData();
     }, [loadAllData]);
 
+    useEffect(() => {
+        const handleOfflineSync = () => loadAllData();
+        window.addEventListener('jftrack:offline-synced', handleOfflineSync);
+        return () => window.removeEventListener('jftrack:offline-synced', handleOfflineSync);
+    }, [loadAllData]);
+
     const refreshData = useCallback(() => {
         loadAllData();
     }, [loadAllData]);
