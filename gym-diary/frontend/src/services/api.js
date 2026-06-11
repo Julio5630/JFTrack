@@ -66,9 +66,9 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email, password }),
     }),
-    register: (name, email, password, accountType = 'student', gymName = '') => request('/auth/register', {
+    register: (name, email, password, accountType = 'student', gymName = '', phone = '') => request('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password, accountType, gymName }),
+        body: JSON.stringify({ name, email, password, accountType, gymName, phone }),
     }),
     getMe: () => request('/me'),
     updateMe: (updates) => request('/me', {
@@ -86,13 +86,13 @@ export const api = {
     }),
     deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
     getExercises: () => request('/exercises'),
-    createExercise: (name, category, gifUrl = '') => request('/exercises', {
+    createExercise: (name, category, videoUrl = '') => request('/exercises', {
         method: 'POST',
-        body: JSON.stringify({ name, category, gifUrl }),
+        body: JSON.stringify({ name, category, videoUrl }),
     }),
-    updateExercise: (id, name, category, gifUrl = '') => request(`/exercises/${id}`, {
+    updateExercise: (id, name, category, videoUrl = '') => request(`/exercises/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ name, category, gifUrl }),
+        body: JSON.stringify({ name, category, videoUrl }),
     }),
     deleteExercise: (id) => request(`/exercises/${id}`, { method: 'DELETE' }),
     getTemplates: () => request('/templates'),
@@ -152,6 +152,10 @@ export const api = {
     updatePersonalAssignment: (id, updates) => request(`/personal/assignments/${id}`, {
         method: 'PUT',
         body: JSON.stringify(updates),
+    }),
+    reorderPersonalAssignments: (studentId, assignmentIds, gymId = '') => request('/personal/assignments/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ studentId, assignmentIds, gymId }),
     }),
     getPersonalAssessments: (studentId = '', gymId = '') => {
         const params = new URLSearchParams();

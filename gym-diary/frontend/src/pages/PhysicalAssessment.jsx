@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
+import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './PhysicalAssessment.css';
 
@@ -12,11 +13,16 @@ const formatDate = (date) => date
   : 'Data não informada';
 
 export default function PhysicalAssessment() {
+  const { notify } = useAlert();
   const [assessments, setAssessments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [sourceFilter, setSourceFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setErrorState] = useState('');
+  const setError = (message) => {
+    setErrorState(message);
+    if (message) notify({ message, type: 'error' });
+  };
 
   useEffect(() => {
     let mounted = true;

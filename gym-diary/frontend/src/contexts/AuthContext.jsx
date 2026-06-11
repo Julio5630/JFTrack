@@ -242,9 +242,9 @@ export const AuthProvider = ({ children }) => {
         return true;
     };
 
-    const register = async (name, email, password, accountType = 'student', gymName = '') => {
+    const register = async (name, email, password, accountType = 'student', gymName = '', phone = '') => {
         try {
-            await api.register(name, email, password, accountType, gymName);
+            await api.register(name, email, password, accountType, gymName, phone);
             return await login(email, password);
         } catch (error) {
             console.error('Erro ao registrar:', error.message);

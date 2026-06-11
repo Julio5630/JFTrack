@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
 
 const getPersonalGymIds = async (personalUserId) => {
     const memberships = await query(
@@ -283,6 +283,7 @@ const toAssignmentDto = (assignment) => ({
     status: assignment.status,
     editableByStudent: Boolean(assignment.editable_by_student),
     notes: assignment.notes || '',
+    displayOrder: Number(assignment.display_order) || 0,
     createdAt: assignment.created_at,
     updatedAt: assignment.updated_at,
     student: assignment.student_name ? {
@@ -338,7 +339,7 @@ const getAssignments = async (personalUserId, gymId = null) => {
      JOIN users u ON u.id = pwa.student_user_id
      JOIN workout_templates wt ON wt.id = pwa.template_id
      WHERE pwa.personal_user_id = ? ${gymClause}
-     ORDER BY pwa.updated_at DESC`,
+     ORDER BY u.name ASC, pwa.display_order ASC, pwa.created_at ASC`,
     params
     );
 };
@@ -512,7 +513,7 @@ const getStudentProfile = async (req, res) => {
                  FROM personal_workout_assignments pwa
                  JOIN workout_templates wt ON wt.id = pwa.template_id
                  WHERE pwa.personal_user_id = ? AND pwa.student_user_id = ? ${gymId ? 'AND pwa.gym_id = ?' : ''}
-                 ORDER BY pwa.updated_at DESC`,
+                 ORDER BY pwa.display_order ASC, pwa.created_at ASC`,
                 gymId ? [req.user.id, studentId, gymId] : [req.user.id, studentId]
             ),
             getAssessments(req.user.id, studentId, gymId)
@@ -622,23 +623,73 @@ const assignWorkout = async (req, res) => {
             [gymId, templateId, req.user.id]
         );
 
+        const nextOrder = await query(
+            `SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order
+             FROM personal_workout_assignments
+             WHERE personal_user_id = ? AND student_user_id = ? AND gym_id = ?`,
+            [req.user.id, resolvedStudentId, gymId]
+        );
+
         await query(
             `INSERT INTO personal_workout_assignments
-             (personal_user_id, student_user_id, gym_id, template_id, status, editable_by_student, notes)
-             VALUES (?, ?, ?, ?, 'active', FALSE, ?)
+             (personal_user_id, student_user_id, gym_id, template_id, status, editable_by_student, notes, display_order)
+             VALUES (?, ?, ?, ?, 'active', FALSE, ?, ?)
              ON DUPLICATE KEY UPDATE
                 gym_id = VALUES(gym_id),
                 status = 'active',
                 editable_by_student = FALSE,
                 notes = VALUES(notes),
                 updated_at = CURRENT_TIMESTAMP`,
-            [req.user.id, resolvedStudentId, gymId, templateId, String(notes || '').trim()]
+            [req.user.id, resolvedStudentId, gymId, templateId, String(notes || '').trim(), Number(nextOrder[0]?.next_order) || 1]
         );
 
         res.status(201).json({ message: 'Treino atribuido ao aluno' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao atribuir treino' });
+    }
+};
+
+const reorderAssignments = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        const { studentId, assignmentIds = [], gymId: requestedGymId = null } = req.body;
+        if (!studentId || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+            return res.status(400).json({ error: 'Aluno e ordem dos treinos sao obrigatorios' });
+        }
+
+        const gymId = await resolvePersonalGymId(req.user.id, requestedGymId);
+        if (!gymId) return res.status(400).json({ error: 'Academia invalida' });
+
+        const [ownedAssignments] = await connection.query(
+            `SELECT id FROM personal_workout_assignments
+             WHERE personal_user_id = ? AND student_user_id = ? AND gym_id = ?`,
+            [req.user.id, studentId, gymId]
+        );
+        const ownedIds = new Set(ownedAssignments.map((assignment) => Number(assignment.id)));
+        const normalizedIds = assignmentIds.map(Number);
+
+        if (normalizedIds.length !== ownedIds.size || normalizedIds.some((id) => !ownedIds.has(id))) {
+            return res.status(400).json({ error: 'A ordem enviada nao corresponde aos treinos do aluno' });
+        }
+
+        await connection.beginTransaction();
+        for (const [index, assignmentId] of normalizedIds.entries()) {
+            await connection.execute(
+                `UPDATE personal_workout_assignments
+                 SET display_order = ?, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = ? AND personal_user_id = ? AND student_user_id = ? AND gym_id = ?`,
+                [index + 1, assignmentId, req.user.id, studentId, gymId]
+            );
+        }
+        await connection.commit();
+        res.json({ message: 'Ordem dos treinos atualizada' });
+    } catch (error) {
+        await connection.rollback();
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao ordenar treinos do aluno' });
+    } finally {
+        connection.release();
     }
 };
 
@@ -859,6 +910,7 @@ module.exports = {
     getStudentProfile,
     listAssignments,
     assignWorkout,
+    reorderAssignments,
     updateAssignment,
     listAssessments,
     createAssessment,

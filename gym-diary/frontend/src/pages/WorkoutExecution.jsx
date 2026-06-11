@@ -1,308 +1,296 @@
-// src/pages/WorkoutExecution.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useAlert } from '../contexts/AlertContext';
 import { api } from '../services/api';
 import Icon from '../components/Icon';
 import './WorkoutExecution.css';
 
+const getYouTubeEmbedUrl = (url = '') => {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    let videoId = '';
+    if (parsed.hostname.includes('youtu.be')) videoId = parsed.pathname.slice(1);
+    if (parsed.hostname.includes('youtube.com')) videoId = parsed.searchParams.get('v') || parsed.pathname.split('/').filter(Boolean).pop();
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+  } catch {
+    return '';
+  }
+};
+
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+};
+
 export default function WorkoutExecution() {
   const { data, updatePartial, refreshData } = useData();
   const { isAcademyStudent } = useAuth();
+  const { notify, confirm } = useAlert();
   const navigate = useNavigate();
   const [currentWorkout, setCurrentWorkout] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!data) return;
-
-    if (data.currentWorkout) {
+    if (data?.currentWorkout) {
       setCurrentWorkout(data.currentWorkout);
-      setLoading(false);
-      return;
+      const firstIncomplete = data.currentWorkout.exercises?.findIndex(exercise => exercise.sets.some(set => !set.completed));
+      const savedIndex = Number.isInteger(data.currentWorkout.activeExerciseIndex)
+        ? data.currentWorkout.activeExerciseIndex
+        : Math.max(0, firstIncomplete);
+      setActiveExerciseIndex(Math.min(savedIndex, Math.max(0, data.currentWorkout.exercises.length - 1)));
+      setElapsedSeconds(data.currentWorkout.startedAt
+        ? Math.max(0, Math.floor((Date.now() - data.currentWorkout.startedAt) / 1000))
+        : 0);
     }
+  }, [data]);
 
-    setCurrentWorkout(null);
-    setLoading(false);
-  }, [data, updatePartial]);
+  useEffect(() => {
+    if (!currentWorkout) return undefined;
+    const timer = window.setInterval(() => setElapsedSeconds((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [Boolean(currentWorkout)]);
 
-  const createWorkoutFromTemplate = (template) => {
-    const workoutExercises = template.exercises.map(exItem => {
-      const exercise = data.exercises?.find(e => e.id === exItem.id);
-      const defaultSets = exItem.defaultSets || 3;
-      const suggestedReps = parseInt(String(exItem.defaultReps || '').match(/\d+/)?.[0], 10) || 8;
-      const sets = Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, completed: false }));
-        return {
-          exerciseId: exItem.id,
-          exerciseName: exercise ? exercise.name : 'Exercício',
-          gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
-          sets,
-        };
-      });
-      const newWorkout = {
-        id: Date.now(),
-        templateId: template.id,
-        name: template.name,
-        exercises: workoutExercises,
-      };
-      setCurrentWorkout(newWorkout);
-      updatePartial({ currentWorkout: newWorkout });
+  const updateWorkout = (updater) => {
+    setCurrentWorkout((previous) => {
+      const next = updater(previous);
+      updatePartial({ currentWorkout: next });
+      return next;
+    });
   };
 
-  const updateWorkout = (updatedWorkout) => {
-    setCurrentWorkout(updatedWorkout);
-    updatePartial({ currentWorkout: updatedWorkout });
+  const selectExercise = (index) => {
+    const boundedIndex = Math.max(0, Math.min(index, currentWorkout.exercises.length - 1));
+    setActiveExerciseIndex(boundedIndex);
+    updateWorkout(workout => ({ ...workout, activeExerciseIndex: boundedIndex }));
   };
 
-  const addSet = (exIndex) => {
-    const newWorkout = { ...currentWorkout };
-    newWorkout.exercises[exIndex].sets.push({ reps: 8, weight: 0, completed: false });
-    updateWorkout(newWorkout);
+  useEffect(() => {
+    if (!currentWorkout || currentWorkout.activeExerciseIndex === activeExerciseIndex) return;
+    const nextWorkout = { ...currentWorkout, activeExerciseIndex };
+    setCurrentWorkout(nextWorkout);
+    updatePartial({ currentWorkout: nextWorkout });
+  }, [activeExerciseIndex, currentWorkout, updatePartial]);
+
+  const updateSet = (exerciseIndex, setIndex, changes) => {
+    updateWorkout((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise, index) => index !== exerciseIndex ? exercise : ({
+        ...exercise,
+        sets: exercise.sets.map((set, currentSetIndex) => currentSetIndex === setIndex ? { ...set, ...changes } : set)
+      }))
+    }));
   };
 
-  const removeSet = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    newWorkout.exercises[exIndex].sets.splice(setIndex, 1);
-    updateWorkout(newWorkout);
+  const addSet = () => {
+    if (currentWorkout.exercises[activeExerciseIndex]?.exerciseCategory === 'Cardio') return;
+    updateWorkout((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise, index) => index !== activeExerciseIndex ? exercise : ({
+        ...exercise,
+        sets: [...exercise.sets, { reps: 8, weight: 0, durationSeconds: 0, completed: false }]
+      }))
+    }));
   };
 
-  const incrementReps = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    newWorkout.exercises[exIndex].sets[setIndex].reps += 1;
-    updateWorkout(newWorkout);
+  const removeSet = (setIndex) => {
+    updateWorkout((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise, index) => index !== activeExerciseIndex ? exercise : ({
+        ...exercise,
+        sets: exercise.sets.filter((_, currentSetIndex) => currentSetIndex !== setIndex)
+      }))
+    }));
   };
 
-  const decrementReps = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    const current = newWorkout.exercises[exIndex].sets[setIndex].reps;
-    if (current > 0) {
-      newWorkout.exercises[exIndex].sets[setIndex].reps -= 1;
-      updateWorkout(newWorkout);
-    }
-  };
-
-  const incrementWeight = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    newWorkout.exercises[exIndex].sets[setIndex].weight += 2.5;
-    updateWorkout(newWorkout);
-  };
-
-  const decrementWeight = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    const current = newWorkout.exercises[exIndex].sets[setIndex].weight;
-    if (current > 0) {
-      newWorkout.exercises[exIndex].sets[setIndex].weight -= 2.5;
-      updateWorkout(newWorkout);
-    }
-  };
-
-  const toggleComplete = (exIndex, setIndex) => {
-    const newWorkout = { ...currentWorkout };
-    newWorkout.exercises[exIndex].sets[setIndex].completed = !newWorkout.exercises[exIndex].sets[setIndex].completed;
-    updateWorkout(newWorkout);
-  };
-
-  const finishWorkout = async () => {
-    if (!currentWorkout) return;
+  const finishWorkout = async (workoutToFinish = currentWorkout) => {
+    if (!workoutToFinish || saving) return;
+    setSaving(true);
     const historyEntry = {
-      name: currentWorkout.name,
-      template_id: currentWorkout.templateId || null,
-      assignment_id: currentWorkout.assignmentId || null,
-      gym_id: currentWorkout.gymId || null,
-      source_type: currentWorkout.sourceType || (isAcademyStudent ? 'academy' : 'own'),
-      date: new Date().toISOString().slice(0, 10),
-      exercises: currentWorkout.exercises.map(ex => ({
-        exerciseId: ex.exerciseId,
-        sets: ex.sets.map(s => ({ reps: s.reps, weight: s.weight, completed: s.completed })),
-      })),
+      name: workoutToFinish.name,
+      template_id: workoutToFinish.templateId || null,
+      assignment_id: workoutToFinish.assignmentId || null,
+      gym_id: workoutToFinish.gymId || null,
+      source_type: workoutToFinish.sourceType || (isAcademyStudent ? 'academy' : 'own'),
+      date: new Date().toLocaleDateString('en-CA'),
+      exercises: workoutToFinish.exercises.map((exercise) => ({
+        exerciseId: exercise.exerciseId,
+        sets: exercise.sets.map((set) => ({
+          reps: set.reps,
+          weight: set.weight,
+          durationSeconds: set.durationSeconds || 0,
+          completed: set.completed
+        }))
+      }))
     };
+
     try {
       await api.saveWorkout(historyEntry);
       updatePartial({ currentWorkout: null });
       await refreshData();
       navigate('/history');
     } catch (error) {
-      alert(error.message || 'Erro ao finalizar treino');
+      notify(error.message || 'Erro ao finalizar treino');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const selectTemplate = (templateId) => {
-    const template = data.workoutTemplates?.find(w => w.id === templateId);
-    if (template) {
-      const workoutExercises = template.exercises.map(exItem => {
-        const exercise = data.exercises?.find(e => e.id === exItem.id);
-        const defaultSets = exItem.defaultSets || 3;
-        const sets = Array(defaultSets).fill().map(() => ({ reps: 8, weight: 0, completed: false }));
-        return {
-          exerciseId: exItem.id,
-          exerciseName: exercise ? exercise.name : 'Exercício',
-          gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
-          sets,
-        };
-      });
-      const newWorkout = {
-        id: Date.now(),
-        templateId: template.id,
-        assignmentId: template.assignmentId,
-        gymId: template.gymId || null,
-        sourceType: isAcademyStudent ? 'academy' : 'own',
-        scopeKey: isAcademyStudent ? `academy:${template.gymId || 'selected'}` : 'own:own',
-        name: template.name,
-        exercises: workoutExercises,
-      };
-      setCurrentWorkout(newWorkout);
-      updatePartial({ currentWorkout: newWorkout });
-    }
+  const leaveWorkout = async () => {
+    if (!await confirm({ title: 'Sair do treino?', message: 'Seu progresso ficará salvo para você continuar depois.', confirmLabel: 'Sair e salvar', tone: 'success' })) return;
+    navigate(isAcademyStudent ? '/student/workouts' : '/my-workouts');
   };
 
-  if (loading) {
-    return <div className="execution-loading">Carregando...</div>;
-  }
+  const stats = useMemo(() => {
+    if (!currentWorkout) return { total: 0, completed: 0, percent: 0 };
+    const total = currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
+    const completed = currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.filter((set) => set.completed).length, 0);
+    return { total, completed, percent: total ? Math.round((completed / total) * 100) : 0 };
+  }, [currentWorkout]);
+
+  if (!data) return <div className="execution-loading">Carregando treino...</div>;
 
   if (!currentWorkout) {
     return (
-      <div className="execution-container">
-        <div className="industrial-bg"></div>
-        <div className="gear gear-exec-1"></div>
-        <div className="gear gear-exec-2"></div>
-        <div className="execution-content">
-          <div className="dashboard-header">
-            <h1>EXECUÇÃO DE TREINO</h1>
-            <div className="header-rivets">
-              <span className="rivet"></span>
-              <span className="rivet"></span>
-              <span className="rivet"></span>
-            </div>
-            <p className="user-greeting">ESCOLHA UM TREINO PARA INICIAR</p>
-          </div>
-          <div className="selector-card">
-            <div className="card-corner"></div>
-            <h3>ESCOLHA UM TREINO PARA INICIAR</h3>
-            <div className="template-list">
-              {data.workoutTemplates?.map(template => (
-                <button key={template.id} className="template-btn" onClick={() => selectTemplate(template.id)}>
-                  {template.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <main className="execution-empty-page">
+        <section>
+          <span><Icon name="dumbbell" size={26} /></span>
+          <h1>Nenhum treino em andamento</h1>
+          <p>Escolha um treino para iniciar sua sessão.</p>
+          <button onClick={() => navigate(isAcademyStudent ? '/student/workouts' : '/my-workouts')}>Ver treinos</button>
+        </section>
+      </main>
     );
   }
 
-  const totalSets = currentWorkout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0);
-  const completedSets = currentWorkout.exercises.reduce(
-    (total, exercise) => total + exercise.sets.filter(set => set.completed).length,
-    0
-  );
-  const progressPercent = totalSets ? Math.round((completedSets / totalSets) * 100) : 0;
+  const exercise = currentWorkout.exercises[activeExerciseIndex];
+  const isTimedExercise = exercise.exerciseCategory === 'Cardio' || exercise.sets.some((set) => Number(set.durationSeconds) > 0);
+  const activeSetIndex = Math.max(0, exercise.sets.findIndex((set) => !set.completed));
+  const currentSetIndex = exercise.sets.some((set) => !set.completed) ? activeSetIndex : Math.max(exercise.sets.length - 1, 0);
+  const currentSet = exercise.sets[currentSetIndex] || { reps: 0, weight: 0, durationSeconds: 0, completed: false };
+  const embedUrl = getYouTubeEmbedUrl(exercise.videoUrl);
+  const exerciseComplete = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
+
+  const completeCurrentSet = () => {
+    const isCompleting = !currentSet.completed;
+    const isLastPendingSet = isCompleting && exercise.sets.every((set, index) => (
+      index === currentSetIndex || set.completed
+    ));
+
+    updateSet(activeExerciseIndex, currentSetIndex, { completed: isCompleting });
+
+    if (isLastPendingSet && activeExerciseIndex < currentWorkout.exercises.length - 1) {
+      selectExercise(activeExerciseIndex + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (isLastPendingSet) {
+      const completedWorkout = {
+        ...currentWorkout,
+        exercises: currentWorkout.exercises.map((currentExercise, exerciseIndex) => (
+          exerciseIndex !== activeExerciseIndex ? currentExercise : {
+            ...currentExercise,
+            sets: currentExercise.sets.map((set, setIndex) => (
+              setIndex === currentSetIndex ? { ...set, completed: true } : set
+            ))
+          }
+        ))
+      };
+      finishWorkout(completedWorkout);
+    }
+  };
 
   return (
-    <div className="execution-container">
-      <div className="industrial-bg"></div>
-      <div className="gear gear-exec-1"></div>
-      <div className="gear gear-exec-2"></div>
-      <div className="execution-content">
-        <div className="dashboard-header">
-          <h1>EXECUÇÃO DE TREINO</h1>
-          <div className="header-rivets">
-            <span className="rivet"></span>
-            <span className="rivet"></span>
-            <span className="rivet"></span>
-          </div>
-          <p className="user-greeting">{currentWorkout.name}</p>
+    <main className="execution-page">
+      <div className="execution-top-progress"><span style={{ width: `${stats.percent}%` }}></span></div>
+
+      <header className="execution-header">
+        <button type="button" onClick={leaveWorkout} aria-label="Sair do treino"><Icon name="close" size={20} /></button>
+        <div>
+          <strong>{currentWorkout.name}</strong>
+          <span>Exercício {activeExerciseIndex + 1} de {currentWorkout.exercises.length}</span>
         </div>
+        <div className="execution-timer"><Icon name="history" size={17} /><span>{formatTime(elapsedSeconds)}</span></div>
+      </header>
 
-        <div className="execution-card">
-          <div className="card-corner"></div>
-          <div className="workout-header">
-            <div>
-              <h2>{currentWorkout.name}</h2>
-              <p>{completedSets} de {totalSets} series concluidas</p>
-            </div>
-            <button className="finish-btn" onClick={finishWorkout}>
-              FINALIZAR TREINO
-            </button>
+      <div className="execution-shell">
+        <nav className="execution-exercise-tabs" aria-label="Exercícios do treino">
+          {currentWorkout.exercises.map((item, index) => {
+            const complete = item.sets.length > 0 && item.sets.every((set) => set.completed);
+            return (
+              <button key={`${item.exerciseId}-${index}`} className={`${index === activeExerciseIndex ? 'active' : ''} ${complete ? 'complete' : ''}`} onClick={() => selectExercise(index)}>
+                <span>{complete ? <Icon name="check" size={13} /> : index + 1}</span>
+                <strong>{item.exerciseName}</strong>
+              </button>
+            );
+          })}
+        </nav>
+
+        <section className="execution-exercise-hero">
+          <div className="execution-video">
+            {embedUrl ? (
+              <iframe src={embedUrl} title={`Como executar ${exercise.exerciseName}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+            ) : (
+              <div className="execution-video-empty"><span><Icon name="dumbbell" size={27} /></span><strong>Vídeo demonstrativo</strong><p>Cadastre um link do YouTube neste exercício para exibi-lo aqui.</p></div>
+            )}
           </div>
-
-          <div className="execution-progress" aria-label={`Progresso do treino: ${progressPercent}%`}>
-            <div className="execution-progress-fill" style={{ width: `${progressPercent}%` }}></div>
+          <div className="execution-exercise-title">
+            <div><span>{exerciseComplete ? 'Exercício concluído' : isTimedExercise ? 'Atividade por tempo' : `Série ${currentSetIndex + 1} de ${exercise.sets.length}`}</span><h1>{exercise.exerciseName}</h1></div>
+            {exercise.videoUrl && !embedUrl && <a href={exercise.videoUrl} target="_blank" rel="noreferrer">Abrir vídeo</a>}
           </div>
+        </section>
 
-          <div className="exercises-list">
-            {currentWorkout.exercises.map((exercise, exIdx) => (
-              <div key={exIdx} className="exercise-block">
-                <div className="exercise-header">
-                  <div>
-                    <h3>{exercise.exerciseName}</h3>
-                    <span>{exercise.sets.filter(set => set.completed).length}/{exercise.sets.length} series</span>
-                  </div>
-                  {!isAcademyStudent && (
-                    <button
-                      className="remove-exercise"
-                      onClick={() => {
-                        const newWorkout = { ...currentWorkout };
-                        newWorkout.exercises.splice(exIdx, 1);
-                        updateWorkout(newWorkout);
-                      }}
-                    >
-                      <Icon name="close" size={16} />
-                    </button>
-                  )}
-                </div>
-                <div className={`exercise-gif-slot ${exercise.gifUrl ? 'has-gif' : ''}`}>
-                  {exercise.gifUrl ? (
-                    <img src={exercise.gifUrl} alt={`GIF de execucao de ${exercise.exerciseName}`} />
-                  ) : (
-                    <span>Espaco para GIF de execucao</span>
-                  )}
-                </div>
-                <div className="sets-container">
-                  {exercise.sets.map((set, setIdx) => (
-                    <div key={setIdx} className="set-row">
-                      <span className="set-number">Serie {setIdx + 1}</span>
-                      {/* Checkbox estilizado SVG */}
-                      <label className="checkbox-wrapper">
-                        <input
-                          type="checkbox"
-                          checked={set.completed}
-                          onChange={() => toggleComplete(exIdx, setIdx)}
-                        />
-                        <svg viewBox="0 0 35.6 35.6">
-                          <circle className="background" cx="17.8" cy="17.8" r="17.8"></circle>
-                          <circle className="stroke" cx="17.8" cy="17.8" r="14.9"></circle>
-                          <polyline className="check" points="11.8 18.2 15.7 22.2 23.6 14"></polyline>
-                        </svg>
-                      </label>
+        <section className={`execution-control-grid ${isTimedExercise ? 'timed' : ''}`}>
+          {isTimedExercise ? (
+            <article>
+              <span>Tempo (minutos)</span>
+              <div><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { durationSeconds: Math.max(60, Number(currentSet.durationSeconds) - 300) })}>−</button><strong>{Math.round(Number(currentSet.durationSeconds) / 60)}</strong><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { durationSeconds: Number(currentSet.durationSeconds) + 300 })}>+</button></div>
+            </article>
+          ) : <>
+            <article>
+              <span>Carga (kg)</span>
+              <div><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { weight: Math.max(0, Number(currentSet.weight) - 2.5) })}>−</button><strong>{currentSet.weight}</strong><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { weight: Number(currentSet.weight) + 2.5 })}>+</button></div>
+            </article>
+            <article>
+              <span>Repetições</span>
+              <div><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { reps: Math.max(0, Number(currentSet.reps) - 1) })}>−</button><strong>{currentSet.reps}</strong><button onClick={() => updateSet(activeExerciseIndex, currentSetIndex, { reps: Number(currentSet.reps) + 1 })}>+</button></div>
+            </article>
+          </>}
+        </section>
 
-                      <div className="set-controls">
-                        <div className="control-group">
-                          <button className="control-btn" onClick={() => decrementReps(exIdx, setIdx)}>-</button>
-                          <span className="value">{set.reps}</span>
-                          <button className="control-btn" onClick={() => incrementReps(exIdx, setIdx)}>+</button>
-                          <span className="label">REPS</span>
-                        </div>
-                        <div className="control-group">
-                          <button className="control-btn" onClick={() => decrementWeight(exIdx, setIdx)}>-</button>
-                          <span className="value">{set.weight} kg</span>
-                          <button className="control-btn" onClick={() => incrementWeight(exIdx, setIdx)}>+</button>
-                          <span className="label">PESO</span>
-                        </div>
-                        <button className="remove-set" onClick={() => removeSet(exIdx, setIdx)} aria-label="Remover serie"><Icon name="close" size={16} /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="add-set-btn" onClick={() => addSet(exIdx)}>
-                  + Adicionar série
-                </button>
+        {isTimedExercise ? (
+          <section className={`execution-cardio-card ${exerciseComplete ? 'complete' : ''}`}>
+            <span><Icon name={exerciseComplete ? 'check' : 'history'} size={22} /></span>
+            <div><strong>{Math.round(Number(currentSet.durationSeconds) / 60)} minutos de atividade</strong><small>{exerciseComplete ? 'Cardio concluído' : 'Conclua a atividade após cumprir o tempo planejado.'}</small></div>
+          </section>
+        ) : <section className="execution-sets-card">
+          <div className="execution-section-heading"><div><span>Progresso do exercício</span><h2>Séries</h2></div><strong>{exercise.sets.filter((set) => set.completed).length}/{exercise.sets.length}</strong></div>
+          <div className="execution-set-list">
+            {exercise.sets.map((set, index) => (
+              <div key={index} className={`${set.completed ? 'complete' : ''} ${index === currentSetIndex && !exerciseComplete ? 'current' : ''}`}>
+                <span>{index + 1}</span>
+                <button className="execution-set-value" onClick={() => setActiveExerciseIndex(activeExerciseIndex)}>{set.weight}kg × {set.reps} reps</button>
+                <button className="execution-set-check" onClick={() => updateSet(activeExerciseIndex, index, { completed: !set.completed })} aria-label={set.completed ? 'Reabrir série' : 'Concluir série'}><Icon name="check" size={16} /></button>
+                {!isAcademyStudent && exercise.sets.length > 1 && <button className="execution-remove-set" onClick={() => removeSet(index)} aria-label="Remover série"><Icon name="close" size={15} /></button>}
               </div>
             ))}
           </div>
+        </section>}
+
+        <div className="execution-exercise-navigation">
+          <button disabled={activeExerciseIndex === 0} onClick={() => setActiveExerciseIndex((index) => index - 1)}><Icon name="chevronLeft" size={17} /> Anterior</button>
+          <button disabled={activeExerciseIndex === currentWorkout.exercises.length - 1} onClick={() => setActiveExerciseIndex((index) => index + 1)}>Próximo <Icon name="chevronRight" size={17} /></button>
         </div>
       </div>
-    </div>
+
+      <footer className="execution-actions">
+        {!isTimedExercise && <button className="execution-extra-set" onClick={addSet}>+ Série extra</button>}
+        <button className={`execution-complete-set ${isTimedExercise ? 'timed' : ''}`} onClick={completeCurrentSet}><Icon name="check" size={20} /> {currentSet.completed ? (isTimedExercise ? 'Reabrir cardio' : 'Reabrir série') : (isTimedExercise ? 'Concluir cardio' : 'Concluir série')}</button>
+        <button className="execution-finish" onClick={() => finishWorkout()} disabled={saving}>{saving ? 'Salvando...' : 'Finalizar'}</button>
+      </footer>
+    </main>
   );
 }

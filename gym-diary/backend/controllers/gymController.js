@@ -422,7 +422,7 @@ const getStudentWorkouts = async (req, res) => {
              JOIN workout_templates wt ON wt.id = pwa.template_id
              JOIN users u ON u.id = pwa.personal_user_id
              WHERE pwa.student_user_id = ? AND pwa.status = 'active' ${gymClause}
-             ORDER BY pwa.updated_at DESC`,
+             ORDER BY pwa.display_order ASC, pwa.created_at ASC`,
             params
         );
 
@@ -437,10 +437,11 @@ const getStudentWorkouts = async (req, res) => {
                 te.exercise_id AS id,
                 te.default_sets AS defaultSets,
                 te.default_reps AS defaultReps,
+                te.duration_minutes AS durationMinutes,
                 te.position,
                 e.name,
                 e.category,
-                e.gif_url AS gifUrl,
+                e.video_url AS videoUrl,
                 e.user_id AS ownerUserId
              FROM template_exercises te
              JOIN exercises e ON e.id = te.exercise_id
@@ -457,8 +458,8 @@ const getStudentWorkouts = async (req, res) => {
                     user_id: exercise.ownerUserId,
                     name: exercise.name,
                     category: exercise.category,
-                    gifUrl: exercise.gifUrl,
-                    gif_url: exercise.gifUrl
+                    videoUrl: exercise.videoUrl,
+                    video_url: exercise.videoUrl
                 });
             }
         });
@@ -475,7 +476,7 @@ const getStudentWorkouts = async (req, res) => {
                 canEdit: false,
                 exercises: templateExercises
                     .filter((exercise) => exercise.template_id === template.id)
-                    .map(({ template_id, position, name, category, gifUrl, ownerUserId, ...exercise }) => exercise)
+                    .map(({ template_id, position, name, category, ownerUserId, ...exercise }) => exercise)
             })),
             exercises: Array.from(exerciseMap.values())
         });

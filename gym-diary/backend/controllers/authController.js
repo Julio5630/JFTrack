@@ -11,6 +11,7 @@ const toUserDto = (user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
+    phone: user.phone || '',
     isAdmin: Boolean(user.is_admin),
     profiles: normalizeProfiles(user.profiles || (user.is_admin ? ['student', 'admin'] : ['student']))
 });
@@ -55,7 +56,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
     try {
-        const { name, email, password, accountType = 'student', gymName = '' } = req.body;
+        const { name, email, password, accountType = 'student', gymName = '', phone = '' } = req.body;
         const normalizedAccountType = accountType === 'gym' ? 'gym' : 'student';
 
         if (!name || !email || !password) {
@@ -69,10 +70,11 @@ const register = async (req, res) => {
         const hashed = await hashPassword(password);
         const normalizedEmail = String(email).trim().toLowerCase();
         const normalizedName = String(name).trim();
+        const normalizedPhone = String(phone).trim();
 
         const result = await query(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-            [normalizedName, normalizedEmail, hashed]
+            'INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)',
+            [normalizedName, normalizedEmail, hashed, normalizedPhone]
         );
 
         if (normalizedAccountType === 'gym') {

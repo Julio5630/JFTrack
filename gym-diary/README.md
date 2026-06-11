@@ -137,7 +137,6 @@ A aba **Meus Treinos** deve unificar:
 - Biblioteca de exercícios
 - Cadastro de exercícios
 - Edição de exercícios
-- Campo para GIF de execução dos exercícios
 
 Ou seja, remover a separação entre “Criar Treino” e “Biblioteca” para esse tipo de usuário. Dentro de **Meus Treinos**, usar abas internas:
 

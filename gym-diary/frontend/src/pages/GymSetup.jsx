@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './GymSetup.css';
 
@@ -16,11 +17,12 @@ const emptyForm = {
 
 export default function GymSetup() {
   const { user, refreshCurrentUser } = useAuth();
+  const { notify } = useAlert();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const setMessage = (message) => message && notify(message);
 
   useEffect(() => {
     let mounted = true;
@@ -99,8 +101,6 @@ export default function GymSetup() {
               <p>Esta etapa cria uma organizacao unica, sem unidades ou filiais.</p>
             </div>
           </div>
-
-          {message && <div className="gym-message">{message}</div>}
 
           <div className="gym-form-grid">
             <label>

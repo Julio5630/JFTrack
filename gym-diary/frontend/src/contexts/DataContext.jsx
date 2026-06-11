@@ -4,8 +4,21 @@ import { api } from '../services/api';
 
 const DataContext = createContext();
 
+const getWorkoutStorageKey = (userId, scopeKey) => `jftrack.currentWorkout.${userId}.${scopeKey}`;
+
+const readStoredWorkout = (userId, scopeKey) => {
+    if (!userId || !scopeKey) return null;
+    try {
+        const workout = JSON.parse(localStorage.getItem(getWorkoutStorageKey(userId, scopeKey)) || 'null');
+        return workout?.scopeKey === scopeKey ? workout : null;
+    } catch {
+        return null;
+    }
+};
+
 export const DataProvider = ({ children }) => {
     const {
+        user,
         token,
         activeProfile,
         isAcademyStudent,
@@ -16,6 +29,9 @@ export const DataProvider = ({ children }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const currentScopeKey = activeProfile === 'student'
+        ? `${studentTrainingMode || 'own'}:${selectedGymId || 'own'}`
+        : activeProfile || 'default';
 
     const loadAllData = useCallback(async () => {
         if (!token || studentContextLoading) {
@@ -25,10 +41,6 @@ export const DataProvider = ({ children }) => {
             }
             return;
         }
-
-        const currentScopeKey = activeProfile === 'student'
-            ? `${studentTrainingMode || 'own'}:${selectedGymId || 'own'}`
-            : activeProfile || 'default';
 
         if (activeProfile === 'student' && isAcademyStudent) {
             setLoading(true);
@@ -46,7 +58,7 @@ export const DataProvider = ({ children }) => {
                     workoutHistory: history || [],
                     currentWorkout: previous?.currentWorkout?.scopeKey === currentScopeKey
                         ? previous.currentWorkout
-                        : null,
+                        : readStoredWorkout(user?.id, currentScopeKey),
                 }));
             } catch (err) {
                 console.error('[DataContext] Erro ao carregar dados do aluno vinculado:', err);
@@ -57,7 +69,7 @@ export const DataProvider = ({ children }) => {
                     workoutHistory: [],
                     currentWorkout: previous?.currentWorkout?.scopeKey === currentScopeKey
                         ? previous.currentWorkout
-                        : null,
+                        : readStoredWorkout(user?.id, currentScopeKey),
                 }));
             } finally {
                 setLoading(false);
@@ -87,7 +99,7 @@ export const DataProvider = ({ children }) => {
                 workoutHistory: history || [],
                 currentWorkout: previous?.currentWorkout?.scopeKey === currentScopeKey
                     ? previous.currentWorkout
-                    : null,
+                    : readStoredWorkout(user?.id, currentScopeKey),
             }));
         } catch (err) {
             console.error('[DataContext] Erro ao carregar dados:', err);
@@ -98,12 +110,12 @@ export const DataProvider = ({ children }) => {
                 workoutHistory: [],
                 currentWorkout: previous?.currentWorkout?.scopeKey === currentScopeKey
                     ? previous.currentWorkout
-                    : null,
+                    : readStoredWorkout(user?.id, currentScopeKey),
             }));
         } finally {
             setLoading(false);
         }
-    }, [token, activeProfile, isAcademyStudent, studentContextLoading, studentTrainingMode, selectedGymId]);
+    }, [token, user?.id, activeProfile, isAcademyStudent, studentContextLoading, studentTrainingMode, selectedGymId, currentScopeKey]);
 
     useEffect(() => {
         loadAllData();
@@ -114,8 +126,13 @@ export const DataProvider = ({ children }) => {
     }, [loadAllData]);
 
     const updatePartial = useCallback((updates) => {
+        if (Object.prototype.hasOwnProperty.call(updates, 'currentWorkout') && user?.id) {
+            const storageKey = getWorkoutStorageKey(user.id, currentScopeKey);
+            if (updates.currentWorkout) localStorage.setItem(storageKey, JSON.stringify(updates.currentWorkout));
+            else localStorage.removeItem(storageKey);
+        }
         setData(previous => previous ? { ...previous, ...updates } : previous);
-    }, []);
+    }, [user?.id, currentScopeKey]);
 
     return (
         <DataContext.Provider value={{ data, loading, error, refreshData, updatePartial }}>

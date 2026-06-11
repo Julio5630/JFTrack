@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './AdminPanel.css';
 
 export default function AdminPanel() {
   const { users, createUser, updateUser, deleteUser } = useAuth();
+  const { notify, confirm } = useAlert();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const setMessage = (message) => message && notify(message);
   const [editUserId, setEditUserId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
   const [editIsAdmin, setEditIsAdmin] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -73,21 +74,10 @@ export default function AdminPanel() {
     setTimeout(() => setMessage(''), 3000);
   };
 
-  const confirmDelete = (userId) => {
-    setShowDeleteConfirm(userId);
-  };
-
-  const handleDeleteUser = async () => {
-    if (showDeleteConfirm) {
-      const success = await deleteUser(showDeleteConfirm);
-      if (success) {
-        setMessage('Usuario removido');
-      } else {
-        setMessage('Nao e possivel remover o proprio usuario');
-      }
-      setShowDeleteConfirm(null);
-      setTimeout(() => setMessage(''), 3000);
-    }
+  const confirmDelete = async (userId) => {
+    if (!await confirm({ title: 'Excluir usuário?', message: 'Esta ação não pode ser desfeita.', confirmLabel: 'Excluir usuário' })) return;
+    const success = await deleteUser(userId);
+    setMessage(success ? 'Usuário removido com sucesso.' : 'Não é possível remover o próprio usuário.');
   };
 
   return (
@@ -105,8 +95,6 @@ export default function AdminPanel() {
             <span className="rivet"></span>
           </div>
         </div>
-
-        {message && <div className="admin-message">{message}</div>}
 
         <div className="admin-grid">
           <div className="industrial-card">
@@ -214,23 +202,6 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {showDeleteConfirm && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h3>CONFIRMAR EXCLUSAO</h3>
-            </div>
-            <div className="modal-body">
-              <p>Tem certeza que deseja excluir este usuario?</p>
-              <p>Esta acao nao pode ser desfeita.</p>
-            </div>
-            <div className="modal-actions">
-              <button onClick={handleDeleteUser} className="industrial-btn danger">EXCLUIR</button>
-              <button onClick={() => setShowDeleteConfirm(null)} className="industrial-btn secondary">CANCELAR</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

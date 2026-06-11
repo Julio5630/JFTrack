@@ -14,9 +14,14 @@
 .academy-workout-summary p { margin: 0; color: #edf1b5; font-size: .8rem; }
 .assigned-workouts-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 16px; }
 .assigned-workout-card { min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; padding: 22px; border-radius: 23px; background: rgba(255,255,255,.95); box-shadow: 0 12px 30px rgba(0,77,64,.085),0 3px 8px rgba(25,28,29,.05); }
+.assigned-workout-card.is-progress { background: #fff9ed; box-shadow: 0 15px 32px rgba(196,128,20,.16); }
+.assigned-workout-card.is-completed { background: #effaf4; box-shadow: 0 15px 32px rgba(22,126,83,.16); }
 .trainer-label { display: inline-flex; padding: 6px 10px; border-radius: 999px; color: #065043; background: #dceee8; font-size: .69rem; font-weight: 800; }
 .assigned-workout-card h2 { margin: 14px 0 8px; color: #00342b; font-size: 1.25rem; }
 .assigned-workout-card p { margin: 0; color: #68716d; font-size: .8rem; }
+.academy-workout-status { width: fit-content; margin-top: 14px; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+.academy-workout-status.progress { color: #8b5b08; background: #ffe9b9; }
+.academy-workout-status.completed { color: #08704a; background: #ccefdc; }
 .assigned-workout-card .industrial-btn { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 14px; color: #fff; background: #004d40; box-shadow: 0 8px 18px rgba(0,77,64,.18); font: 700 .8rem 'Inter',sans-serif; cursor: pointer; }
 .assigned-empty { grid-column: 1/-1; padding: 48px 24px; border-radius: 24px; background: rgba(255,255,255,.94); box-shadow: 0 12px 30px rgba(0,77,64,.08); text-align: center; }
 .assigned-empty > span { width: 54px; height: 54px; display: grid; place-items: center; margin: 0 auto 14px; border-radius: 18px; color: #004d40; background: #dcece6; line-height: 0; }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './UserProfile.css';
 
@@ -32,14 +33,15 @@ export default function UserProfile() {
     logout
   } = useAuth();
   const navigate = useNavigate();
+  const { notify } = useAlert();
   const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
     password: ''
   });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const setMessage = (message) => message && notify({ message, type: 'success' });
+  const setError = (message) => message && notify({ message, type: 'error' });
   const [availableStudentMemberships, setAvailableStudentMemberships] = useState(studentContext.memberships || []);
 
   useEffect(() => {
@@ -162,9 +164,6 @@ export default function UserProfile() {
                 minLength={6}
               />
             </label>
-
-            {message && <p className="profile-feedback success">{message}</p>}
-            {error && <p className="profile-feedback error">{error}</p>}
 
             <button className="profile-save-button" type="submit" disabled={saving}>
               {saving ? 'Salvando...' : 'Salvar alteracoes'}

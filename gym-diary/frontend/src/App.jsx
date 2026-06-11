@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
+import { AlertProvider } from './contexts/AlertContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import Login from './pages/Login';
 import ProfileSelect from './pages/ProfileSelect';
@@ -18,6 +19,7 @@ import UserProfile from './pages/UserProfile';
 import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
 import StudentBottomNav from './components/StudentBottomNav';
+import PersonalBottomNav from './components/PersonalBottomNav';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
@@ -216,16 +218,18 @@ function AppContent() {
     const { user, activeProfile } = useAuth();
     const location = useLocation();
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
-    const showNavbar = showShell && activeProfile !== 'student';
+    const showNavbar = showShell && !['student', 'personal'].includes(activeProfile);
     const showStudentBottomNav = showShell
         && activeProfile === 'student'
         && location.pathname !== '/execution';
+    const showPersonalBottomNav = showShell && activeProfile === 'personal';
 
     return (
         <>
             {showNavbar && <Navbar />}
             <AnimatedRoutes />
             {showStudentBottomNav && <StudentBottomNav />}
+            {showPersonalBottomNav && <PersonalBottomNav />}
         </>
     );
 }
@@ -233,11 +237,13 @@ function AppContent() {
 function App() {
     return (
         <BrowserRouter>
-            <AuthProvider>
-                <DataProvider>
-                    <AppContent />
-                </DataProvider>
-            </AuthProvider>
+            <AlertProvider>
+                <AuthProvider>
+                    <DataProvider>
+                        <AppContent />
+                    </DataProvider>
+                </AuthProvider>
+            </AlertProvider>
         </BrowserRouter>
     );
 }

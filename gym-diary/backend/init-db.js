@@ -114,6 +114,7 @@ async function initDatabase() {
                 name VARCHAR(100) NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
+                phone VARCHAR(30) DEFAULT '',
                 is_admin BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -171,16 +172,16 @@ async function initDatabase() {
                 user_id INT NOT NULL,
                 name VARCHAR(100) NOT NULL,
                 category VARCHAR(50) NOT NULL,
-                gif_url VARCHAR(500) DEFAULT '',
+                video_url VARCHAR(500) DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 UNIQUE KEY unique_user_exercise (user_id, name)
             )
         `);
 
-        const [exerciseColumns] = await connection.query("SHOW COLUMNS FROM exercises LIKE 'gif_url'");
-        if (exerciseColumns.length === 0) {
-            await connection.query("ALTER TABLE exercises ADD COLUMN gif_url VARCHAR(500) DEFAULT '' AFTER category");
+        const [exerciseVideoColumns] = await connection.query("SHOW COLUMNS FROM exercises LIKE 'video_url'");
+        if (exerciseVideoColumns.length === 0) {
+            await connection.query("ALTER TABLE exercises ADD COLUMN video_url VARCHAR(500) DEFAULT '' AFTER category");
         }
 
         await connection.query(`
@@ -202,6 +203,11 @@ async function initDatabase() {
                 FOREIGN KEY (gym_id) REFERENCES gyms(id) ON DELETE SET NULL
             )
         `);
+
+        const [userPhoneColumns] = await connection.query("SHOW COLUMNS FROM users LIKE 'phone'");
+        if (userPhoneColumns.length === 0) {
+            await connection.query("ALTER TABLE users ADD COLUMN phone VARCHAR(30) DEFAULT '' AFTER password");
+        }
 
         const [templateFrequencyColumns] = await connection.query("SHOW COLUMNS FROM workout_templates LIKE 'frequency'");
         if (templateFrequencyColumns.length === 0) {
@@ -259,6 +265,7 @@ async function initDatabase() {
                 position INT NOT NULL,
                 default_sets INT DEFAULT 3,
                 default_reps VARCHAR(40) DEFAULT '8-12',
+                duration_minutes INT DEFAULT NULL,
                 FOREIGN KEY (template_id) REFERENCES workout_templates(id) ON DELETE CASCADE,
                 FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE,
                 UNIQUE KEY unique_template_position (template_id, position)
@@ -269,6 +276,20 @@ async function initDatabase() {
         if (templateExerciseRepColumns.length === 0) {
             await connection.query("ALTER TABLE template_exercises ADD COLUMN default_reps VARCHAR(40) DEFAULT '8-12' AFTER default_sets");
         }
+
+        const [templateExerciseDurationColumns] = await connection.query("SHOW COLUMNS FROM template_exercises LIKE 'duration_minutes'");
+        if (templateExerciseDurationColumns.length === 0) {
+            await connection.query("ALTER TABLE template_exercises ADD COLUMN duration_minutes INT DEFAULT NULL AFTER default_reps");
+        }
+
+        await connection.query(`
+            UPDATE template_exercises te
+            JOIN exercises e ON e.id = te.exercise_id
+            SET te.duration_minutes = COALESCE(te.duration_minutes, 20),
+                te.default_sets = 1,
+                te.default_reps = '0'
+            WHERE e.category = 'Cardio'
+        `);
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS weekly_routines (
@@ -327,12 +348,18 @@ async function initDatabase() {
                 set_number INT NOT NULL,
                 reps INT NOT NULL,
                 weight DECIMAL(5,2) NOT NULL,
+                duration_seconds INT DEFAULT 0,
                 completed BOOLEAN DEFAULT FALSE,
                 notes TEXT,
                 FOREIGN KEY (workout_id) REFERENCES workout_history(id) ON DELETE CASCADE,
                 FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
             )
         `);
+
+        const [workoutSetDurationColumns] = await connection.query("SHOW COLUMNS FROM workout_sets LIKE 'duration_seconds'");
+        if (workoutSetDurationColumns.length === 0) {
+            await connection.query("ALTER TABLE workout_sets ADD COLUMN duration_seconds INT DEFAULT 0 AFTER weight");
+        }
 
         await connection.query(`
             CREATE TABLE IF NOT EXISTS personal_workout_assignments (
@@ -344,6 +371,7 @@ async function initDatabase() {
                 status ENUM('active', 'inactive') DEFAULT 'active',
                 editable_by_student BOOLEAN DEFAULT FALSE,
                 notes TEXT,
+                display_order INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (personal_user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -356,13 +384,40 @@ async function initDatabase() {
 
         const assignmentColumns = [
             ['gym_id', 'INT AFTER student_user_id'],
-            ['editable_by_student', 'BOOLEAN DEFAULT FALSE AFTER status']
+            ['editable_by_student', 'BOOLEAN DEFAULT FALSE AFTER status'],
+            ['display_order', 'INT DEFAULT 0 AFTER notes']
         ];
 
         for (const [column, definition] of assignmentColumns) {
             const [columns] = await connection.query(`SHOW COLUMNS FROM personal_workout_assignments LIKE '${column}'`);
             if (columns.length === 0) {
                 await connection.query(`ALTER TABLE personal_workout_assignments ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
+        await connection.query(`
+            UPDATE personal_workout_assignments
+            SET display_order = id
+            WHERE display_order = 0
+        `);
+
+        const [assignmentGroups] = await connection.query(`
+            SELECT DISTINCT personal_user_id, student_user_id, gym_id
+            FROM personal_workout_assignments
+        `);
+        for (const group of assignmentGroups) {
+            const [orderedAssignments] = await connection.query(
+                `SELECT id
+                 FROM personal_workout_assignments
+                 WHERE personal_user_id = ? AND student_user_id = ? AND gym_id <=> ?
+                 ORDER BY display_order ASC, id ASC`,
+                [group.personal_user_id, group.student_user_id, group.gym_id]
+            );
+            for (const [index, assignment] of orderedAssignments.entries()) {
+                await connection.query(
+                    'UPDATE personal_workout_assignments SET display_order = ? WHERE id = ?',
+                    [index + 1, assignment.id]
+                );
             }
         }
 

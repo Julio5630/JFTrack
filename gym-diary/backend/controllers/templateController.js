@@ -64,11 +64,25 @@ const createTemplate = async (req, res) => {
             ]
         );
 
+        const [exerciseRows] = await connection.query(
+            'SELECT id, category FROM exercises WHERE id IN (?)',
+            [exercises.map((exercise) => exercise.id)]
+        );
+        const categoryByExerciseId = new Map(exerciseRows.map((exercise) => [Number(exercise.id), exercise.category]));
+
         for (const [index, exercise] of exercises.entries()) {
+            const isCardio = categoryByExerciseId.get(Number(exercise.id)) === 'Cardio';
             await connection.execute(
-                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [result.insertId, exercise.id, index, exercise.defaultSets || 3, exercise.defaultReps || '8-12']
+                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps, duration_minutes)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    result.insertId,
+                    exercise.id,
+                    index,
+                    isCardio ? 1 : exercise.defaultSets || 3,
+                    isCardio ? '0' : exercise.defaultReps || '8-12',
+                    isCardio ? Math.max(1, Number(exercise.durationMinutes) || 20) : null
+                ]
             );
         }
 
@@ -102,7 +116,8 @@ const getTemplates = async (req, res) => {
 
         const exercises = templates.length > 0
             ? await query(
-                `SELECT te.template_id, te.exercise_id AS id, te.default_sets AS defaultSets, te.default_reps AS defaultReps, te.position
+                `SELECT te.template_id, te.exercise_id AS id, te.default_sets AS defaultSets, te.default_reps AS defaultReps,
+                        te.duration_minutes AS durationMinutes, te.position
                  FROM template_exercises te
                  JOIN workout_templates wt ON wt.id = te.template_id
                  WHERE wt.user_id = ?
@@ -150,11 +165,25 @@ const updateTemplate = async (req, res) => {
 
         await connection.execute('DELETE FROM template_exercises WHERE template_id = ?', [id]);
 
+        const [exerciseRows] = await connection.query(
+            'SELECT id, category FROM exercises WHERE id IN (?)',
+            [exercises.map((exercise) => exercise.id)]
+        );
+        const categoryByExerciseId = new Map(exerciseRows.map((exercise) => [Number(exercise.id), exercise.category]));
+
         for (const [index, exercise] of exercises.entries()) {
+            const isCardio = categoryByExerciseId.get(Number(exercise.id)) === 'Cardio';
             await connection.execute(
-                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
-                 VALUES (?, ?, ?, ?, ?)`,
-                [id, exercise.id, index, exercise.defaultSets || 3, exercise.defaultReps || '8-12']
+                `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps, duration_minutes)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    id,
+                    exercise.id,
+                    index,
+                    isCardio ? 1 : exercise.defaultSets || 3,
+                    isCardio ? '0' : exercise.defaultReps || '8-12',
+                    isCardio ? Math.max(1, Number(exercise.durationMinutes) || 20) : null
+                ]
             );
         }
 
@@ -172,7 +201,7 @@ const updateTemplate = async (req, res) => {
 const addExerciseToTemplate = async (req, res) => {
     try {
         const { templateId } = req.params;
-        const { exercise_id, position, default_sets, default_reps } = req.body;
+        const { exercise_id, position, default_sets, default_reps, durationMinutes } = req.body;
         const userId = req.user.id;
 
         const template = await query(
@@ -184,10 +213,19 @@ const addExerciseToTemplate = async (req, res) => {
             return res.status(404).json({ error: 'Template nao encontrado' });
         }
 
+        const exercises = await query('SELECT category FROM exercises WHERE id = ?', [exercise_id]);
+        const isCardio = exercises[0]?.category === 'Cardio';
         await query(
-            `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps)
-             VALUES (?, ?, ?, ?, ?)`,
-            [templateId, exercise_id, position, default_sets || 3, default_reps || '8-12']
+            `INSERT INTO template_exercises (template_id, exercise_id, position, default_sets, default_reps, duration_minutes)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                templateId,
+                exercise_id,
+                position,
+                isCardio ? 1 : default_sets || 3,
+                isCardio ? '0' : default_reps || '8-12',
+                isCardio ? Math.max(1, Number(durationMinutes) || 20) : null
+            ]
         );
 
         res.status(201).json({ message: 'Exercicio adicionado ao template' });
@@ -215,7 +253,8 @@ const getTemplateDetails = async (req, res) => {
         }
 
         const exercises = await query(
-            `SELECT te.*, te.default_reps AS defaultReps, e.name, e.category
+            `SELECT te.*, te.default_sets AS defaultSets, te.default_reps AS defaultReps,
+                    te.duration_minutes AS durationMinutes, e.name, e.category
              FROM template_exercises te
              JOIN exercises e ON e.id = te.exercise_id
              WHERE te.template_id = ?

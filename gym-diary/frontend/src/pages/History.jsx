@@ -27,7 +27,13 @@ const getWorkoutVolume = (workout) => (
 );
 
 const getWorkoutSets = (workout) => (
-  (workout.exercises || []).reduce((total, exercise) => total + (exercise.sets?.length || 0), 0)
+  (workout.exercises || []).reduce((total, exercise) => total + (exercise.sets || []).filter((set) => !Number(set.durationSeconds)).length, 0)
+);
+
+const getWorkoutCardioMinutes = (workout) => Math.round(
+  (workout.exercises || []).reduce((total, exercise) => total + (exercise.sets || []).reduce(
+    (setTotal, set) => setTotal + (Number(set.durationSeconds) || 0), 0
+  ), 0) / 60
 );
 
 export default function History() {
@@ -51,6 +57,7 @@ export default function History() {
     history.forEach((workout) => {
       (workout.exercises || []).forEach((exercise) => {
         (exercise.sets || []).forEach((set) => {
+          if (Number(set.durationSeconds) > 0) return;
           const volume = (Number(set.weight) || 0) * (Number(set.reps) || 0);
           const key = exercise.exerciseId || exercise.exerciseName;
           if (!records[key] || volume > records[key].volume) {
@@ -71,6 +78,7 @@ export default function History() {
       const hasRecord = workouts.some((workout) => (
         (workout.exercises || []).some((exercise) => (
           (exercise.sets || []).some((set) => {
+            if (Number(set.durationSeconds) > 0) return false;
             const key = exercise.exerciseId || exercise.exerciseName;
             const volume = (Number(set.weight) || 0) * (Number(set.reps) || 0);
             return records[key]?.date === workout.date && records[key]?.volume === volume;
@@ -232,19 +240,23 @@ export default function History() {
                     </div>
                     <div className="history-detail-stats">
                       <span>{(workout.exercises || []).length} exercícios</span>
-                      <span>{getWorkoutSets(workout)} séries</span>
+                      {getWorkoutSets(workout) > 0 && <span>{getWorkoutSets(workout)} séries</span>}
+                      {getWorkoutCardioMinutes(workout) > 0 && <span>{getWorkoutCardioMinutes(workout)} min de cardio</span>}
                     </div>
                     <div className="history-exercise-list">
                       {(workout.exercises || []).map((exercise, exerciseIndex) => {
                         const exerciseKey = exercise.exerciseId || exercise.exerciseName;
                         const isRecord = (exercise.sets || []).some((set) => {
+                          if (Number(set.durationSeconds) > 0) return false;
                           const volume = (Number(set.weight) || 0) * (Number(set.reps) || 0);
                           return view.records[exerciseKey]?.date === workout.date && view.records[exerciseKey]?.volume === volume;
                         });
                         return (
                           <div className="history-exercise" key={`${exerciseKey}-${exerciseIndex}`}>
                             <div><strong>{exercise.exerciseName || data.exercises?.find((item) => item.id === exercise.exerciseId)?.name || 'Exercício'}</strong>{isRecord && <span><Icon name="trophy" size={12} /> Recorde</span>}</div>
-                            <p>{(exercise.sets || []).map((set) => `${set.weight || 0}kg x ${set.reps || 0}`).join(' · ')}</p>
+                            <p>{(exercise.sets || []).map((set) => Number(set.durationSeconds) > 0
+                              ? `${Math.round(Number(set.durationSeconds) / 60)} minutos`
+                              : `${set.weight || 0}kg x ${set.reps || 0}`).join(' · ')}</p>
                           </div>
                         );
                       })}

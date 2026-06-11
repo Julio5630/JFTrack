@@ -11,16 +11,39 @@ export default function AcademyStudentWorkouts() {
 
   if (!data) return <div className="academy-workouts-loading">Carregando...</div>;
 
+  const today = new Date().toLocaleDateString('en-CA');
+  const scopeKey = `academy:${selectedGymId}`;
+  const getTemplateStatus = (template) => {
+    const completedToday = (data.workoutHistory || []).some(workout => (
+      workout.date === today
+      && (Number(workout.template_id || workout.templateId) === Number(template.id)
+        || (!(workout.template_id || workout.templateId) && workout.name === template.name))
+      && Number(workout.gym_id || workout.gymId) === Number(selectedGymId)
+    ));
+    if (completedToday) return 'completed';
+    if (data.currentWorkout?.scopeKey === scopeKey && Number(data.currentWorkout.templateId) === Number(template.id)) return 'progress';
+    return '';
+  };
+
   const startWorkout = (template) => {
+    if (data.currentWorkout?.scopeKey === scopeKey && Number(data.currentWorkout.templateId) === Number(template.id)) {
+      navigate('/execution');
+      return;
+    }
+
     const workoutExercises = (template.exercises || []).map(exItem => {
       const exercise = data.exercises?.find(item => item.id === exItem.id);
       const defaultSets = exItem.defaultSets || 3;
       const suggestedReps = parseInt(String(exItem.defaultReps || '').match(/\d+/)?.[0], 10) || 8;
+      const isCardio = exercise?.category === 'Cardio' || Number(exItem.durationMinutes) > 0;
       return {
         exerciseId: exItem.id,
         exerciseName: exercise ? exercise.name : 'Exercicio',
-        gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
-        sets: Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, completed: false })),
+        exerciseCategory: exercise?.category || '',
+        videoUrl: exercise?.videoUrl || exercise?.video_url || '',
+        sets: isCardio
+          ? [{ reps: 0, weight: 0, durationSeconds: (Number(exItem.durationMinutes) || 20) * 60, completed: false }]
+          : Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, durationSeconds: 0, completed: false })),
       };
     });
 
@@ -31,7 +54,9 @@ export default function AcademyStudentWorkouts() {
         assignmentId: template.assignmentId,
         gymId: selectedGymId,
         sourceType: 'academy',
-        scopeKey: `academy:${selectedGymId}`,
+        scopeKey,
+        startedAt: Date.now(),
+        activeExerciseIndex: 0,
         name: template.name,
         exercises: workoutExercises,
       }
@@ -65,18 +90,22 @@ export default function AcademyStudentWorkouts() {
               <h2>Nenhum treino disponível</h2>
               <p>Assim que um profissional liberar um treino, ele aparecerá aqui.</p>
             </div>
-          ) : data.workoutTemplates.map(template => (
-            <article key={template.id} className="assigned-workout-card">
+          ) : data.workoutTemplates.map(template => {
+            const status = getTemplateStatus(template);
+            return (
+            <article key={template.id} className={`assigned-workout-card ${status ? `is-${status}` : ''}`}>
               <div>
                 <span className="trainer-label">{template.trainerName || template.trainer_name || 'Personal'}</span>
                 <h2>{template.name}</h2>
+                {status && <span className={`academy-workout-status ${status}`}><Icon name={status === 'completed' ? 'check' : 'history'} size={14} /> {status === 'completed' ? 'Concluído hoje' : 'Em andamento'}</span>}
                 <p>{template.exercises?.length || 0} exercícios cadastrados</p>
               </div>
               <button className="industrial-btn" onClick={() => startWorkout(template)}>
-                <Icon name="dumbbell" size={18} /> Iniciar treino
+                <Icon name={status === 'progress' ? 'chevronRight' : 'dumbbell'} size={18} /> {status === 'progress' ? 'Continuar treino' : 'Iniciar treino'}
               </button>
             </article>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

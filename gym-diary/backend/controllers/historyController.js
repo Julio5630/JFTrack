@@ -78,8 +78,8 @@ const startWorkout = async (req, res) => {
             for (const [setIndex, set] of exercise.sets.entries()) {
                 await connection.execute(
                     `INSERT INTO workout_sets
-                    (workout_id, exercise_id, position, set_number, reps, weight, completed, notes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    (workout_id, exercise_id, position, set_number, reps, weight, duration_seconds, completed, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         result.insertId,
                         exercise.exerciseId,
@@ -87,6 +87,7 @@ const startWorkout = async (req, res) => {
                         setIndex + 1,
                         set.reps || 0,
                         set.weight || 0,
+                        Math.max(0, Number(set.durationSeconds) || 0),
                         Boolean(set.completed),
                         set.notes || null
                     ]
@@ -119,13 +120,14 @@ const addSet = async (req, res) => {
             reps,
             weight,
             completed,
-            notes
+            notes,
+            duration_seconds = 0
         } = req.body;
 
         await query(
             `INSERT INTO workout_sets
-            (workout_id, exercise_id, position, set_number, reps, weight, completed, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (workout_id, exercise_id, position, set_number, reps, weight, duration_seconds, completed, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 workoutId,
                 exercise_id,
@@ -133,6 +135,7 @@ const addSet = async (req, res) => {
                 set_number,
                 reps,
                 weight,
+                Math.max(0, Number(duration_seconds) || 0),
                 completed || false,
                 notes || null
             ]
@@ -192,6 +195,7 @@ const getHistory = async (req, res) => {
                 exercisesByPosition.get(set.position).sets.push({
                     reps: set.reps,
                     weight: Number(set.weight),
+                    durationSeconds: Number(set.duration_seconds) || 0,
                     completed: Boolean(set.completed),
                     notes: set.notes
                 });

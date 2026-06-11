@@ -3,12 +3,12 @@ const { query } = require('../config/database');
 // 📌 Criar exercício
 const createExercise = async (req, res) => {
     try {
-        const { name, category, gifUrl = '' } = req.body;
+        const { name, category, videoUrl = '' } = req.body;
         const userId = req.user.id;
 
         await query(
-            'INSERT INTO exercises (user_id, name, category, gif_url) VALUES (?, ?, ?, ?)',
-            [userId, name, category, gifUrl]
+            'INSERT INTO exercises (user_id, name, category, video_url) VALUES (?, ?, ?, ?)',
+            [userId, name, category, videoUrl]
         );
 
         res.status(201).json({ message: 'Exercício criado com sucesso' });
@@ -29,7 +29,7 @@ const getExercises = async (req, res) => {
         const userId = req.user.id;
 
         const exercises = await query(
-            'SELECT * FROM exercises WHERE user_id = ? ORDER BY created_at DESC',
+            'SELECT id, user_id, name, category, video_url, created_at FROM exercises WHERE user_id = ? ORDER BY created_at DESC',
             [userId]
         );
 
@@ -44,12 +44,12 @@ const getExercises = async (req, res) => {
 const updateExercise = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, category, gifUrl = '' } = req.body;
+        const { name, category, videoUrl = '' } = req.body;
         const userId = req.user.id;
 
         const result = await query(
-            'UPDATE exercises SET name = ?, category = ?, gif_url = ? WHERE id = ? AND user_id = ?',
-            [name, category, gifUrl, id, userId]
+            'UPDATE exercises SET name = ?, category = ?, video_url = ? WHERE id = ? AND user_id = ?',
+            [name, category, videoUrl, id, userId]
         );
 
         if (result.affectedRows === 0) {

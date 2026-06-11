@@ -9,6 +9,7 @@ const {
     getStudentProfile,
     listAssignments,
     assignWorkout,
+    reorderAssignments,
     updateAssignment,
     listAssessments,
     createAssessment,
@@ -25,6 +26,7 @@ router.post('/students', addStudentByEmail);
 router.get('/students/:id', getStudentProfile);
 router.get('/assignments', listAssignments);
 router.post('/assignments', assignWorkout);
+router.put('/assignments/reorder', reorderAssignments);
 router.put('/assignments/:id', updateAssignment);
 router.get('/assessments', listAssessments);
 router.post('/assessments', createAssessment);

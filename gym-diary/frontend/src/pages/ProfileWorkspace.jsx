@@ -13,6 +13,7 @@ import {
   YAxis
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { useAlert } from '../contexts/AlertContext';
 import { api } from '../services/api';
 import Icon from '../components/Icon';
 import './ProfileWorkspace.css';
@@ -49,13 +50,14 @@ const CONTENT = {
 
 export default function ProfileWorkspace() {
   const { activeProfile } = useAuth();
+  const { notify } = useAlert();
   const { section = 'inicio' } = useParams();
   const navigate = useNavigate();
   const [gym, setGym] = useState(null);
   const [loadingGym, setLoadingGym] = useState(false);
   const [members, setMembers] = useState({ student: [], personal: [] });
   const [memberForms, setMemberForms] = useState({ student: '', personal: '' });
-  const [memberMessage, setMemberMessage] = useState('');
+  const setMemberMessage = (message) => message && notify(message);
   const [savingMember, setSavingMember] = useState(null);
   const [reports, setReports] = useState(null);
   const [loadingReports, setLoadingReports] = useState(false);
@@ -522,7 +524,6 @@ export default function ProfileWorkspace() {
             <h2>{section === 'alunos' ? 'Alunos da academia' : 'Personais da academia'}</h2>
             <p>Adicione, acompanhe e remova vinculos por e-mail.</p>
           </div>
-          {memberMessage && <div className="member-message">{memberMessage}</div>}
           {renderMemberPanel(role, section === 'alunos' ? 'Alunos' : 'Personais')}
         </div>
       );

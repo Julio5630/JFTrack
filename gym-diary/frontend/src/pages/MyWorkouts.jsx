@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import './MyWorkouts.css';
 
-const emptyExerciseForm = { name: '', category: 'Peito', gifUrl: '' };
+const emptyExerciseForm = { name: '', category: 'Peito', videoUrl: '' };
 const categories = ['Peito', 'Costas', 'Perna', 'Ombro', 'Biceps', 'Triceps', 'Outros'];
 
 export default function MyWorkouts() {
   const { data, refreshData, updatePartial } = useData();
+  const { notify, confirm } = useAlert();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('workouts');
   const [showWorkoutCreator, setShowWorkoutCreator] = useState(false);
@@ -22,13 +25,40 @@ export default function MyWorkouts() {
   const [exerciseForm, setExerciseForm] = useState(emptyExerciseForm);
   const [filterCategory, setFilterCategory] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const setError = (message) => message && notify(message);
+
+  useEffect(() => {
+    if (!exerciseModalOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setExerciseModalOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [exerciseModalOpen]);
 
   if (!data) return <div className="my-workouts-loading">Carregando...</div>;
 
   const exercises = data.exercises || [];
   const templates = data.workoutTemplates || [];
+  const today = new Date().toLocaleDateString('en-CA');
+
+  const getTemplateStatus = (template) => {
+    const completedToday = (data.workoutHistory || []).some(workout => (
+      workout.date === today
+      && (Number(workout.template_id || workout.templateId) === Number(template.id)
+        || (!(workout.template_id || workout.templateId) && workout.name === template.name))
+      && (workout.source_type || workout.sourceType || 'own') === 'own'
+    ));
+    if (completedToday) return 'completed';
+    if (data.currentWorkout?.scopeKey === 'own:own' && Number(data.currentWorkout.templateId) === Number(template.id)) return 'progress';
+    return '';
+  };
 
   const resetWorkoutForm = () => {
     setWorkoutName('');
@@ -50,7 +80,9 @@ export default function MyWorkouts() {
   const addExerciseToWorkout = (exerciseId) => {
     const exercise = exercises.find(item => item.id === exerciseId);
     if (!exercise || selectedExercises.some(item => item.id === exerciseId)) return;
-    setSelectedExercises(current => [...current, { ...exercise, defaultSets }]);
+    setSelectedExercises(current => [...current, exercise.category === 'Cardio'
+      ? { ...exercise, defaultSets: 1, durationMinutes: 20 }
+      : { ...exercise, defaultSets }]);
   };
 
   const editWorkout = (template) => {
@@ -62,21 +94,31 @@ export default function MyWorkouts() {
       const exercise = exercises.find(candidate => candidate.id === item.id);
       return {
         ...(exercise || { id: item.id, name: 'Exercicio', category: 'Outros' }),
-        defaultSets: item.defaultSets || 3
+        defaultSets: item.durationMinutes ? 1 : item.defaultSets || 3,
+        durationMinutes: item.durationMinutes || null
       };
     }));
   };
 
   const startWorkout = (template) => {
+    if (data.currentWorkout?.scopeKey === 'own:own' && Number(data.currentWorkout.templateId) === Number(template.id)) {
+      navigate('/execution');
+      return;
+    }
+
     const workoutExercises = (template.exercises || []).map(exItem => {
       const exercise = exercises.find(item => item.id === exItem.id);
       const defaultSets = exItem.defaultSets || 3;
       const suggestedReps = parseInt(String(exItem.defaultReps || '').match(/\d+/)?.[0], 10) || 8;
+      const isCardio = exercise?.category === 'Cardio' || Number(exItem.durationMinutes) > 0;
       return {
         exerciseId: exItem.id,
         exerciseName: exercise ? exercise.name : 'Exercicio',
-        gifUrl: exercise?.gifUrl || exercise?.gif_url || '',
-        sets: Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, completed: false })),
+        exerciseCategory: exercise?.category || '',
+        videoUrl: exercise?.videoUrl || exercise?.video_url || '',
+        sets: isCardio
+          ? [{ reps: 0, weight: 0, durationSeconds: (Number(exItem.durationMinutes) || 20) * 60, completed: false }]
+          : Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, durationSeconds: 0, completed: false })),
       };
     });
 
@@ -86,6 +128,8 @@ export default function MyWorkouts() {
         templateId: template.id,
         sourceType: 'own',
         scopeKey: 'own:own',
+        startedAt: Date.now(),
+        activeExerciseIndex: 0,
         name: template.name,
         exercises: workoutExercises,
       }
@@ -109,7 +153,8 @@ export default function MyWorkouts() {
 
     const payload = selectedExercises.map(exercise => ({
       id: exercise.id,
-      defaultSets: exercise.defaultSets || 3
+      defaultSets: exercise.category === 'Cardio' ? 1 : exercise.defaultSets || 3,
+      durationMinutes: exercise.category === 'Cardio' ? exercise.durationMinutes || 20 : null
     }));
 
     try {
@@ -128,7 +173,7 @@ export default function MyWorkouts() {
   };
 
   const deleteWorkout = async (template) => {
-    if (!window.confirm(`Excluir o treino "${template.name}"?`)) return;
+    if (!await confirm({ title: 'Excluir treino?', message: `O treino "${template.name}" será removido permanentemente.`, confirmLabel: 'Excluir treino' })) return;
     setSaving(true);
     setError(null);
     try {
@@ -145,7 +190,7 @@ export default function MyWorkouts() {
   const openExerciseModal = (exercise = null) => {
     setEditingExercise(exercise);
     setExerciseForm(exercise
-      ? { name: exercise.name, category: exercise.category, gifUrl: exercise.gifUrl || exercise.gif_url || '' }
+      ? { name: exercise.name, category: exercise.category, videoUrl: exercise.videoUrl || exercise.video_url || '' }
       : emptyExerciseForm
     );
     setExerciseModalOpen(true);
@@ -169,9 +214,9 @@ export default function MyWorkouts() {
 
     try {
       if (editingExercise) {
-        await api.updateExercise(editingExercise.id, exerciseForm.name.trim(), exerciseForm.category, exerciseForm.gifUrl.trim());
+        await api.updateExercise(editingExercise.id, exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
       } else {
-        await api.createExercise(exerciseForm.name.trim(), exerciseForm.category, exerciseForm.gifUrl.trim());
+        await api.createExercise(exerciseForm.name.trim(), exerciseForm.category, exerciseForm.videoUrl.trim());
       }
       await refreshData();
       closeExerciseModal();
@@ -183,7 +228,7 @@ export default function MyWorkouts() {
   };
 
   const deleteExercise = async (exercise) => {
-    if (!window.confirm(`Remover "${exercise.name}"? Ele sera excluido dos seus treinos.`)) return;
+    if (!await confirm({ title: 'Remover exercício?', message: `"${exercise.name}" será excluído da biblioteca e removido dos seus treinos.`, confirmLabel: 'Remover exercício' })) return;
     setSaving(true);
     setError(null);
     try {
@@ -229,8 +274,6 @@ export default function MyWorkouts() {
           </button>
         </div>
 
-        {error && <div className="my-workouts-error">{error}</div>}
-
         {activeTab === 'workouts' && (
           <div className="workouts-layout">
             <section className="template-list-card">
@@ -243,14 +286,17 @@ export default function MyWorkouts() {
               <div className="template-management-list">
                 {templates.length === 0 ? (
                   <div className="empty-message">Nenhum treino criado ainda.</div>
-                ) : templates.map(template => (
-                  <article key={template.id} className="template-management-item">
+                ) : templates.map(template => {
+                  const status = getTemplateStatus(template);
+                  return (
+                  <article key={template.id} className={`template-management-item ${status ? `is-${status}` : ''}`}>
                     <div>
                       <h3>{template.name}</h3>
+                      {status && <span className={`workout-status-pill ${status}`}><Icon name={status === 'completed' ? 'check' : 'history'} size={13} /> {status === 'completed' ? 'Concluído hoje' : 'Em andamento'}</span>}
                       <span>{template.exercises?.length || 0} exercícios · Criador: {template.creatorName || 'Você'}</span>
                     </div>
                     <div className="card-actions">
-                      <button className="action-btn start" onClick={() => startWorkout(template)} aria-label="Iniciar treino"><Icon name="dumbbell" size={17} /></button>
+                      <button className="action-btn start" onClick={() => startWorkout(template)} aria-label={status === 'progress' ? 'Continuar treino' : 'Iniciar treino'}><Icon name={status === 'progress' ? 'chevronRight' : 'dumbbell'} size={17} /></button>
                       {template.canEdit !== false && (
                         <>
                           <button className="action-btn edit" onClick={() => editWorkout(template)} aria-label="Editar treino"><Icon name="edit" size={17} /></button>
@@ -259,7 +305,8 @@ export default function MyWorkouts() {
                       )}
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -280,7 +327,7 @@ export default function MyWorkouts() {
 
                   <div className="form-row">
                     <div className="form-group half">
-                      <label>SERIES PADRAO</label>
+                      <label>SERIES PADRAO (MUSCULACAO)</label>
                       <input type="number" min="1" max="10" value={defaultSets} onChange={(event) => setDefaultSets(parseInt(event.target.value) || 1)} />
                     </div>
                   </div>
@@ -309,15 +356,20 @@ export default function MyWorkouts() {
                               <div className="item-info">
                                 <span>{exercise.name}</span>
                                 <div className="sets-control">
-                                  <label>Series:</label>
+                                  <label>{exercise.category === 'Cardio' ? 'Minutos:' : 'Series:'}</label>
                                   <input
                                     type="number"
                                     min="1"
-                                    max="10"
-                                    value={exercise.defaultSets}
+                                    max={exercise.category === 'Cardio' ? '180' : '10'}
+                                    step={exercise.category === 'Cardio' ? '5' : '1'}
+                                    value={exercise.category === 'Cardio' ? exercise.durationMinutes : exercise.defaultSets}
                                     onChange={(event) => {
                                       const next = [...selectedExercises];
-                                      next[index].defaultSets = parseInt(event.target.value) || 1;
+                                      if (exercise.category === 'Cardio') {
+                                        next[index].durationMinutes = parseInt(event.target.value) || 1;
+                                      } else {
+                                        next[index].defaultSets = parseInt(event.target.value) || 1;
+                                      }
                                       setSelectedExercises(next);
                                     }}
                                   />
@@ -368,9 +420,6 @@ export default function MyWorkouts() {
                   <div className="exercise-info">
                     <h3>{exercise.name}</h3>
                     <span className="category-badge">{exercise.category}</span>
-                    <span className={`gif-status ${(exercise.gifUrl || exercise.gif_url) ? 'ready' : ''}`}>
-                      {(exercise.gifUrl || exercise.gif_url) ? 'GIF cadastrado' : 'Espaco para GIF'}
-                    </span>
                   </div>
                   <div className="card-actions">
                     <button className="action-btn edit" onClick={() => openExerciseModal(exercise)} aria-label="Editar exercicio"><Icon name="edit" size={17} /></button>
@@ -383,7 +432,7 @@ export default function MyWorkouts() {
         )}
       </div>
 
-      {exerciseModalOpen && (
+      {exerciseModalOpen && createPortal((
         <div className="modal-overlay" onClick={closeExerciseModal}>
           <div className="industrial-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -402,13 +451,8 @@ export default function MyWorkouts() {
                 </select>
               </div>
               <div className="form-group">
-                <label>GIF DE EXECUCAO</label>
-                <input type="url" value={exerciseForm.gifUrl} onChange={(event) => setExerciseForm({ ...exerciseForm, gifUrl: event.target.value })} placeholder="Cole aqui o link do GIF do exercicio" />
-                {exerciseForm.gifUrl && (
-                  <div className="gif-preview">
-                    <img src={exerciseForm.gifUrl} alt={`GIF de execucao de ${exerciseForm.name || 'exercicio'}`} />
-                  </div>
-                )}
+                <label>VÍDEO DO YOUTUBE</label>
+                <input type="url" value={exerciseForm.videoUrl} onChange={(event) => setExerciseForm({ ...exerciseForm, videoUrl: event.target.value })} placeholder="Cole o link do vídeo ensinando o exercício" />
               </div>
             </div>
             <div className="modal-footer">
@@ -419,7 +463,7 @@ export default function MyWorkouts() {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 }
