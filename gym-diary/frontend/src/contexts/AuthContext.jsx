@@ -199,6 +199,12 @@ export const AuthProvider = ({ children }) => {
         return response.user;
     }, [applyUserSession, getProfileTypes]);
 
+    const updateCurrentUser = useCallback(async (updates) => {
+        const response = await api.updateMe(updates);
+        setUser(response.user);
+        return response.user;
+    }, []);
+
     const selectProfile = (profileType) => {
         if (!profileType) {
             setActiveProfile(null);
@@ -343,6 +349,7 @@ export const AuthProvider = ({ children }) => {
             register,
             logout,
             refreshCurrentUser,
+            updateCurrentUser,
             selectProfile,
             selectStudentTrainingMode,
             requestStudentModeSelection,

@@ -26,7 +26,7 @@ async function request(endpoint, options = {}) {
     }
 
     const activeProfile = localStorage.getItem('activeProfile');
-    if (activeProfile) {
+    if (activeProfile && !headers['X-Active-Profile']) {
         headers['X-Active-Profile'] = activeProfile;
     }
 
@@ -71,6 +71,10 @@ export const api = {
         body: JSON.stringify({ name, email, password, accountType, gymName }),
     }),
     getMe: () => request('/me'),
+    updateMe: (updates) => request('/me', {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+    }),
     getUsers: () => request('/users'),
     createUser: (name, email, password, isAdmin = false) => request('/users', {
         method: 'POST',
@@ -119,11 +123,15 @@ export const api = {
         body: JSON.stringify({ email, role }),
     }),
     removeGymMember: (id) => request(`/gyms/me/members/${id}`, { method: 'DELETE' }),
-    getStudentContext: () => request('/gyms/student-context'),
+    getStudentContext: (profileOverride = '') => request('/gyms/student-context', {
+        headers: profileOverride ? { 'X-Active-Profile': profileOverride } : {}
+    }),
     getStudentWorkouts: () => request('/gyms/student-workouts'),
     getStudentAssessments: () => request('/gyms/student-assessments'),
     getPersonalSummary: (gymId = '') => request(`/personal/summary${gymId ? `?gymId=${encodeURIComponent(gymId)}` : ''}`),
-    getPersonalGyms: () => request('/personal/gyms'),
+    getPersonalGyms: (profileOverride = '') => request('/personal/gyms', {
+        headers: profileOverride ? { 'X-Active-Profile': profileOverride } : {}
+    }),
     getPersonalStudents: (search = '', gymId = '') => {
         const params = new URLSearchParams();
         if (search) params.set('search', search);

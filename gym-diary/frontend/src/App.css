@@ -5,13 +5,14 @@
   box-sizing: border-box;
 }
 
+html,
 body {
-  background-color: #0a0c0f;
+  background-color: #f3f5f4;
   font-family: 'Roboto Condensed', sans-serif;
   overflow-x: hidden;
 }
 
 #root {
-  background-color: #0a0c0f;
+  background-color: #f3f5f4;
   min-height: 100vh;
 }

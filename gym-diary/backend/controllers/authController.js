@@ -106,4 +106,49 @@ const register = async (req, res) => {
     }
 };
 
-module.exports = { login, register, toUserDto };
+const updateMe = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name, email, password = '' } = req.body;
+        const normalizedName = String(name || '').trim();
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+
+        if (!normalizedName || !normalizedEmail) {
+            return res.status(400).json({ error: 'Nome e e-mail sao obrigatorios' });
+        }
+
+        if (password) {
+            const hashed = await hashPassword(password);
+            await query(
+                'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?',
+                [normalizedName, normalizedEmail, hashed, userId]
+            );
+        } else {
+            await query(
+                'UPDATE users SET name = ?, email = ? WHERE id = ?',
+                [normalizedName, normalizedEmail, userId]
+            );
+        }
+
+        const users = await query(
+            'SELECT id, name, email, is_admin FROM users WHERE id = ?',
+            [userId]
+        );
+        const profiles = await getUserProfiles(query, userId, Boolean(users[0].is_admin));
+
+        res.json({
+            message: 'Perfil atualizado',
+            user: toUserDto({ ...users[0], profiles })
+        });
+    } catch (error) {
+        console.error(error);
+
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: 'E-mail ja cadastrado' });
+        }
+
+        res.status(500).json({ error: 'Erro ao atualizar perfil' });
+    }
+};
+
+module.exports = { login, register, updateMe, toUserDto };

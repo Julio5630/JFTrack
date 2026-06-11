@@ -46,6 +46,16 @@ const toStudentMembershipDto = (membership) => ({
 
 const normalizeRole = (role) => (role === 'personal' ? 'personal' : 'student');
 
+const parseAssessmentJson = (value) => {
+    if (!value) return {};
+    if (typeof value === 'object') return value;
+    try {
+        return JSON.parse(value);
+    } catch {
+        return {};
+    }
+};
+
 const getOwnedGym = async (userId) => {
     const gyms = await query(
         'SELECT * FROM gyms WHERE owner_user_id = ? LIMIT 1',
@@ -477,20 +487,15 @@ const getStudentWorkouts = async (req, res) => {
 
 const getStudentAssessments = async (req, res) => {
     try {
-        const selectedGymId = req.get('X-Selected-Student-Gym-Id') || null;
-        const params = [req.user.id];
-        const gymClause = selectedGymId ? 'AND pa.gym_id = ?' : '';
-        if (selectedGymId) params.push(selectedGymId);
-
         const assessments = await query(
             `SELECT pa.*, DATE_FORMAT(pa.assessment_date, '%Y-%m-%d') AS assessment_date,
                     u.name AS personal_name, g.name AS gym_name
              FROM physical_assessments pa
              JOIN users u ON u.id = pa.personal_user_id
              LEFT JOIN gyms g ON g.id = pa.gym_id
-             WHERE pa.student_user_id = ? ${gymClause}
+             WHERE pa.student_user_id = ? AND pa.status = 'completed'
              ORDER BY pa.assessment_date DESC, pa.created_at DESC`,
-            params
+            [req.user.id]
         );
 
         res.json({
@@ -498,12 +503,22 @@ const getStudentAssessments = async (req, res) => {
                 id: assessment.id,
                 assessmentDate: assessment.assessment_date,
                 goal: assessment.goal || '',
+                weight: assessment.weight !== null ? Number(assessment.weight) : null,
+                height: assessment.height !== null ? Number(assessment.height) : null,
+                bodyFat: assessment.body_fat !== null ? Number(assessment.body_fat) : null,
+                questionnaire: assessment.questionnaire || '',
                 workoutSuggestion: assessment.workout_suggestion || '',
+                personalData: parseAssessmentJson(assessment.personal_data),
+                medicalHistory: parseAssessmentJson(assessment.medical_history),
+                activityHistory: parseAssessmentJson(assessment.activity_history),
+                lifestyle: parseAssessmentJson(assessment.lifestyle),
+                availability: parseAssessmentJson(assessment.availability),
+                measurements: parseAssessmentJson(assessment.measurements),
                 bmi: assessment.bmi !== null ? Number(assessment.bmi) : null,
                 medicalAlert: Boolean(assessment.medical_alert),
                 medicalAlertMessage: assessment.medical_alert_message || '',
                 personal: { name: assessment.personal_name },
-                gym: assessment.gym_name ? { name: assessment.gym_name } : null
+                gym: assessment.gym_name ? { id: assessment.gym_id, name: assessment.gym_name } : null
             }))
         });
     } catch (error) {

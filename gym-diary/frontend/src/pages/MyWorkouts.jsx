@@ -205,27 +205,27 @@ export default function MyWorkouts() {
 
   return (
     <div className="my-workouts-container">
-      <div className="industrial-bg"></div>
-      <div className="gear gear-creator-1"></div>
-      <div className="gear gear-creator-2"></div>
-
       <div className="my-workouts-content">
-        <div className="dashboard-header">
-          <h1>MEUS TREINOS</h1>
-          <div className="header-rivets">
-            <span className="rivet"></span>
-            <span className="rivet"></span>
-            <span className="rivet"></span>
+        <header className="workouts-page-heading">
+          <div>
+            <span className="workouts-eyebrow">Sua rotina</span>
+            <h1>Meus treinos</h1>
+            <p>Organize seus treinos e personalize sua biblioteca de exercícios.</p>
           </div>
-          <p className="user-greeting">TREINOS E EXERCICIOS EM UM SO LUGAR</p>
-        </div>
+          <span className="workouts-heading-icon"><Icon name="dumbbell" size={25} /></span>
+        </header>
+
+        <section className="workouts-overview">
+          <article><span><Icon name="dumbbell" size={19} /></span><div><strong>{templates.length}</strong><small>Treinos criados</small></div></article>
+          <article><span className="coral"><Icon name="book" size={19} /></span><div><strong>{exercises.length}</strong><small>Exercícios disponíveis</small></div></article>
+        </section>
 
         <div className="student-tabs" role="tablist" aria-label="Meus treinos">
           <button className={activeTab === 'workouts' ? 'active' : ''} onClick={() => setActiveTab('workouts')}>
             <Icon name="dumbbell" size={18} /> Treinos
           </button>
           <button className={activeTab === 'exercises' ? 'active' : ''} onClick={() => setActiveTab('exercises')}>
-            <Icon name="book" size={18} /> Exercicios
+            <Icon name="book" size={18} /> Exercícios
           </button>
         </div>
 
@@ -247,7 +247,7 @@ export default function MyWorkouts() {
                   <article key={template.id} className="template-management-item">
                     <div>
                       <h3>{template.name}</h3>
-                      <span>{template.exercises?.length || 0} exercicios | Criador: {template.creatorName || 'Voce'}</span>
+                      <span>{template.exercises?.length || 0} exercícios · Criador: {template.creatorName || 'Você'}</span>
                     </div>
                     <div className="card-actions">
                       <button className="action-btn start" onClick={() => startWorkout(template)} aria-label="Iniciar treino"><Icon name="dumbbell" size={17} /></button>
@@ -265,7 +265,6 @@ export default function MyWorkouts() {
 
             {showWorkoutCreator && (
               <section className="creator-card">
-                <div className="card-corner"></div>
                 <div className="section-title-row">
                   <h2>{editingTemplateId ? 'Editar treino' : 'Criar treino'}</h2>
                   <button className="text-action" onClick={resetWorkoutForm}>
@@ -336,7 +335,7 @@ export default function MyWorkouts() {
 
                   <div className="form-actions">
                     <button className="industrial-btn" onClick={saveWorkout} disabled={saving}>
-                      {saving ? 'SALVANDO...' : editingTemplateId ? 'SALVAR ALTERACOES' : 'SALVAR TREINO'}
+                      {saving ? 'Salvando...' : editingTemplateId ? 'Salvar alterações' : 'Salvar treino'}
                     </button>
                   </div>
                 </div>
@@ -358,7 +357,7 @@ export default function MyWorkouts() {
                   {categories.map(category => <option key={category} value={category}>{category.toUpperCase()}</option>)}
                 </select>
               </div>
-              <button className="industrial-btn" onClick={() => openExerciseModal()} disabled={saving}>+ NOVO EXERCICIO</button>
+              <button className="industrial-btn" onClick={() => openExerciseModal()} disabled={saving}><Icon name="book" size={17} /> Novo exercício</button>
             </div>
 
             <div className="exercises-grid">
@@ -366,7 +365,6 @@ export default function MyWorkouts() {
                 <div className="empty-message">Nenhum exercicio encontrado.</div>
               ) : filteredExercises.map(exercise => (
                 <article key={exercise.id} className="exercise-card">
-                  <div className="card-corner"></div>
                   <div className="exercise-info">
                     <h3>{exercise.name}</h3>
                     <span className="category-badge">{exercise.category}</span>

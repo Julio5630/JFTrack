@@ -43,36 +43,37 @@ export default function AcademyStudentWorkouts() {
 
   return (
     <div className="academy-workouts-container">
-      <div className="industrial-bg"></div>
-      <div className="gear gear-dash-1"></div>
-      <div className="gear gear-dash-2"></div>
-
       <div className="academy-workouts-content">
-        <div className="dashboard-header">
-          <h1>TREINOS</h1>
-          <div className="header-rivets">
-            <span className="rivet"></span>
-            <span className="rivet"></span>
-            <span className="rivet"></span>
+        <header className="academy-workouts-heading">
+          <div>
+            <span>Programa da academia</span>
+            <h1>Seus treinos</h1>
+            <p>Treinos prescritos pelos profissionais da {gymName || 'sua academia'}.</p>
           </div>
-          <p className="user-greeting">{gymName || 'TREINOS DA ACADEMIA'}</p>
-        </div>
+          <span className="academy-heading-icon"><Icon name="gymLogo" size={25} /></span>
+        </header>
+
+        <section className="academy-workout-summary">
+          <span><Icon name="dumbbell" size={21} /></span>
+          <div><strong>{data.workoutTemplates?.length || 0} treino{data.workoutTemplates?.length === 1 ? '' : 's'} disponível{data.workoutTemplates?.length === 1 ? '' : 'is'}</strong><p>Escolha um treino para começar sua sessão.</p></div>
+        </section>
 
         <div className="assigned-workouts-grid">
           {data.workoutTemplates?.length === 0 ? (
             <div className="assigned-empty">
-              Nenhum treino foi disponibilizado pelo personal ainda.
+              <span><Icon name="dumbbell" size={24} /></span>
+              <h2>Nenhum treino disponível</h2>
+              <p>Assim que um profissional liberar um treino, ele aparecerá aqui.</p>
             </div>
           ) : data.workoutTemplates.map(template => (
             <article key={template.id} className="assigned-workout-card">
-              <div className="card-corner"></div>
               <div>
                 <span className="trainer-label">{template.trainerName || template.trainer_name || 'Personal'}</span>
                 <h2>{template.name}</h2>
-                <p>{template.exercises?.length || 0} exercicios cadastrados</p>
+                <p>{template.exercises?.length || 0} exercícios cadastrados</p>
               </div>
               <button className="industrial-btn" onClick={() => startWorkout(template)}>
-                <Icon name="dumbbell" size={18} /> INICIAR TREINO
+                <Icon name="dumbbell" size={18} /> Iniciar treino
               </button>
             </article>
           ))}

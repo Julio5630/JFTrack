@@ -1,4 +1,3 @@
-/* src/components/Navbar.css */
 .industrial-navbar {
   position: sticky;
   top: 0;
@@ -6,7 +5,7 @@
   background: rgba(10, 12, 15, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 107, 53, 0.3);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .nav-container {
@@ -20,7 +19,6 @@
   position: relative;
 }
 
-/* Brand / Logo */
 .nav-brand {
   display: flex;
   align-items: center;
@@ -35,9 +33,9 @@
   height: 38px;
   color: #fff;
   background: linear-gradient(135deg, #ff6b35, #b8441d);
-  border: 1px solid rgba(255,255,255,0.24);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 8px;
-  box-shadow: 0 0 12px rgba(255,107,53,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+  box-shadow: 0 0 12px rgba(255, 107, 53, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .brand-text {
@@ -54,16 +52,15 @@
 
 .profile-pill {
   padding: 3px 8px;
-  border: 1px solid rgba(255,107,53,0.38);
+  border: 1px solid rgba(255, 107, 53, 0.38);
   border-radius: 999px;
   color: #ffb08d;
-  background: rgba(255,107,53,0.12);
+  background: rgba(255, 107, 53, 0.12);
   font-family: monospace;
   font-size: 0.72rem;
   letter-spacing: 0.5px;
 }
 
-/* Hamburger button */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -98,7 +95,6 @@
   transform: rotate(-45deg) translate(8px, -8px);
 }
 
-/* Menu links (desktop) */
 .nav-links {
   display: flex;
   align-items: center;
@@ -110,8 +106,9 @@
   align-items: center;
 }
 
-/* Links individuais */
-.nav-link, .logout-link, .mode-switch-link {
+.nav-link,
+.logout-link,
+.mode-switch-link {
   position: relative;
   display: flex;
   align-items: center;
@@ -130,7 +127,9 @@
   border-radius: 2px;
 }
 
-.nav-link::before, .logout-link::before, .mode-switch-link::before {
+.nav-link::before,
+.logout-link::before,
+.mode-switch-link::before {
   content: '';
   position: absolute;
   bottom: 0;
@@ -141,13 +140,15 @@
   transition: width 0.2s;
 }
 
-.nav-link:hover::before, .logout-link:hover::before, .mode-switch-link:hover::before {
+.nav-link:hover::before,
+.logout-link:hover::before,
+.mode-switch-link:hover::before {
   width: 100%;
 }
 
 .nav-link.active {
   color: #ff6b35;
-  background: rgba(255,107,53,0.1);
+  background: rgba(255, 107, 53, 0.1);
 }
 
 .nav-link.active::before {
@@ -156,7 +157,7 @@
 
 .nav-icon {
   font-size: 1.2rem;
-  filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.5));
 }
 
 .nav-label {
@@ -179,7 +180,6 @@
   opacity: 1;
 }
 
-/* Logout button */
 .logout-link {
   background: rgba(220, 53, 69, 0.1);
   margin-left: 8px;
@@ -190,7 +190,6 @@
   color: #ff6b35;
 }
 
-/* Responsive - Mobile */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -203,11 +202,11 @@
     width: 100%;
     background: rgba(10, 12, 15, 0.98);
     backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(255,107,53,0.3);
+    border-top: 1px solid rgba(255, 107, 53, 0.3);
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
     z-index: 999;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   }
 
   .nav-links.open {
@@ -221,19 +220,23 @@
     gap: 0;
   }
 
-  .nav-link, .logout-link, .mode-switch-link {
+  .nav-link,
+  .logout-link,
+  .mode-switch-link {
     width: 100%;
     padding: 14px 20px;
     border-radius: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     justify-content: flex-start;
   }
 
   .nav-link.active {
-    background: rgba(255,107,53,0.15);
+    background: rgba(255, 107, 53, 0.15);
   }
 
-  .nav-link::before, .logout-link::before, .mode-switch-link::before {
+  .nav-link::before,
+  .logout-link::before,
+  .mode-switch-link::before {
     display: none;
   }
 
@@ -246,11 +249,13 @@
     margin-top: 10px;
     background: rgba(220, 53, 69, 0.15);
   }
+
 }
 
-/* Desktop ajustes */
 @media (min-width: 769px) {
-  .nav-link:hover, .logout-link:hover, .mode-switch-link:hover {
+  .nav-link:hover,
+  .logout-link:hover,
+  .mode-switch-link:hover {
     transform: translateY(-1px);
   }
 }

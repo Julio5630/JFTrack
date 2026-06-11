@@ -10,7 +10,7 @@ const gymRoutes = require('./gyms');
 const personalRoutes = require('./personal');
 
 const { authenticateToken, isAdmin } = require('../middlewares/auth');
-const { toUserDto } = require('../controllers/authController');
+const { toUserDto, updateMe } = require('../controllers/authController');
 
 // Públicas
 router.use('/auth', authRoutes);
@@ -27,6 +27,7 @@ router.use('/users', authenticateToken, isAdmin, userRoutes);
 router.get('/me', authenticateToken, (req, res) => {
     res.json({ user: toUserDto(req.user) });
 });
+router.put('/me', authenticateToken, updateMe);
 
 // Health
 router.get('/health', (req, res) => {

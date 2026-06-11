@@ -1,95 +1,91 @@
-@import './Dashboard.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-.assessment-container {
-  position: relative;
-  min-height: 100vh;
-  background: #0a0c0f;
-  font-family: 'Roboto Condensed', sans-serif;
-  overflow-x: hidden;
-  padding: 20px;
-}
+.assessment-page { min-height: 100vh; padding: 28px 20px 120px; color: #191c1d; font-family: 'Inter', sans-serif; background: radial-gradient(circle at 92% 2%, rgba(175,239,221,.62), transparent 23%), radial-gradient(circle at 5% 88%, rgba(253,136,99,.1), transparent 19%), linear-gradient(180deg,#f8f9fa 0%,#eef2ef 100%); }
+.assessment-shell { max-width: 1100px; margin: 0 auto; }
+.assessment-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+.assessment-eyebrow, .assessment-card-heading small, .assessment-recommendation-card small { color: #29695b; font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.assessment-heading h1 { margin: 7px 0 8px; color: #00342b; font-size: clamp(2rem,4vw,3rem); line-height: 1; letter-spacing: -.045em; }
+.assessment-heading p { margin: 0; color: #5f6965; line-height: 1.55; }
+.assessment-heading-icon { width: 58px; height: 58px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 19px; color: #004d40; background: rgba(175,239,221,.65); box-shadow: 0 10px 25px rgba(0,77,64,.1); line-height: 0; }
+.assessment-heading-icon .animated-icon, .assessment-metric-card .animated-icon, .assessment-card-heading .animated-icon { animation: none; }
 
-.assessment-content {
-  position: relative;
-  z-index: 2;
-  max-width: 900px;
-  margin: 0 auto;
-}
+.assessment-source-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.assessment-source-filter button { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 13px; border: 0; border-radius: 999px; color: #53605b; background: rgba(255,255,255,.86); box-shadow: 0 4px 12px rgba(0,77,64,.055); font: 700 .76rem 'Inter',sans-serif; cursor: pointer; }
+.assessment-source-filter button span { min-width: 20px; height: 20px; display: grid; place-items: center; padding: 0 5px; border-radius: 999px; color: #29695b; background: #e3efeb; font-size: .65rem; }
+.assessment-source-filter button.active { color: #fff; background: #004d40; }
+.assessment-source-filter button.active span { color: #00342b; background: #afefdd; }
 
-.assessment-panel {
-  position: relative;
-  background: rgba(18, 22, 28, 0.85);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  padding: 32px;
-  text-align: center;
-}
+.assessment-history-strip { display: flex; gap: 10px; margin-bottom: 18px; overflow-x: auto; padding: 2px 2px 8px; }
+.assessment-history-strip button { min-width: 220px; padding: 11px 14px; border: 0; border-radius: 15px; color: #59635f; background: rgba(255,255,255,.78); box-shadow: 0 5px 14px rgba(0,77,64,.06); font: inherit; text-align: left; cursor: pointer; }
+.assessment-history-strip span, .assessment-history-strip strong { display: block; }
+.assessment-history-strip span { margin-bottom: 4px; font-size: .68rem; }
+.assessment-history-strip strong { font-size: .77rem; }
+.assessment-history-strip small { display: block; overflow: hidden; margin-top: 5px; font-size: .65rem; opacity: .72; text-overflow: ellipsis; white-space: nowrap; }
+.assessment-history-strip button.active { color: #fff; background: #004d40; }
 
-.assessment-icon {
-  color: #ff6b35;
-}
+.assessment-hero-card, .assessment-report-card, .assessment-metric-card, .assessment-recommendation-card, .assessment-empty-card { border: 0; background: rgba(255,255,255,.94); box-shadow: 0 12px 30px rgba(0,77,64,.085), 0 3px 8px rgba(25,28,29,.05); }
+.assessment-hero-card { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 180px; padding: 28px; border-radius: 25px; color: #fff; background: linear-gradient(135deg,#004d40 0%,#29695b 60%,#3a7a6e 100%); }
+.assessment-hero-copy, .assessment-date-block { position: relative; z-index: 1; }
+.assessment-status { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; color: #00342b; background: #afefdd; font-size: .72rem; font-weight: 800; }
+.assessment-hero-card h2 { margin: 16px 0 8px; font-size: clamp(1.5rem,3vw,2.15rem); letter-spacing: -.035em; }
+.assessment-hero-card p { margin: 0; color: #d8ebe5; }
+.assessment-date-block { min-width: 180px; padding: 16px; border-radius: 17px; background: rgba(255,255,255,.12); }
+.assessment-date-block span, .assessment-date-block strong { display: block; }
+.assessment-date-block span { margin-bottom: 6px; color: #afefdd; font-size: .7rem; }
+.assessment-date-block strong { font-size: .86rem; text-transform: capitalize; }
+.assessment-hero-card > i { position: absolute; right: -55px; bottom: -90px; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle,rgba(223,236,96,.3),transparent 68%); }
 
-.assessment-panel h2 {
-  color: #fff;
-  margin: 14px 0 8px;
-}
+.assessment-alert-card { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 14px; margin-top: 18px; padding: 17px 19px; border-radius: 18px; color: #7d2222; background: #ffdad6; }
+.assessment-alert-card > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: rgba(186,26,26,.1); line-height: 0; }
+.assessment-alert-card strong { display: block; margin-bottom: 5px; }
+.assessment-alert-card p { margin: 0; font-size: .83rem; line-height: 1.55; }
 
-.assessment-panel p {
-  color: #c7ced8;
-  margin: 0;
-  font-family: monospace;
-}
+.assessment-metric-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; margin: 20px 0; }
+.assessment-metric-card { display: grid; grid-template-columns: 44px minmax(0,1fr); align-items: center; gap: 12px; min-height: 86px; padding: 17px; border-radius: 20px; }
+.assessment-metric-card > span, .assessment-card-heading > span { display: grid; place-items: center; color: #004d40; background: rgba(148,211,193,.28); line-height: 0; }
+.assessment-metric-card > span { width: 44px; height: 44px; border-radius: 15px; }
+.assessment-metric-card > span.coral, .assessment-card-heading > span.coral { color: #9f4122; background: rgba(253,136,99,.2); }
+.assessment-metric-card > span.lime { color: #4f5700; background: rgba(223,236,96,.34); }
+.assessment-metric-card > span.gold { color: #735b00; background: rgba(255,217,110,.3); }
+.assessment-metric-card small, .assessment-metric-card strong { display: block; }
+.assessment-metric-card small { margin-bottom: 4px; color: #707975; font-size: .72rem; }
+.assessment-metric-card strong { overflow: hidden; color: #00342b; font-size: 1rem; text-overflow: ellipsis; }
 
-.student-assessment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.assessment-content-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.assessment-report-card { padding: 22px; border-radius: 23px; }
+.assessment-card-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.assessment-card-heading > span { width: 43px; height: 43px; flex: 0 0 auto; border-radius: 14px; }
+.assessment-card-heading h2 { margin: 4px 0 0; color: #00342b; font-size: 1.05rem; }
+.assessment-data-list { display: grid; }
+.assessment-data-list > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e6ebe8; }
+.assessment-data-list > div:last-child { border-bottom: 0; }
+.assessment-data-list span { color: #68716d; font-size: .8rem; }
+.assessment-data-list strong { color: #303735; font-size: .8rem; text-align: right; }
 
-.student-assessment-card {
-  position: relative;
-  background: rgba(18, 22, 28, 0.85);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  padding: 22px;
-  color: #f4f7fb;
-}
+.assessment-recommendation-card { display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 16px; margin-top: 20px; padding: 23px; border-radius: 23px; background: linear-gradient(135deg,rgba(248,250,224,.96),rgba(255,255,255,.96)); }
+.assessment-recommendation-icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 17px; color: #596100; background: #e8ef9b; line-height: 0; }
+.assessment-recommendation-card h2 { margin: 5px 0 9px; color: #3e4500; font-size: 1.08rem; }
+.assessment-recommendation-card p { margin: 0; color: #5f6650; font-size: .86rem; line-height: 1.65; white-space: pre-wrap; }
+.assessment-footer-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; color: #707975; font-size: .73rem; text-align: center; }
 
-.student-assessment-card h2 {
-  margin: 6px 0;
-  color: #fff;
-}
+.assessment-empty-card { padding: 48px 24px; border-radius: 24px; text-align: center; }
+.assessment-empty-card > span, .assessment-state-icon { width: 56px; height: 56px; display: grid; place-items: center; margin: 0 auto 16px; border-radius: 18px; color: #004d40; background: #dcece6; line-height: 0; }
+.assessment-empty-card h2 { margin: 0 0 8px; color: #00342b; }
+.assessment-empty-card p { max-width: 480px; margin: 0 auto; color: #68716d; line-height: 1.55; }
+.assessment-state { display: grid; place-content: center; text-align: center; }
+.assessment-state h1 { margin: 0; color: #00342b; font-size: 1.1rem; }
 
-.student-assessment-card p {
-  color: #c7ced8;
-  font-family: monospace;
-}
-
-.assessment-date {
-  color: #ffb08d;
-  font-family: monospace;
-}
-
-.assessment-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.assessment-metrics span,
-.assessment-metrics strong {
-  padding: 6px 8px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.25);
-  font-family: monospace;
-}
-
-.assessment-metrics strong {
-  color: #ffd8dd;
-  border-color: rgba(220,53,69,0.6);
-}
-
-.assessment-suggestion {
-  white-space: pre-wrap;
+@media (max-width: 850px) { .assessment-metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 680px) {
+  .assessment-page { padding: 20px 14px 112px; }
+  .assessment-heading { align-items: flex-start; }
+  .assessment-heading-icon { width: 48px; height: 48px; border-radius: 16px; }
+  .assessment-heading p { max-width: 290px; font-size: .86rem; }
+  .assessment-hero-card { display: grid; padding: 22px; }
+  .assessment-date-block { min-width: 0; }
+  .assessment-metric-grid, .assessment-content-grid { grid-template-columns: 1fr; }
+  .assessment-metric-grid { gap: 10px; }
+  .assessment-metric-card { min-height: 74px; padding: 14px 16px; }
+  .assessment-report-card { padding: 19px; border-radius: 20px; }
+  .assessment-recommendation-card { grid-template-columns: 1fr; }
 }

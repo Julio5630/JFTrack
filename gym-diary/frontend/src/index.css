@@ -7,7 +7,6 @@
   animation: icon-float 2.8s ease-in-out infinite;
 }
 
-.mode-toggle,
 .record-badge,
 .set-detail,
 .nav-icon,
@@ -20,33 +19,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-}
-
-.mode-toggle {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 1200;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ff6b35, #b8441d);
-  color: #fff;
-  font-family: 'Roboto Condensed', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
-}
-
-.mode-toggle.active {
-  background: linear-gradient(135deg, #2c3138, #15191f);
-  border-color: rgba(255,107,53,0.55);
-}
-
-body.training-mode .industrial-navbar {
-  display: none;
 }
 
 button:hover .animated-icon,

@@ -14,10 +14,10 @@ import MyWorkouts from './pages/MyWorkouts';
 import AcademyStudentWorkouts from './pages/AcademyStudentWorkouts';
 import PhysicalAssessment from './pages/PhysicalAssessment';
 import History from './pages/History';
-import Progress from './pages/Progress';
+import UserProfile from './pages/UserProfile';
 import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
-import TrainingModeToggle from './components/TrainingModeToggle';
+import StudentBottomNav from './components/StudentBottomNav';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
@@ -89,12 +89,12 @@ function AnimatedRoutes() {
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
                 <Route path="/login" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" style={{ background: '#0a0c0f' }}>
+                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
                         <LoginRoute />
                     </motion.div>
                 } />
                 <Route path="/profile-select" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" style={{ background: '#0a0c0f' }}>
+                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
                         <ProfileSelect />
                     </motion.div>
                 } />
@@ -162,11 +162,11 @@ function AnimatedRoutes() {
                 } />
                 <Route path="/student/assessment" element={
                     <PrivateRoute>
-                        <StudentModeRoute academy>
+                        <StudentRoute>
                             <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
                                 <PhysicalAssessment />
                             </motion.div>
-                        </StudentModeRoute>
+                        </StudentRoute>
                     </PrivateRoute>
                 } />
                 <Route path="/create" element={
@@ -192,13 +192,11 @@ function AnimatedRoutes() {
                         </StudentRoute>
                     </PrivateRoute>
                 } />
-                <Route path="/progress" element={
+                <Route path="/profile" element={
                     <PrivateRoute>
-                        <StudentRoute>
-                            <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-                                <Progress />
-                            </motion.div>
-                        </StudentRoute>
+                        <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+                            <UserProfile />
+                        </motion.div>
                     </PrivateRoute>
                 } />
                 <Route path="/admin" element={
@@ -208,21 +206,26 @@ function AnimatedRoutes() {
                         </motion.div>
                     </AdminRoute>
                 } />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </AnimatePresence>
     );
 }
 
 function AppContent() {
-    const { user, activeProfile, isAcademyStudent } = useAuth();
+    const { user, activeProfile } = useAuth();
     const location = useLocation();
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
+    const showNavbar = showShell && activeProfile !== 'student';
+    const showStudentBottomNav = showShell
+        && activeProfile === 'student'
+        && location.pathname !== '/execution';
 
     return (
         <>
-            {showShell && <Navbar />}
+            {showNavbar && <Navbar />}
             <AnimatedRoutes />
-            {showShell && activeProfile === 'student' && !isAcademyStudent && <TrainingModeToggle />}
+            {showStudentBottomNav && <StudentBottomNav />}
         </>
     );
 }
