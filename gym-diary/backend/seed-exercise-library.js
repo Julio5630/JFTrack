@@ -1,19 +1,16 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 const { getDatabaseConfig } = require('./config/dbConfig');
-const { defaultExercises, seedDefaultExercises } = require('./utils/defaultExercises');
+const { defaultExercises, seedDefaultExercisesForAllUsers } = require('./utils/defaultExercises');
 
 const seedExerciseLibrary = async () => {
     const connection = await mysql.createConnection(getDatabaseConfig(true));
 
     try {
-        const [users] = await connection.query('SELECT id FROM users');
+        const [[{ totalUsers }]] = await connection.query('SELECT COUNT(*) AS totalUsers FROM users');
+        await seedDefaultExercisesForAllUsers(connection.query.bind(connection));
 
-        for (const user of users) {
-            await seedDefaultExercises(connection.query.bind(connection), user.id);
-        }
-
-        console.log(`Biblioteca sincronizada: ${defaultExercises.length} exercicios para ${users.length} usuarios.`);
+        console.log(`Biblioteca sincronizada: ${defaultExercises.length} exercicios para ${totalUsers} usuarios.`);
     } finally {
         await connection.end();
     }

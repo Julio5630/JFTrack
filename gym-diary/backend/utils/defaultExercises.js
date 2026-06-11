@@ -179,18 +179,36 @@ const defaultExercises = [
 ];
 
 const seedDefaultExercises = async (query, userId) => {
-    for (const exercise of defaultExercises) {
-        await query(
-            `INSERT INTO exercises (user_id, name, category)
-             VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-                category = VALUES(category)`,
-            [userId, exercise.name, exercise.category]
-        );
-    }
+    const placeholders = defaultExercises.map(() => '(?, ?, ?)').join(', ');
+    const params = defaultExercises.flatMap((exercise) => [userId, exercise.name, exercise.category]);
+
+    await query(
+        `INSERT INTO exercises (user_id, name, category)
+         VALUES ${placeholders}
+         ON DUPLICATE KEY UPDATE category = VALUES(category)`,
+        params
+    );
+};
+
+const seedDefaultExercisesForAllUsers = async (query) => {
+    const exerciseRows = defaultExercises
+        .map((_, index) => `${index === 0 ? 'SELECT' : 'UNION ALL SELECT'} ? AS name, ? AS category`)
+        .join('\n');
+    const params = defaultExercises.flatMap((exercise) => [exercise.name, exercise.category]);
+
+    await query(
+        `INSERT INTO exercises (user_id, name, category)
+         SELECT users.id, defaults.name, defaults.category
+         FROM users
+         CROSS JOIN (${exerciseRows}) AS defaults
+         WHERE TRUE
+         ON DUPLICATE KEY UPDATE category = VALUES(category)`,
+        params
+    );
 };
 
 module.exports = {
     defaultExercises,
-    seedDefaultExercises
+    seedDefaultExercises,
+    seedDefaultExercisesForAllUsers
 };

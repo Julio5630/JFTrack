@@ -2,8 +2,7 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 const { getDatabaseConfig } = require('./config/dbConfig');
-const { seedDefaultExercises } = require('./utils/defaultExercises');
-const { ensureUserProfiles } = require('./utils/profiles');
+const { seedDefaultExercisesForAllUsers } = require('./utils/defaultExercises');
 
 const questionnaireLabels = {
     fullName: 'Nome completo',
@@ -95,6 +94,7 @@ const config = getDatabaseConfig(false);
 
 async function initDatabase() {
     let connection;
+    const startedAt = Date.now();
     try {
         console.log(' Conectando ao MySQL...');
         connection = await mysql.createConnection(config);
@@ -104,6 +104,13 @@ async function initDatabase() {
         await connection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
         await connection.query(`USE ${process.env.DB_NAME}`);
         console.log(` Usando banco: ${process.env.DB_NAME}`);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS app_migrations (
+                name VARCHAR(120) PRIMARY KEY,
+                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
 
         // Criar tabelas
         console.log(' Criando tabelas...');
@@ -401,26 +408,6 @@ async function initDatabase() {
             WHERE display_order = 0
         `);
 
-        const [assignmentGroups] = await connection.query(`
-            SELECT DISTINCT personal_user_id, student_user_id, gym_id
-            FROM personal_workout_assignments
-        `);
-        for (const group of assignmentGroups) {
-            const [orderedAssignments] = await connection.query(
-                `SELECT id
-                 FROM personal_workout_assignments
-                 WHERE personal_user_id = ? AND student_user_id = ? AND gym_id <=> ?
-                 ORDER BY display_order ASC, id ASC`,
-                [group.personal_user_id, group.student_user_id, group.gym_id]
-            );
-            for (const [index, assignment] of orderedAssignments.entries()) {
-                await connection.query(
-                    'UPDATE personal_workout_assignments SET display_order = ? WHERE id = ?',
-                    [index + 1, assignment.id]
-                );
-            }
-        }
-
         await connection.query(`
             UPDATE personal_workout_assignments
             SET editable_by_student = FALSE
@@ -546,6 +533,12 @@ async function initDatabase() {
             ON DUPLICATE KEY UPDATE status = 'active', updated_at = CURRENT_TIMESTAMP
         `);
 
+        const [assessmentMigration] = await connection.query(
+            'SELECT name FROM app_migrations WHERE name = ?',
+            ['normalize-legacy-assessments-v1']
+        );
+
+        if (assessmentMigration.length === 0) {
         const [existingAssessments] = await connection.query(`
             SELECT id, questionnaire, personal_data, medical_history, activity_history, lifestyle, availability,
                    measurements, weight, height, body_fat, bmi
@@ -622,6 +615,12 @@ async function initDatabase() {
             }
         }
 
+        await connection.query(
+            'INSERT INTO app_migrations (name) VALUES (?)',
+            ['normalize-legacy-assessments-v1']
+        );
+        }
+
         console.log(' Todas as tabelas criadas com sucesso!');
 
         // Verificar se já existe admin
@@ -641,32 +640,34 @@ async function initDatabase() {
             console.log(' Usuário admin já existe');
         }
 
-        const [users] = await connection.query('SELECT id FROM users');
-        for (const user of users) {
-            await seedDefaultExercises(connection.query.bind(connection), user.id);
-        }
+        await seedDefaultExercisesForAllUsers(connection.query.bind(connection));
         console.log(' Exercícios padrão garantidos para todos os usuários');
 
-        const [profileUsers] = await connection.query(`
-            SELECT u.id, u.is_admin, g.id AS owned_gym_id
+        await connection.query(`
+            INSERT INTO user_profiles (user_id, profile_type, status)
+            SELECT u.id, 'student', 'active'
             FROM users u
-            LEFT JOIN gyms g ON g.owner_user_id = u.id
+            WHERE u.is_admin = TRUE
+               OR NOT EXISTS (SELECT 1 FROM gyms g WHERE g.owner_user_id = u.id)
+            ON DUPLICATE KEY UPDATE status = VALUES(status)
         `);
-        for (const user of profileUsers) {
-            if (user.owned_gym_id && !Boolean(user.is_admin)) {
-                await connection.query(
-                    `INSERT INTO user_profiles (user_id, profile_type, status)
-                     VALUES (?, 'gym', 'active')
-                     ON DUPLICATE KEY UPDATE status = VALUES(status)`,
-                    [user.id]
-                );
-            } else {
-                await ensureUserProfiles(connection.query.bind(connection), user.id, Boolean(user.is_admin));
-            }
-        }
+        await connection.query(`
+            INSERT INTO user_profiles (user_id, profile_type, status)
+            SELECT id, 'admin', 'active' FROM users WHERE is_admin = TRUE
+            ON DUPLICATE KEY UPDATE status = VALUES(status)
+        `);
+        await connection.query(`
+            INSERT INTO user_profiles (user_id, profile_type, status)
+            SELECT DISTINCT u.id, 'gym', 'active'
+            FROM users u
+            JOIN gyms g ON g.owner_user_id = u.id
+            WHERE u.is_admin = FALSE
+            ON DUPLICATE KEY UPDATE status = VALUES(status)
+        `);
         console.log(' Perfis de usuário garantidos');
 
         console.log('\n Banco de dados inicializado com sucesso!');
+        console.log(` Inicializacao concluida em ${((Date.now() - startedAt) / 1000).toFixed(2)}s`);
         console.log(' Detalhes da conexão:');
         console.log(`   Host: ${config.host}:${config.port}`);
         console.log(`   Banco: ${process.env.DB_NAME}`);
