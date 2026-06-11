@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { api } from '../services/api';
 
@@ -29,14 +29,20 @@ export const DataProvider = ({ children }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const loadSequence = useRef(0);
     const currentScopeKey = activeProfile === 'student'
         ? `${studentTrainingMode || 'own'}:${selectedGymId || 'own'}`
         : activeProfile || 'default';
 
     const loadAllData = useCallback(async () => {
+        const requestSequence = ++loadSequence.current;
+        const isCurrentRequest = () => requestSequence === loadSequence.current;
+
         if (!token || studentContextLoading) {
             if (!token) {
                 setData(null);
+                setLoading(false);
+            } else {
                 setLoading(false);
             }
             return;
@@ -52,6 +58,7 @@ export const DataProvider = ({ children }) => {
                     api.getHistory().catch(err => { console.error('Erro history:', err); return []; }),
                 ]);
 
+                if (!isCurrentRequest()) return;
                 setData(previous => ({
                     exercises: studentWorkouts.exercises || [],
                     workoutTemplates: studentWorkouts.templates || [],
@@ -61,6 +68,7 @@ export const DataProvider = ({ children }) => {
                         : readStoredWorkout(user?.id, currentScopeKey),
                 }));
             } catch (err) {
+                if (!isCurrentRequest()) return;
                 console.error('[DataContext] Erro ao carregar dados do aluno vinculado:', err);
                 setError(err.message);
                 setData(previous => ({
@@ -72,7 +80,7 @@ export const DataProvider = ({ children }) => {
                         : readStoredWorkout(user?.id, currentScopeKey),
                 }));
             } finally {
-                setLoading(false);
+                if (isCurrentRequest()) setLoading(false);
             }
             return;
         }
@@ -93,6 +101,7 @@ export const DataProvider = ({ children }) => {
                 api.getHistory().catch(err => { console.error('Erro history:', err); return []; }),
             ]);
 
+            if (!isCurrentRequest()) return;
             setData(previous => ({
                 exercises: exercises || [],
                 workoutTemplates: templates || [],
@@ -102,6 +111,7 @@ export const DataProvider = ({ children }) => {
                     : readStoredWorkout(user?.id, currentScopeKey),
             }));
         } catch (err) {
+            if (!isCurrentRequest()) return;
             console.error('[DataContext] Erro ao carregar dados:', err);
             setError(err.message);
             setData(previous => ({
@@ -113,7 +123,7 @@ export const DataProvider = ({ children }) => {
                     : readStoredWorkout(user?.id, currentScopeKey),
             }));
         } finally {
-            setLoading(false);
+            if (isCurrentRequest()) setLoading(false);
         }
     }, [token, user?.id, activeProfile, isAcademyStudent, studentContextLoading, studentTrainingMode, selectedGymId, currentScopeKey]);
 

@@ -100,6 +100,7 @@
   .auth-mobile-highlights span { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid rgba(255,255,255,.11); border-radius: 999px; color: #e5f2ee; background: rgba(255,255,255,.08); font-size: .61rem; font-weight: 700; }
   .auth-mobile-highlights .animated-icon { animation: none; }
   .auth-form-heading h2 { font-size: 2rem; }
+  .auth-field input { font-size: 16px; }
 }
 
 @media (max-width: 420px) {

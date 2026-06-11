@@ -2,6 +2,7 @@ const CACHE_PREFIX = 'jftrack.api.cache.';
 const QUEUE_KEY = 'jftrack.offline.queue';
 const ID_MAP_KEY = 'jftrack.offline.idMap';
 let syncInFlight = null;
+let temporaryIdSequence = 0;
 
 const parseJson = (value, fallback) => {
   try {
@@ -23,7 +24,10 @@ const getQueue = () => parseJson(localStorage.getItem(QUEUE_KEY), []);
 const setQueue = (queue) => localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 const getIdMap = () => parseJson(localStorage.getItem(ID_MAP_KEY), {});
 const setIdMap = (map) => localStorage.setItem(ID_MAP_KEY, JSON.stringify(map));
-const temporaryId = () => -Math.max(Date.now(), Math.floor(Math.random() * 1000000000));
+const temporaryId = () => {
+  temporaryIdSequence = (temporaryIdSequence + 1) % 1000;
+  return -((Date.now() * 1000) + temporaryIdSequence);
+};
 
 export const cacheApiResponse = (endpoint, data) => {
   localStorage.setItem(getCacheKey(endpoint), JSON.stringify({ data, savedAt: Date.now() }));

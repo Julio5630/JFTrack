@@ -42,8 +42,11 @@ async function request(endpoint, options = {}) {
     }
 
     const url = `${API_URL}${endpoint}`;
-    
     const method = options.method || 'GET';
+    const controller = new AbortController();
+    const timeoutId = method === 'GET'
+        ? window.setTimeout(() => controller.abort(), 15000)
+        : null;
 
     if (method !== 'GET' && typeof navigator !== 'undefined' && !navigator.onLine) {
         const queued = queueOfflineMutation(endpoint, options);
@@ -54,6 +57,7 @@ async function request(endpoint, options = {}) {
         const response = await fetch(url, {
             ...options,
             headers,
+            signal: options.signal || (method === 'GET' ? controller.signal : undefined),
         });
 
         if (!response.ok) {
@@ -76,6 +80,8 @@ async function request(endpoint, options = {}) {
         const queued = error.isHttpError ? null : queueOfflineMutation(endpoint, options);
         if (queued) return queued;
         throw error;
+    } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
     }
 }
 

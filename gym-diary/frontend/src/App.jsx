@@ -20,6 +20,7 @@ import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
 import StudentBottomNav from './components/StudentBottomNav';
 import PersonalBottomNav from './components/PersonalBottomNav';
+import InstallAppButton from './components/InstallAppButton';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
@@ -42,15 +43,14 @@ function ProfileRoute({ profile, children }) {
 }
 
 function StudentModeRoute({ academy = false, children }) {
-    const { activeProfile, isAcademyStudent, studentContextLoading } = useAuth();
-    if (studentContextLoading) return null;
+    const { activeProfile, studentTrainingMode } = useAuth();
     if (activeProfile !== 'student') return <Navigate to="/dashboard" />;
-    return isAcademyStudent === academy ? children : <Navigate to="/dashboard" />;
+    const academyMode = studentTrainingMode === 'academy';
+    return academyMode === academy ? children : <Navigate to="/dashboard" />;
 }
 
 function StudentRoute({ children }) {
-    const { activeProfile, studentContextLoading } = useAuth();
-    if (studentContextLoading) return null;
+    const { activeProfile } = useAuth();
     return activeProfile === 'student' ? children : <Navigate to="/dashboard" />;
 }
 
@@ -226,6 +226,7 @@ function AppContent() {
 
     return (
         <>
+            <InstallAppButton />
             {showNavbar && <Navbar />}
             <AnimatedRoutes />
             {showStudentBottomNav && <StudentBottomNav />}
