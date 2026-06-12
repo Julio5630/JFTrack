@@ -176,10 +176,11 @@ export default function ProfileWorkspace() {
   };
 
   const chartTooltipStyle = {
-    background: '#11161d',
-    border: '1px solid rgba(255,107,53,0.35)',
-    borderRadius: 6,
-    color: '#f4f7fb'
+    background: '#ffffff',
+    border: '0',
+    borderRadius: 14,
+    boxShadow: '0 12px 28px rgba(0,77,64,.14)',
+    color: '#173e36'
   };
 
   const renderGymOverview = () => {
@@ -259,7 +260,7 @@ export default function ProfileWorkspace() {
       { name: 'Com avaliacao', value: Math.max((reports.summary?.totalActiveStudents || 0) - (reports.summary?.pendingAssessmentStudents || 0), 0) },
       { name: 'Pendente', value: reports.summary?.pendingAssessmentStudents || 0 }
     ].filter((item) => item.value > 0);
-    const pieColors = ['#2ecc71', '#ff6b35'];
+    const pieColors = ['#17705f', '#f29b7d'];
 
     return (
       <div className="reports-section">
@@ -290,11 +291,11 @@ export default function ProfileWorkspace() {
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={busyDayChartData} margin={{ top: 18, right: 16, left: -20, bottom: 8 }}>
-                  <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                  <XAxis dataKey="name" stroke="#aeb7c4" tickLine={false} axisLine={false} />
-                  <YAxis stroke="#aeb7c4" tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip cursor={{ fill: 'rgba(255,107,53,0.08)' }} contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="treinos" radius={[8, 8, 2, 2]} fill="#ff6b35" />
+                  <CartesianGrid stroke="rgba(0,77,64,0.08)" vertical={false} />
+                  <XAxis dataKey="name" stroke="#71807a" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#71807a" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(0,77,64,0.05)' }} contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="treinos" radius={[8, 8, 2, 2]} fill="#17705f" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -331,11 +332,11 @@ export default function ProfileWorkspace() {
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={busyHourChartData} margin={{ top: 18, right: 16, left: -20, bottom: 8 }}>
-                  <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                  <XAxis dataKey="name" stroke="#aeb7c4" tickLine={false} axisLine={false} />
-                  <YAxis stroke="#aeb7c4" tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip cursor={{ fill: 'rgba(46,204,113,0.08)' }} contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="treinos" radius={[8, 8, 2, 2]} fill="#2ecc71" />
+                  <CartesianGrid stroke="rgba(0,77,64,0.08)" vertical={false} />
+                  <XAxis dataKey="name" stroke="#71807a" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#71807a" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(0,77,64,0.05)' }} contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="treinos" radius={[8, 8, 2, 2]} fill="#70b8a7" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -351,13 +352,13 @@ export default function ProfileWorkspace() {
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={personalChartData} margin={{ top: 18, right: 16, left: -20, bottom: 8 }}>
-                  <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-                  <XAxis dataKey="name" stroke="#aeb7c4" tickLine={false} axisLine={false} />
-                  <YAxis stroke="#aeb7c4" tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="alunos" fill="#ff6b35" radius={[7, 7, 2, 2]} />
-                  <Bar dataKey="avaliacoes" fill="#ffd28a" radius={[7, 7, 2, 2]} />
-                  <Bar dataKey="frequencia" fill="#2ecc71" radius={[7, 7, 2, 2]} />
+                  <CartesianGrid stroke="rgba(0,77,64,0.08)" vertical={false} />
+                  <XAxis dataKey="name" stroke="#71807a" tickLine={false} axisLine={false} />
+                  <YAxis stroke="#71807a" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip cursor={{ fill: 'rgba(0,77,64,0.05)' }} contentStyle={chartTooltipStyle} />
+                  <Bar dataKey="alunos" fill="#17705f" radius={[7, 7, 2, 2]} />
+                  <Bar dataKey="avaliacoes" fill="#f2b18f" radius={[7, 7, 2, 2]} />
+                  <Bar dataKey="frequencia" fill="#8bcfbe" radius={[7, 7, 2, 2]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -567,7 +568,7 @@ export default function ProfileWorkspace() {
   };
 
   return (
-    <div className="workspace-container">
+    <div className={`workspace-container ${activeProfile === 'gym' ? 'gym-workspace' : ''}`}>
       <div className="industrial-bg"></div>
       <div className="workspace-content">
         {activeProfile === 'gym' && (section === 'inicio' || section === 'configuracoes') && (

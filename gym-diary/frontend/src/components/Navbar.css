@@ -259,3 +259,29 @@
     transform: translateY(-1px);
   }
 }
+
+/* Light organization navigation used by the academy workspace. */
+.industrial-navbar.gym-navbar {
+  margin: 14px 18px 0;
+  border: 0;
+  border-radius: 20px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 12px 30px rgba(0,77,64,.09),0 3px 8px rgba(25,28,29,.04);
+}
+.gym-navbar .nav-container { max-width: 1180px; height: 66px; }
+.gym-navbar .brand-icon { display: grid; place-items: center; border: 0; border-radius: 13px; color: #fff; background: #075f50; box-shadow: 0 7px 16px rgba(0,77,64,.18); }
+.gym-navbar .brand-text { color: #173e36; font-family: 'Inter',sans-serif; letter-spacing: -.04em; }
+.gym-navbar .brand-text span { color: #287565; }
+.gym-navbar .profile-pill { border: 0; color: #176456; background: #e3f2ed; font-family: 'Inter',sans-serif; font-weight: 800; }
+.gym-navbar .nav-links-inner { gap: 3px; }
+.gym-navbar .nav-link,.gym-navbar .logout-link,.gym-navbar .mode-switch-link { padding: 10px 11px; border-radius: 12px; color: #65716c; font-family: 'Inter',sans-serif; letter-spacing: 0; font-size: .75rem; }
+.gym-navbar .nav-link::before,.gym-navbar .logout-link::before,.gym-navbar .mode-switch-link::before,.gym-navbar .nav-link-rivet { display: none; }
+.gym-navbar .nav-link.active { color: #fff; background: #075f50; box-shadow: 0 6px 14px rgba(0,77,64,.15); }
+.gym-navbar .logout-link { margin-left: 4px; color: #a34d3b; background: #ffebe7; }
+.gym-navbar .hamburger-line { background: #075f50; }
+@media (max-width:768px) {
+  .industrial-navbar.gym-navbar { margin: 8px 10px 0; border-radius: 17px; }
+  .gym-navbar .nav-links { top: 82px; left: 10px; width: calc(100% - 20px); overflow: hidden; border: 0; border-radius: 18px; background: rgba(255,255,255,.98); box-shadow: 0 16px 34px rgba(0,77,64,.15); }
+  .gym-navbar .nav-link,.gym-navbar .logout-link,.gym-navbar .mode-switch-link { width: auto; margin: 3px 12px; border: 0; border-radius: 12px; }
+  .gym-navbar .nav-link.active { background: #075f50; }
+}

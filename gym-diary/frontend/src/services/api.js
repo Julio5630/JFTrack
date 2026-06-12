@@ -152,6 +152,12 @@ export const api = {
     }),
     getStudentWorkouts: () => request('/gyms/student-workouts'),
     getStudentAssessments: () => request('/gyms/student-assessments'),
+    getBodyMetrics: () => request('/body-metrics'),
+    createBodyMetric: (metric) => request('/body-metrics', {
+        method: 'POST',
+        body: JSON.stringify(metric),
+    }),
+    deleteBodyMetric: (id) => request(`/body-metrics/${id}`, { method: 'DELETE' }),
     getPersonalSummary: (gymId = '') => request(`/personal/summary${gymId ? `?gymId=${encodeURIComponent(gymId)}` : ''}`),
     getPersonalGyms: (profileOverride = '') => request('/personal/gyms', {
         headers: profileOverride ? { 'X-Active-Profile': profileOverride } : {}

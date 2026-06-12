@@ -471,6 +471,49 @@ async function initDatabase() {
             )
         `);
 
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS student_body_metrics (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                recorded_date DATE NOT NULL,
+                relaxed_biceps DECIMAL(6,2),
+                contracted_biceps DECIMAL(6,2),
+                forearm DECIMAL(6,2),
+                chest DECIMAL(6,2),
+                shoulders DECIMAL(6,2),
+                waist DECIMAL(6,2),
+                abdomen DECIMAL(6,2),
+                hip DECIMAL(6,2),
+                upper_thigh DECIMAL(6,2),
+                middle_thigh DECIMAL(6,2),
+                lower_thigh DECIMAL(6,2),
+                calf DECIMAL(6,2),
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_student_body_metrics_user_date (user_id, recorded_date)
+            )
+        `);
+
+        const bodyMetricColumns = [
+            ['relaxed_biceps', 'DECIMAL(6,2)'],
+            ['contracted_biceps', 'DECIMAL(6,2)'],
+            ['forearm', 'DECIMAL(6,2)'],
+            ['shoulders', 'DECIMAL(6,2)'],
+            ['upper_thigh', 'DECIMAL(6,2)'],
+            ['middle_thigh', 'DECIMAL(6,2)'],
+            ['lower_thigh', 'DECIMAL(6,2)'],
+            ['calf', 'DECIMAL(6,2)']
+        ];
+
+        for (const [column, definition] of bodyMetricColumns) {
+            const [columns] = await connection.query(`SHOW COLUMNS FROM student_body_metrics LIKE '${column}'`);
+            if (columns.length === 0) {
+                await connection.query(`ALTER TABLE student_body_metrics ADD COLUMN ${column} ${definition}`);
+            }
+        }
+
         const assessmentColumns = [
             ['gym_id', 'INT AFTER student_user_id'],
             ['personal_data', 'TEXT AFTER workout_suggestion'],

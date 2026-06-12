@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Reorder, useDragControls } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
@@ -54,6 +54,7 @@ export default function MyWorkouts() {
   const { data, refreshData, updatePartial } = useData();
   const { notify, confirm } = useAlert();
   const navigate = useNavigate();
+  const workoutCreatorRef = useRef(null);
   const [showWorkoutCreator, setShowWorkoutCreator] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [selectedExercises, setSelectedExercises] = useState([]);
@@ -81,6 +82,13 @@ export default function MyWorkouts() {
       window.removeEventListener('keydown', closeOnEscape);
     };
   }, [exerciseModalOpen]);
+
+  useEffect(() => {
+    if (!showWorkoutCreator) return;
+    window.requestAnimationFrame(() => {
+      workoutCreatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [showWorkoutCreator, editingTemplateId]);
 
   if (!data) return <div className="my-workouts-loading">Carregando...</div>;
 
@@ -340,16 +348,16 @@ export default function MyWorkouts() {
         <div><span>Estúdio de treinos</span><h2>Monte sua própria rotina</h2><p>Escolha os exercícios, organize a sequência e ajuste séries ou duração.</p></div>
         <div className="workout-studio-stats">
           <article><Icon name="book" size={19} /><strong>{templates.length}</strong><small>treinos salvos</small></article>
-          <article><Icon name="dumbbell" size={19} /><strong>{selectedExercises.length}</strong><small>exercícios escolhidos</small></article>
+          <article><Icon name="dumbbell" size={19} /><strong>{showWorkoutCreator ? selectedExercises.length : exercises.length}</strong><small>{showWorkoutCreator ? 'exercícios escolhidos' : 'exercícios disponíveis'}</small></article>
         </div>
       </section>
 
-      <div className="workout-studio-grid">
-        <section className="workout-builder-card">
+      <div className={`workout-studio-grid ${showWorkoutCreator ? '' : 'creator-closed'}`}>
+        {showWorkoutCreator && <section className="workout-builder-card" ref={workoutCreatorRef}>
           <header className="workout-card-heading">
             <span className="workout-step-number">1</span>
             <div><h3>{editingTemplateId ? 'Editar treino' : 'Criar novo treino'}</h3><p>Defina um nome e monte a sequência de exercícios.</p></div>
-            {editingTemplateId && <button type="button" className="workout-text-button" onClick={resetWorkoutForm}>Criar novo</button>}
+            <button type="button" className="workout-text-button" onClick={resetWorkoutForm}>{editingTemplateId ? 'Cancelar edicao' : 'Fechar'}</button>
           </header>
 
           <label className="workout-name-field"><span>Nome do treino</span><input value={workoutName} onChange={(event) => setWorkoutName(event.target.value)} placeholder="Ex.: Treino A - Peito e tríceps" /></label>
@@ -388,10 +396,19 @@ export default function MyWorkouts() {
             <div><strong>{selectedExercises.filter((item) => item.category !== 'Cardio').reduce((total, item) => total + (item.defaultSets || 3), 0)}</strong><span>séries</span>{selectedExercises.some((item) => item.category === 'Cardio') && <><strong>{selectedExercises.filter((item) => item.category === 'Cardio').reduce((total, item) => total + (item.durationMinutes || 20), 0)}</strong><span>min de cardio</span></>}</div>
             <button type="button" onClick={saveWorkout} disabled={saving || !workoutName.trim() || selectedExercises.length === 0}><Icon name="check" size={18} /> {saving ? 'Salvando...' : editingTemplateId ? 'Salvar alterações' : 'Salvar treino'}</button>
           </footer>
-        </section>
+        </section>}
 
-        <aside className="student-saved-workouts">
-          <header><span>Seus treinos</span><h3>Treinos salvos</h3><p>Inicie uma sessão ou edite uma rotina existente.</p></header>
+        <aside className={`student-saved-workouts ${showWorkoutCreator ? '' : 'expanded'}`}>
+          <header className="student-saved-workouts-header">
+            <div><span>Seus treinos</span><h3>Treinos salvos</h3><p>Inicie uma sessão ou edite uma rotina existente.</p></div>
+            {!showWorkoutCreator && (
+              <button type="button" className="student-open-workout-creator" onClick={openWorkoutCreator}>
+                <span className="student-open-workout-icon"><Icon name="plus" size={18} /></span>
+                <span className="student-open-workout-copy"><strong>Criar novo treino</strong><small>Monte sua rotina</small></span>
+                <Icon name="chevronRight" size={17} />
+              </button>
+            )}
+          </header>
           <div className="student-saved-workout-list">
             {templates.map((template) => {
               const status = getTemplateStatus(template);

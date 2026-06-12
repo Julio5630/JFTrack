@@ -8,6 +8,7 @@ const historyRoutes = require('./history');
 const userRoutes = require('./users');
 const gymRoutes = require('./gyms');
 const personalRoutes = require('./personal');
+const bodyMetricsRoutes = require('./bodyMetrics');
 
 const { authenticateToken, isAdmin } = require('../middlewares/auth');
 const { toUserDto, updateMe } = require('../controllers/authController');
@@ -21,6 +22,7 @@ router.use('/templates', authenticateToken, templateRoutes);
 router.use('/history', authenticateToken, historyRoutes);
 router.use('/gyms', authenticateToken, gymRoutes);
 router.use('/personal', authenticateToken, personalRoutes);
+router.use('/body-metrics', authenticateToken, bodyMetricsRoutes);
 router.use('/users', authenticateToken, isAdmin, userRoutes);
 
 // Usuário logado

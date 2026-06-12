@@ -5,6 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import './Dashboard.css';
 
+const toLocalDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function Dashboard() {
   const { user, isAcademyStudent, selectedGymMembership } = useAuth();
   const { data } = useData();
@@ -35,15 +42,16 @@ export default function Dashboard() {
       };
     });
 
-    const weekDays = [];
-    for (let index = 6; index >= 0; index -= 1) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - index);
-      weekDays.push(date);
-    }
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const weekDays = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + index);
+      return date;
+    });
 
-    const weeklySeries = weekDays.map((date, index) => {
-      const key = date.toISOString().slice(0, 10);
+    const weeklySeries = weekDays.map((date) => {
+      const key = toLocalDateKey(date);
       const workouts = normalizedHistory.filter((item) => item.date === key);
       const volume = workouts.reduce((acc, item) => acc + item.volume, 0);
       return {
@@ -51,7 +59,7 @@ export default function Dashboard() {
         label: date.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 1).toUpperCase(),
         workouts: workouts.length,
         volume,
-        accent: index === weekDays.length - 1
+        accent: key === toLocalDateKey(today)
       };
     });
 
@@ -180,7 +188,7 @@ export default function Dashboard() {
             </div>
             <div className="metric-footer">
               <strong>{dashboardData.totalVolume.toLocaleString('pt-BR')} kg</strong>
-              <span>Volume acumulado nos ultimos 7 dias</span>
+              <span>Volume acumulado na semana atual</span>
             </div>
           </article>
 

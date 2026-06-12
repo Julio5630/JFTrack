@@ -60,7 +60,7 @@ export default function Navbar() {
   const currentProfile = user?.profiles?.find(profile => profile.type === activeProfile)?.label;
 
   return (
-      <nav className="industrial-navbar">
+      <nav className={`industrial-navbar ${activeProfile === 'gym' ? 'gym-navbar' : ''}`}>
         <div className="nav-container">
           <div className="nav-brand">
             <span className="brand-icon"><Icon name="gymLogo" size={26} title="JFTrack" /></span>

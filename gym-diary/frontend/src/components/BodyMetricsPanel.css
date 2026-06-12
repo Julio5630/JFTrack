@@ -1,0 +1,63 @@
+.body-metrics-card { grid-column: 1/-1; overflow: hidden; border-radius: 24px; background: rgba(255,255,255,.96); box-shadow: 0 14px 34px rgba(0,77,64,.1),0 3px 8px rgba(25,28,29,.045); }
+.body-metrics-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 23px; background: linear-gradient(125deg,#f5faf8 0%,#e5f4ef 100%); }
+.body-metrics-title { display: flex; align-items: center; gap: 13px; }
+.body-metrics-title > span { width: 46px; height: 46px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 15px; color: #fff; background: #075f50; box-shadow: 0 8px 17px rgba(0,77,64,.18); }
+.body-metrics-title small,.body-metrics-title h2,.body-metrics-title p { display: block; margin: 0; }
+.body-metrics-title small { margin-bottom: 3px; color: #287565; font-size: .64rem; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+.body-metrics-title h2 { color: #00342b; font-size: 1.13rem; }
+.body-metrics-title p { margin-top: 4px; color: #65716c; font-size: .78rem; line-height: 1.4; }
+.body-metrics-heading > button { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border: 0; border-radius: 13px; color: #fff; background: #075f50; box-shadow: 0 7px 16px rgba(0,77,64,.16); font: 800 .7rem 'Inter',sans-serif; cursor: pointer; white-space: nowrap; }
+.body-metrics-form { padding: 23px; border-top: 1px solid rgba(0,77,64,.07); background: #fbfcfb; }
+.body-metrics-form-intro,.body-comparison-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.body-metrics-form-intro strong,.body-metrics-form-intro span { display: block; }
+.body-metrics-form-intro strong { color: #173e36; font-size: .95rem; }
+.body-metrics-form-intro span { margin-top: 3px; color: #71807a; font-size: .72rem; }
+.body-metrics-bmi { min-width: 105px; padding: 9px 12px; border-radius: 13px; color: #174c42; text-align: right; background: #e4f1ed; }
+.body-metrics-bmi small,.body-metrics-bmi strong { display: block; }
+.body-metrics-bmi small { font-size: .55rem; }
+.body-metrics-bmi strong { margin-top: 2px; font-size: 1.02rem; }
+.body-metrics-fields { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.body-metric-group + .body-metric-group { margin-top: 22px; }
+.body-metric-group h3 { margin: 0 0 11px; color: #174c42; font-size: .8rem; letter-spacing: .01em; }
+.body-metric-field { display: grid; gap: 6px; }
+.body-metric-field > span { color: #46534e; font-size: .68rem; font-weight: 800; }
+.body-metric-field > div { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; overflow: hidden; border-radius: 12px; background: #edf1ef; box-shadow: inset 0 1px 3px rgba(25,28,29,.05); }
+.body-metric-field input,.body-metric-field textarea { box-sizing: border-box; width: 100%; border: 0; outline: 0; color: #202623; background: transparent; font: 500 .78rem 'Inter',sans-serif; }
+.body-metric-field input { min-height: 43px; padding: 0 10px; }
+.body-metric-field div small { padding-right: 10px; color: #74817c; font-size: .6rem; }
+.body-metric-field em { color: #7b8682; font-size: .56rem; font-style: normal; line-height: 1.4; }
+.body-metric-field.date { max-width: 220px; margin-bottom: 15px; }
+.body-metric-field.date input { border-radius: 12px; background: #edf1ef; }
+.body-metric-field.notes { margin-top: 14px; }
+.body-metric-field textarea { min-height: 82px; padding: 12px; resize: vertical; border-radius: 12px; background: #edf1ef; }
+.body-metrics-save { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; padding: 0 17px; border: 0; border-radius: 13px; color: #fff; background: #075f50; box-shadow: 0 7px 17px rgba(0,77,64,.17); font-weight: 800; cursor: pointer; }
+.body-metrics-save:disabled { opacity: .6; }
+.body-metrics-empty { display: grid; place-items: center; padding: 38px 20px; color: #71807a; text-align: center; }
+.body-metrics-empty > span { width: 50px; height: 50px; display: grid; place-items: center; margin-bottom: 10px; border-radius: 16px; color: #176456; background: #e3f1ec; }
+.body-metrics-empty strong { color: #174c42; }
+.body-metrics-empty p { max-width: 420px; margin: 6px 0 0; font-size: .78rem; line-height: 1.5; }
+.body-metrics-latest { display: grid; grid-template-columns: 1.25fr repeat(4,1fr); gap: 10px; padding: 20px 23px; }
+.body-metrics-latest > div,.body-metrics-latest article { padding: 13px; border-radius: 15px; background: #f1f5f3; }
+.body-metrics-latest small,.body-metrics-latest span,.body-metrics-latest strong { display: block; }
+.body-metrics-latest small,.body-metrics-latest span { color: #72807b; font-size: .61rem; }
+.body-metrics-latest strong { margin-top: 5px; color: #173e36; font-size: .86rem; }
+.body-metrics-comparison,.body-metrics-history { margin: 0 23px 21px; padding: 18px; border-radius: 19px; background: #f7f9f8; }
+.body-comparison-heading small,.body-comparison-heading h3 { display: block; margin: 0; }
+.body-comparison-heading small { color: #287565; font-size: .58rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.body-comparison-heading h3 { margin-top: 4px; color: #173e36; font-size: .91rem; }
+.body-comparison-heading > span { color: #74817c; font-size: .65rem; }
+.body-comparison-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.body-comparison-grid article { padding: 12px; border-radius: 13px; background: #fff; box-shadow: 0 4px 10px rgba(0,77,64,.045); }
+.body-comparison-grid span,.body-comparison-grid strong,.body-comparison-grid small { display: block; }
+.body-comparison-grid span { color: #72807b; font-size: .59rem; }
+.body-comparison-grid strong { margin: 4px 0; color: #183f37; font-size: .78rem; }
+.body-comparison-grid small { color: #74817c; font-size: .61rem; font-weight: 800; }
+.body-comparison-grid small.up { color: #b45d43; }
+.body-comparison-grid small.down { color: #18705f; }
+.body-metrics-history > article { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 4px; border-top: 1px solid rgba(0,77,64,.08); }
+.body-metrics-history > article strong,.body-metrics-history > article span { display: block; }
+.body-metrics-history > article strong { color: #25473f; font-size: .73rem; }
+.body-metrics-history > article span { margin-top: 3px; color: #74817c; font-size: .62rem; }
+.body-metrics-history > article button { width: 33px; height: 33px; display: grid; place-items: center; flex: 0 0 auto; border: 0; border-radius: 10px; color: #a54d3b; background: #ffebe7; cursor: pointer; }
+@media (max-width:760px) { .body-metrics-heading { display: grid; padding: 19px; } .body-metrics-heading > button { width: 100%; } .body-metrics-form { padding: 19px; } .body-metrics-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .body-metrics-latest { grid-template-columns: repeat(2,1fr); padding: 17px; } .body-metrics-latest > div { grid-column: 1/-1; } .body-metrics-comparison,.body-metrics-history { margin: 0 17px 17px; padding: 15px; } .body-comparison-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width:430px) { .body-metrics-title { align-items: flex-start; } .body-metrics-fields { grid-template-columns: 1fr; } .body-comparison-grid { grid-template-columns: 1fr 1fr; } }

@@ -20,6 +20,7 @@ import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
 import StudentBottomNav from './components/StudentBottomNav';
 import PersonalBottomNav from './components/PersonalBottomNav';
+import GymBottomNav from './components/GymBottomNav';
 import InstallAppButton from './components/InstallAppButton';
 import './App.css';
 
@@ -218,11 +219,12 @@ function AppContent() {
     const { user, activeProfile } = useAuth();
     const location = useLocation();
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
-    const showNavbar = showShell && !['student', 'personal'].includes(activeProfile);
+    const showNavbar = showShell && !['student', 'personal', 'gym'].includes(activeProfile);
     const showStudentBottomNav = showShell
         && activeProfile === 'student'
         && location.pathname !== '/execution';
     const showPersonalBottomNav = showShell && activeProfile === 'personal';
+    const showGymBottomNav = showShell && activeProfile === 'gym';
 
     return (
         <>
@@ -231,6 +233,7 @@ function AppContent() {
             <AnimatedRoutes />
             {showStudentBottomNav && <StudentBottomNav />}
             {showPersonalBottomNav && <PersonalBottomNav />}
+            {showGymBottomNav && <GymBottomNav />}
         </>
     );
 }
