@@ -12,6 +12,7 @@
 .body-metrics-form-intro strong,.body-metrics-form-intro span { display: block; }
 .body-metrics-form-intro strong { color: #173e36; font-size: .95rem; }
 .body-metrics-form-intro span { margin-top: 3px; color: #71807a; font-size: .72rem; }
+.body-metrics-form-intro > button { padding: 8px 11px; border: 0; border-radius: 11px; color: #075f50; background: #e4f1ed; font: 800 .66rem 'Inter',sans-serif; cursor: pointer; white-space: nowrap; }
 .body-metrics-bmi { min-width: 105px; padding: 9px 12px; border-radius: 13px; color: #174c42; text-align: right; background: #e4f1ed; }
 .body-metrics-bmi small,.body-metrics-bmi strong { display: block; }
 .body-metrics-bmi small { font-size: .55rem; }
@@ -36,8 +37,15 @@
 .body-metrics-empty > span { width: 50px; height: 50px; display: grid; place-items: center; margin-bottom: 10px; border-radius: 16px; color: #176456; background: #e3f1ec; }
 .body-metrics-empty strong { color: #174c42; }
 .body-metrics-empty p { max-width: 420px; margin: 6px 0 0; font-size: .78rem; line-height: 1.5; }
-.body-metrics-latest { display: grid; grid-template-columns: 1.25fr repeat(4,1fr); gap: 10px; padding: 20px 23px; }
-.body-metrics-latest > div,.body-metrics-latest article { padding: 13px; border-radius: 15px; background: #f1f5f3; }
+.body-metrics-latest-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 23px 5px; }
+.body-metrics-latest-heading small,.body-metrics-latest-heading h3 { display: block; margin: 0; }
+.body-metrics-latest-heading small { color: #287565; font-size: .58rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.body-metrics-latest-heading h3 { margin-top: 4px; color: #173e36; font-size: .95rem; }
+.body-metrics-latest-heading > strong { color: #61706a; font-size: .7rem; }
+.body-metrics-latest-groups { display: grid; gap: 17px; padding: 14px 23px 21px; }
+.body-metrics-result-group h4 { margin: 0 0 9px; color: #2b6659; font-size: .7rem; }
+.body-metrics-latest { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; padding: 0; }
+.body-metrics-latest article { padding: 13px; border-radius: 15px; background: #f1f5f3; }
 .body-metrics-latest small,.body-metrics-latest span,.body-metrics-latest strong { display: block; }
 .body-metrics-latest small,.body-metrics-latest span { color: #72807b; font-size: .61rem; }
 .body-metrics-latest strong { margin-top: 5px; color: #173e36; font-size: .86rem; }
@@ -59,5 +67,8 @@
 .body-metrics-history > article strong { color: #25473f; font-size: .73rem; }
 .body-metrics-history > article span { margin-top: 3px; color: #74817c; font-size: .62rem; }
 .body-metrics-history > article button { width: 33px; height: 33px; display: grid; place-items: center; flex: 0 0 auto; border: 0; border-radius: 10px; color: #a54d3b; background: #ffebe7; cursor: pointer; }
-@media (max-width:760px) { .body-metrics-heading { display: grid; padding: 19px; } .body-metrics-heading > button { width: 100%; } .body-metrics-form { padding: 19px; } .body-metrics-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .body-metrics-latest { grid-template-columns: repeat(2,1fr); padding: 17px; } .body-metrics-latest > div { grid-column: 1/-1; } .body-metrics-comparison,.body-metrics-history { margin: 0 17px 17px; padding: 15px; } .body-comparison-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+.body-metric-history-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.body-metrics-history > article button.edit { color: #176456; background: #e3f1ec; }
+.body-metrics-history > article button.edit:hover { background: #d4eae3; }
+@media (max-width:760px) { .body-metrics-heading { display: grid; padding: 19px; } .body-metrics-heading > button { width: 100%; } .body-metrics-form { padding: 19px; } .body-metrics-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .body-metrics-latest-heading { padding: 18px 17px 4px; } .body-metrics-latest-groups { padding: 13px 17px 18px; } .body-metrics-latest { grid-template-columns: repeat(2,1fr); } .body-metrics-comparison,.body-metrics-history { margin: 0 17px 17px; padding: 15px; } .body-comparison-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width:430px) { .body-metrics-title { align-items: flex-start; } .body-metrics-fields { grid-template-columns: 1fr; } .body-comparison-grid { grid-template-columns: 1fr 1fr; } }

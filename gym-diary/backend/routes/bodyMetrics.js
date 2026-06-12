@@ -1,6 +1,6 @@
 const express = require('express');
 const { requireProfile } = require('../middlewares/permissions');
-const { listBodyMetrics, createBodyMetric, deleteBodyMetric } = require('../controllers/bodyMetricsController');
+const { listBodyMetrics, createBodyMetric, updateBodyMetric, deleteBodyMetric } = require('../controllers/bodyMetricsController');
 
 const router = express.Router();
 
@@ -13,6 +13,7 @@ router.use((req, res, next) => {
 });
 router.get('/', listBodyMetrics);
 router.post('/', createBodyMetric);
+router.put('/:id', updateBodyMetric);
 router.delete('/:id', deleteBodyMetric);
 
 module.exports = router;

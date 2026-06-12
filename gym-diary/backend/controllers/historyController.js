@@ -248,9 +248,28 @@ const getWorkoutDetails = async (req, res) => {
     }
 };
 
+const deleteWorkout = async (req, res) => {
+    try {
+        const result = await query(
+            'DELETE FROM workout_history WHERE id = ? AND user_id = ?',
+            [req.params.id, req.user.id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Treino realizado nao encontrado' });
+        }
+
+        res.json({ message: 'Treino realizado removido com sucesso' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao remover treino realizado' });
+    }
+};
+
 module.exports = {
     startWorkout,
     addSet,
     getHistory,
-    getWorkoutDetails
+    getWorkoutDetails,
+    deleteWorkout
 };

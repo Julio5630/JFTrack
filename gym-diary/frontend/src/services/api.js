@@ -135,6 +135,7 @@ export const api = {
         body: JSON.stringify(workoutData),
     }),
     getWorkoutDetail: (id) => request(`/history/${id}`),
+    deleteWorkoutHistory: (id) => request(`/history/${id}`, { method: 'DELETE' }),
     getMyGym: () => request('/gyms/me'),
     saveMyGym: (gymData) => request('/gyms/me', {
         method: 'PUT',
@@ -155,6 +156,10 @@ export const api = {
     getBodyMetrics: () => request('/body-metrics'),
     createBodyMetric: (metric) => request('/body-metrics', {
         method: 'POST',
+        body: JSON.stringify(metric),
+    }),
+    updateBodyMetric: (id, metric) => request(`/body-metrics/${id}`, {
+        method: 'PUT',
         body: JSON.stringify(metric),
     }),
     deleteBodyMetric: (id) => request(`/body-metrics/${id}`, { method: 'DELETE' }),

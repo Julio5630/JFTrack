@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
+import { useAlert } from '../contexts/AlertContext';
+import { api } from '../services/api';
 import Icon from '../components/Icon';
 import './History.css';
 
@@ -37,9 +39,11 @@ const getWorkoutCardioMinutes = (workout) => Math.round(
 );
 
 export default function History() {
-  const { data } = useData();
+  const { data, updatePartial } = useData();
+  const { confirm, notify } = useAlert();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(null);
+  const [deletingWorkoutId, setDeletingWorkoutId] = useState(null);
 
   const view = useMemo(() => {
     if (!data) return null;
@@ -124,6 +128,36 @@ export default function History() {
     setSelectedDay({ date, dateKey: workout.date, workouts: [workout] });
   };
 
+  const deleteWorkout = async (workout) => {
+    const accepted = await confirm({
+      title: 'Excluir treino realizado?',
+      message: `A execução de "${workout.name || 'Treino concluído'}" será removida do histórico e dos seus resultados. O treino original continuará disponível.`,
+      confirmLabel: 'Excluir registro',
+      cancelLabel: 'Manter treino',
+      tone: 'danger'
+    });
+
+    if (!accepted) return;
+
+    setDeletingWorkoutId(workout.id);
+    try {
+      await api.deleteWorkoutHistory(workout.id);
+      updatePartial({
+        workoutHistory: (data.workoutHistory || []).filter((item) => item.id !== workout.id)
+      });
+      setSelectedDay((current) => {
+        if (!current) return null;
+        const remainingWorkouts = current.workouts.filter((item) => item.id !== workout.id);
+        return remainingWorkouts.length ? { ...current, workouts: remainingWorkouts } : null;
+      });
+      notify({ message: 'Treino removido do histórico com sucesso.', type: 'success' });
+    } catch (error) {
+      notify({ message: error.message || 'Não foi possível excluir o treino.', type: 'error' });
+    } finally {
+      setDeletingWorkoutId(null);
+    }
+  };
+
   return (
     <main className="history-page">
       <div className="history-shell">
@@ -202,7 +236,8 @@ export default function History() {
             ) : (
               <div className="history-recent-list">
                 {view.recentWorkouts.map((workout, index) => (
-                  <button key={`${workout.id || workout.date}-${index}`} onClick={() => openWorkout(workout)} className="history-workout-row">
+                  <div className="history-workout-row-wrap" key={`${workout.id || workout.date}-${index}`}>
+                  <button onClick={() => openWorkout(workout)} className="history-workout-row">
                     <span className="history-workout-badge"><Icon name="dumbbell" size={17} /></span>
                     <div>
                       <strong>{workout.name || 'Treino concluído'}</strong>
@@ -210,6 +245,16 @@ export default function History() {
                     </div>
                     <Icon name="chevronRight" size={17} />
                   </button>
+                  <button
+                    type="button"
+                    className="history-delete-row"
+                    onClick={() => deleteWorkout(workout)}
+                    disabled={deletingWorkoutId === workout.id}
+                    aria-label={`Excluir ${workout.name || 'treino realizado'} do histórico`}
+                  >
+                    <Icon name="trash" size={16} />
+                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -236,7 +281,18 @@ export default function History() {
                   <article className="history-workout-detail" key={`${workout.id || workout.date}-${workoutIndex}`}>
                     <div className="history-detail-heading">
                       <div><h3>{workout.name || 'Treino concluído'}</h3><span>{workout.source_type === 'academy' ? (workout.gym_name || 'Academia') : 'Treino próprio'}</span></div>
-                      <strong>{getWorkoutVolume(workout).toLocaleString('pt-BR')} kg</strong>
+                      <div className="history-detail-actions">
+                        <strong>{getWorkoutVolume(workout).toLocaleString('pt-BR')} kg</strong>
+                        <button
+                          type="button"
+                          onClick={() => deleteWorkout(workout)}
+                          disabled={deletingWorkoutId === workout.id}
+                          aria-label={`Excluir ${workout.name || 'treino realizado'} do histórico`}
+                        >
+                          <Icon name="trash" size={16} />
+                          Excluir
+                        </button>
+                      </div>
                     </div>
                     <div className="history-detail-stats">
                       <span>{(workout.exercises || []).length} exercícios</span>

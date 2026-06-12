@@ -476,6 +476,8 @@ async function initDatabase() {
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 user_id INT NOT NULL,
                 recorded_date DATE NOT NULL,
+                weight DECIMAL(6,2),
+                height DECIMAL(6,2),
                 relaxed_biceps DECIMAL(6,2),
                 contracted_biceps DECIMAL(6,2),
                 forearm DECIMAL(6,2),
@@ -497,6 +499,8 @@ async function initDatabase() {
         `);
 
         const bodyMetricColumns = [
+            ['weight', 'DECIMAL(6,2)'],
+            ['height', 'DECIMAL(6,2)'],
             ['relaxed_biceps', 'DECIMAL(6,2)'],
             ['contracted_biceps', 'DECIMAL(6,2)'],
             ['forearm', 'DECIMAL(6,2)'],

@@ -5,12 +5,14 @@ const {
     startWorkout,
     addSet,
     getHistory,
-    getWorkoutDetails
+    getWorkoutDetails,
+    deleteWorkout
 } = require('../controllers/historyController');
 
 // Histórico
 router.get('/', getHistory);
 router.get('/:id', getWorkoutDetails);
+router.delete('/:id', deleteWorkout);
 
 // Criar treino
 router.post('/', startWorkout);

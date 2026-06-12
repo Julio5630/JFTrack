@@ -1,7 +1,7 @@
 const { query } = require('../config/database');
 
 const metricFields = [
-    'relaxedBiceps', 'contractedBiceps', 'forearm', 'chest', 'shoulders', 'waist',
+    'weight', 'height', 'relaxedBiceps', 'contractedBiceps', 'forearm', 'chest', 'shoulders', 'waist',
     'abdomen', 'hip', 'upperThigh', 'middleThigh', 'lowerThigh', 'calf'
 ];
 
@@ -82,6 +82,43 @@ const createBodyMetric = async (req, res) => {
     }
 };
 
+const updateBodyMetric = async (req, res) => {
+    try {
+        const recordedDate = String(req.body.recordedDate || '').trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(recordedDate)) {
+            return res.status(400).json({ error: 'Informe uma data valida' });
+        }
+
+        const values = metricFields.map((field) => toNumberOrNull(req.body[field]));
+        if (values.every((value) => value === null)) {
+            return res.status(400).json({ error: 'Informe pelo menos uma metrica corporal' });
+        }
+
+        const columns = metricFields.map((field) => columnByField[field] || field);
+        const assignments = columns.map((column) => `${column} = ?`).join(', ');
+        const result = await query(
+            `UPDATE student_body_metrics
+             SET recorded_date = ?, ${assignments}, notes = ?
+             WHERE id = ? AND user_id = ?`,
+            [recordedDate, ...values, String(req.body.notes || '').trim(), req.params.id, req.user.id]
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ error: 'Registro nao encontrado' });
+        }
+
+        const rows = await query(
+            `SELECT *, DATE_FORMAT(recorded_date, '%Y-%m-%d') AS recorded_date
+             FROM student_body_metrics WHERE id = ? AND user_id = ?`,
+            [req.params.id, req.user.id]
+        );
+        res.json({ metric: toDto(rows[0]) });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao atualizar metricas corporais' });
+    }
+};
+
 const deleteBodyMetric = async (req, res) => {
     try {
         const result = await query(
@@ -96,4 +133,4 @@ const deleteBodyMetric = async (req, res) => {
     }
 };
 
-module.exports = { listBodyMetrics, createBodyMetric, deleteBodyMetric };
+module.exports = { listBodyMetrics, createBodyMetric, updateBodyMetric, deleteBodyMetric };
