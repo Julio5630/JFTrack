@@ -411,20 +411,28 @@ const getMyStudentContext = async (req, res) => {
 const getStudentWorkouts = async (req, res) => {
     try {
         const selectedGymId = req.get('X-Selected-Student-Gym-Id') || null;
-        const params = [req.user.id];
-        const gymClause = selectedGymId ? 'AND pwa.gym_id = ?' : '';
-        if (selectedGymId) params.push(selectedGymId);
+        const fetchTemplates = async (gymId = null) => {
+            const params = [req.user.id];
+            const gymClause = gymId ? 'AND pwa.gym_id = ?' : '';
+            if (gymId) params.push(gymId);
 
-        const templates = await query(
-            `SELECT wt.*, u.name AS trainer_name, pwa.id AS assignment_id,
-                    pwa.gym_id AS assignment_gym_id, pwa.notes AS assignment_notes
-             FROM personal_workout_assignments pwa
-             JOIN workout_templates wt ON wt.id = pwa.template_id
-             JOIN users u ON u.id = pwa.personal_user_id
-             WHERE pwa.student_user_id = ? AND pwa.status = 'active' ${gymClause}
-             ORDER BY pwa.display_order ASC, pwa.created_at ASC`,
-            params
-        );
+            return query(
+                `SELECT wt.*, u.name AS trainer_name, pwa.id AS assignment_id,
+                        pwa.gym_id AS assignment_gym_id, pwa.notes AS assignment_notes
+                 FROM personal_workout_assignments pwa
+                 JOIN workout_templates wt ON wt.id = pwa.template_id
+                 JOIN users u ON u.id = pwa.personal_user_id
+                 WHERE pwa.student_user_id = ? AND pwa.status = 'active' ${gymClause}
+                 ORDER BY pwa.display_order ASC, pwa.created_at ASC`,
+                params
+            );
+        };
+
+        let templates = await fetchTemplates(selectedGymId);
+
+        if (templates.length === 0 && selectedGymId) {
+            templates = await fetchTemplates(null);
+        }
 
         if (templates.length === 0) {
             return res.json({ templates: [], exercises: [] });
