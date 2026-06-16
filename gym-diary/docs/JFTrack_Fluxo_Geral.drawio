@@ -1,0 +1,305 @@
+<mxfile host="app.diagrams.net" modified="2026-06-12T23:59:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="jftrack-flow" name="Fluxo Geral">
+    <mxGraphModel dx="1920" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="start" value="Inicio" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e8dff5;strokeColor=#9673a6;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="20" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="isRegistered" value="Ja cadastrado?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d79b00;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="990" y="90" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="registerInfo" value="Inserir informacoes&#xa;de cadastro" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="95" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="confirmRegister" value="Confirmar cadastro" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="195" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="loginInfo" value="Inserir informacoes&#xa;de login" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="990" y="210" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="correctData" value="Dados corretos?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d79b00;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="315" width="150" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="invalidData" value="Exibir erro de login" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="330" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="multiProfile" value="Possui mais de&#xa;um perfil?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d79b00;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="995" y="440" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="profileSelect" value="Selecionar perfil" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="455" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dashboard" value="Dashboard principal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="985" y="565" width="180" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="logout" value="Realizar logout" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="760" y="565" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="noteAccess" value="A autenticacao libera o acesso&#xa;conforme o perfil selecionado." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="760" y="150" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="noteDashboard" value="A pagina inicial muda de acordo&#xa;com o perfil ativo do usuario." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="575" width="190" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="studentModule" value="Fluxo do Aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="760" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="studentMode" value="Selecionar contexto&#xa;do aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="155" y="865" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="studentOwn" value="Treino proprio" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="20" y="975" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="studentGym" value="Aluno vinculado&#xa;a academia" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="975" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="studentHistory" value="Historico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="440" y="975" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="studentMetrics" value="Metricas corporais" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="630" y="975" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ownCreate" value="Criar treino" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="0" y="1085" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ownEdit" value="Editar treino" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1085" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ownExercises" value="Gerenciar&#xa;exercicios" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1160" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gymReceive" value="Selecionar treino&#xa;recebido" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="235" y="1085" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gymExecute" value="Executar treino" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="235" y="1160" width="150" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="gymFinish" value="Finalizar e salvar&#xa;no historico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="235" y="1235" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="historyView" value="Visualizar treinos&#xa;realizados" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="435" y="1085" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="historyDelete" value="Excluir registro&#xa;duplicado" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="435" y="1160" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="metricCreate" value="Novo registro" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="615" y="1085" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="metricEdit" value="Editar registro" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="745" y="1085" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="metricCompare" value="Comparar evolucao" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="680" y="1160" width="140" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="personalModule" value="Fluxo do Personal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="905" y="760" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="personalStudents" value="Gerenciar alunos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="780" y="865" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="personalWorkouts" value="Gerenciar treinos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="935" y="865" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="personalAssessments" value="Gerenciar&#xa;avaliacoes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="865" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="studentSearch" value="Buscar aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="755" y="975" width="110" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="studentProfile" value="Abrir perfil&#xa;do aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="875" y="975" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="studentProgress" value="Consultar historico&#xa;e progresso" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="805" y="1050" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="workoutTemplate" value="Criar treino" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="950" y="975" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="workoutAssign" value="Atribuir treino&#xa;ao aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="950" y="1050" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="workoutOrder" value="Ordenar exercicios&#xa;e ajustar treino" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="950" y="1130" width="120" height="65" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assessmentCreate" value="Criar avaliacao&#xa;fisica" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="975" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="assessmentHistory" value="Visualizar historico&#xa;de avaliacoes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="1055" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="assessmentUpdate" value="Atualizar avaliacao" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="1135" width="120" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="gymModule" value="Fluxo da Academia" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1505" y="760" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gymMembers" value="Gerenciar membros" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1405" y="865" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gymTrainingView" value="Visualizar treinos&#xa;dos alunos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1570" y="865" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gymReports" value="Relatorios gerais" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1735" y="865" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="memberAddStudent" value="Adicionar aluno" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1380" y="975" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="memberAddPersonal" value="Adicionar personal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="975" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="memberRemove" value="Remover vinculo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1450" y="1050" width="125" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="trainingMonitor" value="Consultar treinos&#xa;ativos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1585" y="975" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="assessmentMonitor" value="Consultar&#xa;avaliacoes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1585" y="1050" width="130" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="reportsView" value="Visualizar indicadores" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="975" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="reportsExport" value="Exportar relatorios" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="1050" width="120" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="profileModule" value="Perfil e Configuracoes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="700" width="225" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="profileEdit" value="Editar dados pessoais" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="990" y="1325" width="150" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="profileSwitch" value="Alterar perfil ativo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="1325" width="150" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="start" target="isRegistered">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="nao" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="isRegistered" target="registerInfo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="registerInfo" target="confirmRegister">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="confirmRegister" target="loginInfo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="isRegistered" target="loginInfo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="loginInfo" target="correctData">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="nao" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="correctData" target="invalidData">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="invalidData" target="loginInfo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="correctData" target="multiProfile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="sim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="multiProfile" target="profileSelect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="nao" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="multiProfile" target="dashboard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="profileSelect" target="dashboard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="dashboard" target="studentModule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="dashboard" target="personalModule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="dashboard" target="gymModule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="dashboard" target="logout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="dashboard" target="profileModule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentModule" target="studentMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentMode" target="studentOwn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentMode" target="studentGym">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentModule" target="studentHistory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentModule" target="studentMetrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentOwn" target="ownCreate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentOwn" target="ownEdit"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentOwn" target="ownExercises"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentGym" target="gymReceive"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymReceive" target="gymExecute"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymExecute" target="gymFinish"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentHistory" target="historyView"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentHistory" target="historyDelete"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentMetrics" target="metricCreate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentMetrics" target="metricEdit"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="studentMetrics" target="metricCompare"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalModule" target="personalStudents"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalModule" target="personalWorkouts"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalModule" target="personalAssessments"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalStudents" target="studentSearch"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalStudents" target="studentProfile"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalStudents" target="studentProgress"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalWorkouts" target="workoutTemplate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalWorkouts" target="workoutAssign"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalWorkouts" target="workoutOrder"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalAssessments" target="assessmentCreate"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalAssessments" target="assessmentHistory"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="personalAssessments" target="assessmentUpdate"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e46" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymModule" target="gymMembers"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymModule" target="gymTrainingView"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymModule" target="gymReports"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymMembers" target="memberAddStudent"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymMembers" target="memberAddPersonal"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymMembers" target="memberRemove"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymTrainingView" target="trainingMonitor"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymTrainingView" target="assessmentMonitor"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e54" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymReports" target="reportsView"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="gymReports" target="reportsExport"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e56" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="profileModule" target="profileEdit"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="profileModule" target="profileSwitch"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
