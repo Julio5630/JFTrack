@@ -39,11 +39,12 @@ export default function WorkoutExecution() {
   useEffect(() => {
     if (data?.currentWorkout) {
       setCurrentWorkout(data.currentWorkout);
-      const firstIncomplete = data.currentWorkout.exercises?.findIndex(exercise => exercise.sets.some(set => !set.completed));
+      const exercises = Array.isArray(data.currentWorkout.exercises) ? data.currentWorkout.exercises : [];
+      const firstIncomplete = exercises.findIndex((exercise) => Array.isArray(exercise.sets) && exercise.sets.some((set) => !set.completed));
       const savedIndex = Number.isInteger(data.currentWorkout.activeExerciseIndex)
         ? data.currentWorkout.activeExerciseIndex
         : Math.max(0, firstIncomplete);
-      setActiveExerciseIndex(Math.min(savedIndex, Math.max(0, data.currentWorkout.exercises.length - 1)));
+      setActiveExerciseIndex(Math.min(savedIndex, Math.max(0, exercises.length - 1)));
       setElapsedSeconds(data.currentWorkout.startedAt
         ? Math.max(0, Math.floor((Date.now() - data.currentWorkout.startedAt) / 1000))
         : 0);
@@ -65,7 +66,7 @@ export default function WorkoutExecution() {
   };
 
   const selectExercise = (index) => {
-    const boundedIndex = Math.max(0, Math.min(index, currentWorkout.exercises.length - 1));
+    const boundedIndex = Math.max(0, Math.min(index, (currentWorkout.exercises || []).length - 1));
     setActiveExerciseIndex(boundedIndex);
     updateWorkout(workout => ({ ...workout, activeExerciseIndex: boundedIndex }));
   };
@@ -149,8 +150,9 @@ export default function WorkoutExecution() {
 
   const stats = useMemo(() => {
     if (!currentWorkout) return { total: 0, completed: 0, percent: 0 };
-    const total = currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
-    const completed = currentWorkout.exercises.reduce((sum, exercise) => sum + exercise.sets.filter((set) => set.completed).length, 0);
+    const exercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
+    const total = exercises.reduce((sum, exercise) => sum + (Array.isArray(exercise.sets) ? exercise.sets.length : 0), 0);
+    const completed = exercises.reduce((sum, exercise) => sum + (Array.isArray(exercise.sets) ? exercise.sets.filter((set) => set.completed).length : 0), 0);
     return { total, completed, percent: total ? Math.round((completed / total) * 100) : 0 };
   }, [currentWorkout]);
 
@@ -169,7 +171,21 @@ export default function WorkoutExecution() {
     );
   }
 
-  const exercise = currentWorkout.exercises[activeExerciseIndex];
+  const workoutExercises = Array.isArray(currentWorkout.exercises) ? currentWorkout.exercises : [];
+  const exercise = workoutExercises[activeExerciseIndex];
+
+  if (!exercise || !Array.isArray(exercise.sets) || exercise.sets.length === 0) {
+    return (
+      <main className="execution-empty-page">
+        <section>
+          <span><Icon name="dumbbell" size={26} /></span>
+          <h1>Treino indisponivel para execucao</h1>
+          <p>Este treino nao possui exercicios validos. Volte para a lista e escolha outro treino.</p>
+          <button onClick={() => navigate(isAcademyStudent ? '/student/workouts' : '/my-workouts')}>Ver treinos</button>
+        </section>
+      </main>
+    );
+  }
   const isTimedExercise = exercise.exerciseCategory === 'Cardio' || exercise.sets.some((set) => Number(set.durationSeconds) > 0);
   const activeSetIndex = Math.max(0, exercise.sets.findIndex((set) => !set.completed));
   const currentSetIndex = exercise.sets.some((set) => !set.completed) ? activeSetIndex : Math.max(exercise.sets.length - 1, 0);
@@ -185,13 +201,13 @@ export default function WorkoutExecution() {
 
     updateSet(activeExerciseIndex, currentSetIndex, { completed: isCompleting });
 
-    if (isLastPendingSet && activeExerciseIndex < currentWorkout.exercises.length - 1) {
+    if (isLastPendingSet && activeExerciseIndex < workoutExercises.length - 1) {
       selectExercise(activeExerciseIndex + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (isLastPendingSet) {
       const completedWorkout = {
         ...currentWorkout,
-        exercises: currentWorkout.exercises.map((currentExercise, exerciseIndex) => (
+        exercises: workoutExercises.map((currentExercise, exerciseIndex) => (
           exerciseIndex !== activeExerciseIndex ? currentExercise : {
             ...currentExercise,
             sets: currentExercise.sets.map((set, setIndex) => (
@@ -212,14 +228,14 @@ export default function WorkoutExecution() {
         <button type="button" onClick={leaveWorkout} aria-label="Sair do treino"><Icon name="close" size={20} /></button>
         <div>
           <strong>{currentWorkout.name}</strong>
-          <span>Exercício {activeExerciseIndex + 1} de {currentWorkout.exercises.length}</span>
+          <span>Exercício {activeExerciseIndex + 1} de {workoutExercises.length}</span>
         </div>
         <div className="execution-timer"><Icon name="history" size={17} /><span>{formatTime(elapsedSeconds)}</span></div>
       </header>
 
       <div className="execution-shell">
         <nav className="execution-exercise-tabs" aria-label="Exercícios do treino">
-          {currentWorkout.exercises.map((item, index) => {
+          {workoutExercises.map((item, index) => {
             const complete = item.sets.length > 0 && item.sets.every((set) => set.completed);
             return (
               <button key={`${item.exerciseId}-${index}`} className={`${index === activeExerciseIndex ? 'active' : ''} ${complete ? 'complete' : ''}`} onClick={() => selectExercise(index)}>
@@ -283,7 +299,7 @@ export default function WorkoutExecution() {
 
         <div className="execution-exercise-navigation">
           <button disabled={activeExerciseIndex === 0} onClick={() => setActiveExerciseIndex((index) => index - 1)}><Icon name="chevronLeft" size={17} /> Anterior</button>
-          <button disabled={activeExerciseIndex === currentWorkout.exercises.length - 1} onClick={() => setActiveExerciseIndex((index) => index + 1)}>Próximo <Icon name="chevronRight" size={17} /></button>
+          <button disabled={activeExerciseIndex === workoutExercises.length - 1} onClick={() => setActiveExerciseIndex((index) => index + 1)}>Próximo <Icon name="chevronRight" size={17} /></button>
         </div>
       </div>
 

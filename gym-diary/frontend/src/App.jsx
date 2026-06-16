@@ -22,11 +22,12 @@ import StudentBottomNav from './components/StudentBottomNav';
 import PersonalBottomNav from './components/PersonalBottomNav';
 import GymBottomNav from './components/GymBottomNav';
 import InstallAppButton from './components/InstallAppButton';
+import AppLoader from './components/AppLoader';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader />;
     if (!user) return <Navigate to="/login" />;
     if (needsProfileSelection && !allowProfileSelection) return <Navigate to="/profile-select" />;
     return children;
@@ -34,7 +35,7 @@ function PrivateRoute({ children, allowProfileSelection = false }) {
 
 function AdminRoute({ children }) {
     const { user, loading, activeProfile } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader label="Carregando permissões" detail="Verificando acesso e preparando sua área administrativa." />;
     return user?.isAdmin && activeProfile === 'admin' ? children : <Navigate to="/dashboard" />;
 }
 
@@ -57,14 +58,14 @@ function StudentRoute({ children }) {
 
 function HomeRedirect() {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader label="Abrindo o JFTrack" detail="Conectando seu perfil e preparando a próxima etapa." />;
     if (!user) return <Navigate to="/login" />;
     return <Navigate to={needsProfileSelection ? '/profile-select' : '/dashboard'} />;
 }
 
 function LoginRoute() {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader label="Carregando acesso" detail="Validando sua sessão para entrar no aplicativo." />;
     if (user) return <Navigate to={needsProfileSelection ? '/profile-select' : '/dashboard'} />;
     return <Login />;
 }

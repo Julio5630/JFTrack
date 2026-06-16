@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './AcademyStudentWorkouts.css';
 
 export default function AcademyStudentWorkouts() {
   const { data, updatePartial } = useData();
   const { selectedGymId, selectedGymMembership } = useAuth();
+  const { notify } = useAlert();
   const navigate = useNavigate();
 
   if (!data) return <div className="academy-workouts-loading">Carregando...</div>;
@@ -32,20 +34,26 @@ export default function AcademyStudentWorkouts() {
     }
 
     const workoutExercises = (template.exercises || []).map(exItem => {
-      const exercise = data.exercises?.find(item => item.id === exItem.id);
-      const defaultSets = exItem.defaultSets || 3;
+      const exercise = data.exercises?.find(item => Number(item.id) === Number(exItem.id));
+      const defaultSets = Math.max(1, Number(exItem.defaultSets) || 3);
       const suggestedReps = parseInt(String(exItem.defaultReps || '').match(/\d+/)?.[0], 10) || 8;
-      const isCardio = exercise?.category === 'Cardio' || Number(exItem.durationMinutes) > 0;
+      const category = exercise?.category || exItem.category || '';
+      const isCardio = category === 'Cardio' || Number(exItem.durationMinutes) > 0;
       return {
         exerciseId: exItem.id,
-        exerciseName: exercise ? exercise.name : 'Exercicio',
-        exerciseCategory: exercise?.category || '',
-        videoUrl: exercise?.videoUrl || exercise?.video_url || '',
+        exerciseName: exercise?.name || exItem.name || 'Exercicio',
+        exerciseCategory: category,
+        videoUrl: exercise?.videoUrl || exercise?.video_url || exItem.videoUrl || exItem.video_url || '',
         sets: isCardio
           ? [{ reps: 0, weight: 0, durationSeconds: (Number(exItem.durationMinutes) || 20) * 60, completed: false }]
           : Array(defaultSets).fill().map(() => ({ reps: suggestedReps, weight: 0, durationSeconds: 0, completed: false })),
       };
-    });
+    }).filter((exercise) => exercise.sets.length > 0);
+
+    if (workoutExercises.length === 0) {
+      notify('Este treino nao possui exercicios validos para execucao.');
+      return;
+    }
 
     updatePartial({
       currentWorkout: {
