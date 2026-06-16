@@ -438,25 +438,28 @@ const getStudentWorkouts = async (req, res) => {
             return res.json({ templates: [], exercises: [] });
         }
 
-        const templateIds = templates.map((template) => template.id);
-        const templateExercises = await query(
-            `SELECT
-                te.template_id,
-                te.exercise_id AS id,
-                te.default_sets AS defaultSets,
-                te.default_reps AS defaultReps,
-                te.duration_minutes AS durationMinutes,
-                te.position,
-                e.name,
-                e.category,
-                e.video_url AS videoUrl,
-                e.user_id AS ownerUserId
-             FROM template_exercises te
-             JOIN exercises e ON e.id = te.exercise_id
-             WHERE te.template_id IN (?)
-             ORDER BY te.template_id, te.position ASC`,
-            [templateIds]
-        );
+        const templateIds = templates.map((template) => Number(template.id)).filter(Boolean);
+        const templatePlaceholders = templateIds.map(() => '?').join(', ');
+        const templateExercises = templateIds.length > 0
+            ? await query(
+                `SELECT
+                    te.template_id,
+                    te.exercise_id AS id,
+                    te.default_sets AS defaultSets,
+                    te.default_reps AS defaultReps,
+                    te.duration_minutes AS durationMinutes,
+                    te.position,
+                    e.name,
+                    e.category,
+                    e.video_url AS videoUrl,
+                    e.user_id AS ownerUserId
+                 FROM template_exercises te
+                 JOIN exercises e ON e.id = te.exercise_id
+                 WHERE te.template_id IN (${templatePlaceholders})
+                 ORDER BY te.template_id, te.position ASC`,
+                templateIds
+            )
+            : [];
 
         const exerciseMap = new Map();
         templateExercises.forEach((exercise) => {

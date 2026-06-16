@@ -22,9 +22,7 @@ export default function AppLoader({
           <span className="app-loader-ring app-loader-ring-outer"></span>
           <span className="app-loader-ring app-loader-ring-middle"></span>
           <span className="app-loader-ring app-loader-ring-inner"></span>
-          <span className="app-loader-core-icon">
-            <Icon name="gymLogo" size={28} />
-          </span>
+          <span className="app-loader-core-pulse"></span>
         </div>
 
         <div className="app-loader-copy">

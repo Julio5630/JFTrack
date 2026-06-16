@@ -1,0 +1,44 @@
+.route-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgba(184, 235, 214, 0.26), transparent 22%),
+    linear-gradient(180deg, rgba(250, 252, 250, 0.54), rgba(241, 246, 243, 0.24));
+  backdrop-filter: blur(6px);
+  animation: route-transition-fade .42s ease forwards;
+}
+
+.route-transition-bar {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: min(220px, calc(100% - 48px));
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(19, 70, 58, 0.08);
+  transform: translateX(-50%);
+  box-shadow: 0 6px 18px rgba(6, 54, 43, 0.08);
+}
+
+.route-transition-bar span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f6a58 0%, #7bdbb7 55%, #d0e85c 100%);
+  animation: route-transition-slide .55s cubic-bezier(.22,.84,.24,1) forwards;
+}
+
+@keyframes route-transition-fade {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes route-transition-slide {
+  0% { transform: translateX(-125%); }
+  100% { transform: translateX(340%); }
+}

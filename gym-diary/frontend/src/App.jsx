@@ -1,4 +1,5 @@
 // src/App.jsx
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
@@ -23,6 +24,7 @@ import PersonalBottomNav from './components/PersonalBottomNav';
 import GymBottomNav from './components/GymBottomNav';
 import InstallAppButton from './components/InstallAppButton';
 import AppLoader from './components/AppLoader';
+import RouteTransition from './components/RouteTransition';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
@@ -219,6 +221,7 @@ function AnimatedRoutes() {
 function AppContent() {
     const { user, activeProfile } = useAuth();
     const location = useLocation();
+    const [showRouteTransition, setShowRouteTransition] = useState(false);
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
     const showNavbar = showShell && !['student', 'personal', 'gym'].includes(activeProfile);
     const showStudentBottomNav = showShell
@@ -227,9 +230,16 @@ function AppContent() {
     const showPersonalBottomNav = showShell && activeProfile === 'personal';
     const showGymBottomNav = showShell && activeProfile === 'gym';
 
+    useEffect(() => {
+        setShowRouteTransition(true);
+        const timer = window.setTimeout(() => setShowRouteTransition(false), 430);
+        return () => window.clearTimeout(timer);
+    }, [location.pathname]);
+
     return (
         <>
             <InstallAppButton />
+            {showRouteTransition && <RouteTransition />}
             {showNavbar && <Navbar />}
             <AnimatedRoutes />
             {showStudentBottomNav && <StudentBottomNav />}
