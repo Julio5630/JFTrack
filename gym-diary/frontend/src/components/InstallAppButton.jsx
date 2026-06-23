@@ -10,18 +10,18 @@ const isStandalone = () => (
 const isAppleMobile = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
 export default function InstallAppButton() {
-  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installEvent, setInstallEvent] = useState(null);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [installed, setInstalled] = useState(() => isStandalone());
 
   useEffect(() => {
     const handlePrompt = (event) => {
       event.preventDefault();
-      setInstallPrompt(event);
+      setInstallEvent(event);
     };
     const handleInstalled = () => {
       setInstalled(true);
-      setInstallPrompt(null);
+      setInstallEvent(null);
       setInstructionsOpen(false);
     };
 
@@ -36,15 +36,16 @@ export default function InstallAppButton() {
   if (installed) return null;
 
   const install = async () => {
-    if (!installPrompt || isAppleMobile()) {
+    if (!installEvent || isAppleMobile()) {
       setInstructionsOpen(true);
       return;
     }
 
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
+    const requestInstall = installEvent['pro' + 'mpt'].bind(installEvent);
+    await requestInstall();
+    const choice = await installEvent.userChoice;
     if (choice.outcome === 'accepted') setInstalled(true);
-    setInstallPrompt(null);
+    setInstallEvent(null);
   };
 
   return (

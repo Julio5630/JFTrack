@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed:exercises": "node seed-exercise-library.js"
+    "seed:exercises": "node seed-exercise-library.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:watch": "node --test --watch tests/**/*.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
