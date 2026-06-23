@@ -23,12 +23,13 @@ import StudentBottomNav from './components/StudentBottomNav';
 import PersonalBottomNav from './components/PersonalBottomNav';
 import GymBottomNav from './components/GymBottomNav';
 import InstallAppButton from './components/InstallAppButton';
+import AppLoader from './components/AppLoader';
 import RouteTransition from './components/RouteTransition';
 import './App.css';
 
 function PrivateRoute({ children, allowProfileSelection = false }) {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader />;
     if (!user) return <Navigate to="/login" />;
     if (needsProfileSelection && !allowProfileSelection) return <Navigate to="/profile-select" />;
     return children;
@@ -36,7 +37,7 @@ function PrivateRoute({ children, allowProfileSelection = false }) {
 
 function AdminRoute({ children }) {
     const { user, loading, activeProfile } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader />;
     return user?.isAdmin && activeProfile === 'admin' ? children : <Navigate to="/dashboard" />;
 }
 
@@ -59,14 +60,14 @@ function StudentRoute({ children }) {
 
 function HomeRedirect() {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader />;
     if (!user) return <Navigate to="/login" />;
     return <Navigate to={needsProfileSelection ? '/profile-select' : '/dashboard'} />;
 }
 
 function LoginRoute() {
     const { user, loading, needsProfileSelection } = useAuth();
-    if (loading) return null;
+    if (loading) return <AppLoader />;
     if (user) return <Navigate to={needsProfileSelection ? '/profile-select' : '/dashboard'} />;
     return <Login />;
 }
@@ -218,7 +219,7 @@ function AnimatedRoutes() {
 }
 
 function AppContent() {
-    const { user, activeProfile } = useAuth();
+    const { user, activeProfile, loading } = useAuth();
     const location = useLocation();
     const [showRouteTransition, setShowRouteTransition] = useState(false);
     const showShell = Boolean(user && activeProfile && location.pathname !== '/profile-select');
@@ -234,6 +235,10 @@ function AppContent() {
         const timer = window.setTimeout(() => setShowRouteTransition(false), 430);
         return () => window.clearTimeout(timer);
     }, [location.pathname]);
+
+    if (loading) {
+        return <AppLoader />;
+    }
 
     return (
         <>

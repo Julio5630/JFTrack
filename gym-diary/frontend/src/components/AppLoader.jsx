@@ -1,39 +1,24 @@
-import Icon from './Icon';
 import './AppLoader.css';
 
 export default function AppLoader({
-  label = 'Preparando sua experiência',
-  detail = 'Organizando treinos, histórico e perfil para deixar tudo pronto.'
+  label = 'Loading...',
+  detail = 'O backend está sendo inicializado. Aguarde alguns instantes.'
 }) {
   return (
     <main className="app-loader-screen" aria-label="Carregando aplicativo">
-      <div className="app-loader-orb app-loader-orb-a"></div>
-      <div className="app-loader-orb app-loader-orb-b"></div>
+      <section className="terminal-loader" role="status" aria-live="polite">
+        <header className="terminal-header">
+          <span className="terminal-title">JFTrack Status</span>
+          <div className="terminal-controls" aria-hidden="true">
+            <span className="control close"></span>
+            <span className="control minimize"></span>
+            <span className="control maximize"></span>
+          </div>
+        </header>
 
-      <section className="app-loader-card">
-        <div className="app-loader-badge">
-          <span className="app-loader-badge-icon">
-            <Icon name="dumbbell" size={18} />
-          </span>
-          <strong>JFTrack</strong>
-        </div>
-
-        <div className="app-loader-core" aria-hidden="true">
-          <span className="app-loader-ring app-loader-ring-outer"></span>
-          <span className="app-loader-ring app-loader-ring-middle"></span>
-          <span className="app-loader-ring app-loader-ring-inner"></span>
-          <span className="app-loader-core-pulse"></span>
-        </div>
-
-        <div className="app-loader-copy">
-          <h1>{label}</h1>
-          <p>{detail}</p>
-        </div>
-
-        <div className="app-loader-status" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
+        <div className="terminal-body">
+          <span className="terminal-text">{label}</span>
+          <p className="terminal-detail">{detail}</p>
         </div>
       </section>
     </main>
