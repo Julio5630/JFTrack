@@ -58,9 +58,12 @@ export default function Navbar() {
 
   const navItems = navByProfile[activeProfile] || [];
   const currentProfile = user?.profiles?.find(profile => profile.type === activeProfile)?.label;
+  const navbarVariantClass = ['gym', 'admin'].includes(activeProfile)
+    ? `${activeProfile}-navbar`
+    : '';
 
   return (
-      <nav className={`industrial-navbar ${activeProfile === 'gym' ? 'gym-navbar' : ''}`}>
+      <nav className={`industrial-navbar ${navbarVariantClass}`}>
         <div className="nav-container">
           <div className="nav-brand">
             <span className="brand-icon"><Icon name="gymLogo" size={26} title="JFTrack" /></span>

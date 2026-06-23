@@ -285,3 +285,83 @@
   .gym-navbar .nav-link,.gym-navbar .logout-link,.gym-navbar .mode-switch-link { width: auto; margin: 3px 12px; border: 0; border-radius: 12px; }
   .gym-navbar .nav-link.active { background: #075f50; }
 }
+
+/* Light navigation for the admin workspace. */
+.industrial-navbar.admin-navbar {
+  margin: 14px 18px 0;
+  border: 0;
+  border-radius: 20px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 12px 30px rgba(0,77,64,.09),0 3px 8px rgba(25,28,29,.04);
+}
+.admin-navbar .nav-container { max-width: 1180px; height: 66px; }
+.admin-navbar .brand-icon {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(145deg, #004d40, #27695c);
+  box-shadow: 0 7px 16px rgba(0,77,64,.18);
+}
+.admin-navbar .brand-text {
+  color: #173e36;
+  font-family: 'Inter',sans-serif;
+  letter-spacing: -.04em;
+}
+.admin-navbar .brand-text span { color: #287565; }
+.admin-navbar .profile-pill {
+  border: 0;
+  color: #176456;
+  background: #e3f2ed;
+  font-family: 'Inter',sans-serif;
+  font-weight: 800;
+}
+.admin-navbar .nav-links-inner { gap: 4px; }
+.admin-navbar .nav-link,
+.admin-navbar .logout-link,
+.admin-navbar .mode-switch-link {
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #65716c;
+  font-family: 'Inter',sans-serif;
+  letter-spacing: 0;
+  font-size: .78rem;
+}
+.admin-navbar .nav-link::before,
+.admin-navbar .logout-link::before,
+.admin-navbar .mode-switch-link::before,
+.admin-navbar .nav-link-rivet { display: none; }
+.admin-navbar .nav-link.active {
+  color: #fff;
+  background: #004d40;
+  box-shadow: 0 6px 14px rgba(0,77,64,.15);
+}
+.admin-navbar .logout-link {
+  margin-left: 4px;
+  color: #a34d3b;
+  background: #ffebe7;
+}
+.admin-navbar .hamburger-line { background: #075f50; }
+@media (max-width:768px) {
+  .industrial-navbar.admin-navbar { margin: 8px 10px 0; border-radius: 17px; }
+  .admin-navbar .nav-links {
+    top: 82px;
+    left: 10px;
+    width: calc(100% - 20px);
+    overflow: hidden;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 16px 34px rgba(0,77,64,.15);
+  }
+  .admin-navbar .nav-link,
+  .admin-navbar .logout-link,
+  .admin-navbar .mode-switch-link {
+    width: auto;
+    margin: 3px 12px;
+    border: 0;
+    border-radius: 12px;
+  }
+  .admin-navbar .nav-link.active { background: #004d40; }
+}

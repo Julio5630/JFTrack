@@ -1,123 +1,296 @@
-@keyframes blinkCursor {
-  50% {
-    border-right-color: transparent;
+@keyframes appLoaderOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@keyframes typeAndDelete {
+@keyframes appLoaderPulse {
   0%,
-  10% {
-    width: 0;
-  }
-
-  45%,
-  55% {
-    width: 8.2em;
-  }
-
-  90%,
   100% {
-    width: 0;
+    transform: scale(0.96);
+    opacity: 0.82;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes appLoaderSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(220%);
   }
 }
 
 .app-loader-screen {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
+  overflow: hidden;
   padding: 24px;
   background:
-    radial-gradient(circle at top right, rgba(175, 239, 221, 0.48), transparent 20%),
+    radial-gradient(circle at top right, rgba(175, 239, 221, 0.58), transparent 22%),
+    radial-gradient(circle at left bottom, rgba(253, 136, 99, 0.12), transparent 18%),
     linear-gradient(180deg, #f8f9fa 0%, #eef2ef 100%);
 }
 
-.terminal-loader {
-  width: min(100%, 340px);
-  border: 1px solid #2e3433;
-  border-radius: 16px;
-  background: #161918;
-  color: #8dffb8;
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  font-family: "Courier New", Courier, monospace;
+.app-loader-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(6px);
+  pointer-events: none;
 }
 
-.terminal-header {
-  min-height: 42px;
-  padding: 0 14px;
+.app-loader-glow-a {
+  top: 9%;
+  right: 8%;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(175, 239, 221, 0.48), transparent 68%);
+}
+
+.app-loader-glow-b {
+  left: 6%;
+  bottom: 10%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(223, 236, 96, 0.2), transparent 70%);
+}
+
+.app-loader-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 430px);
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 18px 42px rgba(0, 77, 64, 0.1),
+    0 4px 12px rgba(25, 28, 29, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.app-loader-brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  background: #2b302f;
 }
 
-.terminal-title {
-  color: #f0f3f1;
+.app-loader-brand-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 16px;
+  color: #ffffff;
+  background: linear-gradient(145deg, #004d40, #2a6f61);
+  box-shadow: 0 10px 22px rgba(0, 77, 64, 0.16);
+}
+
+.app-loader-brand strong,
+.app-loader-brand span {
+  display: block;
+}
+
+.app-loader-brand strong {
+  color: #113931;
+  font-size: 1rem;
+}
+
+.app-loader-brand span {
+  margin-top: 3px;
+  color: #6a7470;
   font-size: 0.82rem;
 }
 
-.terminal-controls {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.app-loader-visual {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 22px auto 18px;
+  display: grid;
+  place-items: center;
 }
 
-.control {
-  width: 10px;
-  height: 10px;
+.app-loader-visual-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: #7f8784;
+  border: 1px solid rgba(0, 77, 64, 0.1);
 }
 
-.control.close {
-  background: #ef5f56;
+.app-loader-visual-ring-outer {
+  animation: appLoaderOrbit 7s linear infinite;
 }
 
-.control.minimize {
-  background: #f6c04d;
+.app-loader-visual-ring-outer::after,
+.app-loader-visual-ring-middle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.control.maximize {
-  background: #58d26a;
+.app-loader-visual-ring-outer::after {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #004d40 0%, #9ddfca 100%);
+  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.82);
+  margin-top: -58px;
 }
 
-.terminal-body {
-  padding: 18px 18px 16px;
+.app-loader-visual-ring-middle {
+  inset: 20px;
+  animation: appLoaderOrbit 5s linear infinite reverse;
 }
 
-.terminal-text {
-  display: inline-block;
-  max-width: 100%;
+.app-loader-visual-ring-middle::after {
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #d8e85b 0%, #3a7a6e 100%);
+  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.84);
+  margin-top: -37px;
+}
+
+.app-loader-visual-core {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(175, 239, 221, 0.4), rgba(175, 239, 221, 0.08));
+  box-shadow:
+    inset 0 0 0 10px rgba(255, 255, 255, 0.82),
+    0 10px 22px rgba(0, 77, 64, 0.08);
+  animation: appLoaderPulse 2.2s ease-in-out infinite;
+}
+
+.app-loader-visual-core span {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #004d40;
+}
+
+.app-loader-visual-core span:nth-child(1) {
+  transform: translateY(-18px);
+}
+
+.app-loader-visual-core span:nth-child(2) {
+  transform: translateX(-14px);
+  background: #87d5bd;
+}
+
+.app-loader-visual-core span:nth-child(3) {
+  transform: translateX(14px);
+  background: #c3d63d;
+}
+
+.app-loader-copy {
+  text-align: center;
+}
+
+.app-loader-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #edf7f2;
+  color: #0f5d4f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.app-loader-copy h1 {
+  margin: 14px 0 10px;
+  color: #113931;
+  font-size: clamp(1.55rem, 4vw, 2rem);
+  line-height: 1.06;
+  letter-spacing: -0.05em;
+}
+
+.app-loader-copy p {
+  margin: 0;
+  color: #65716c;
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.app-loader-progress {
+  margin-top: 22px;
+  height: 10px;
+  border-radius: 999px;
   overflow: hidden;
-  white-space: nowrap;
-  border-right: 0.18em solid #58d26a;
-  color: #8dffb8;
-  font-size: 1rem;
-  animation:
-    typeAndDelete 4s steps(10) infinite,
-    blinkCursor 0.55s step-end infinite alternate;
+  background: #e8ecea;
 }
 
-.terminal-detail {
-  margin: 14px 0 0;
-  color: #c7d2ce;
-  font-size: 0.83rem;
-  line-height: 1.6;
+.app-loader-progress-bar {
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #004d40 0%, #76d6b6 52%, #d8e85b 100%);
+  animation: appLoaderSlide 1.8s ease-in-out infinite;
+}
+
+.app-loader-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.app-loader-status-pill {
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #f1f4f3;
+  color: #65716c;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.app-loader-status-pill.is-live {
+  background: #dff2eb;
+  color: #126454;
 }
 
 @media (max-width: 520px) {
-  .terminal-loader {
-    width: min(100%, 320px);
+  .app-loader-panel {
+    padding: 20px;
+    border-radius: 24px;
   }
 
-  .terminal-body {
-    padding: 16px;
+  .app-loader-visual {
+    width: 136px;
+    height: 136px;
   }
 
-  .terminal-text {
-    font-size: 0.95rem;
+  .app-loader-visual-ring-middle {
+    inset: 18px;
+  }
+
+  .app-loader-visual-core {
+    width: 70px;
+    height: 70px;
   }
 }
