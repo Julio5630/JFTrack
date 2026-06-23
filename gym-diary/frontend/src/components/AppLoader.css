@@ -1,4 +1,4 @@
-@keyframes appLoaderOrbit {
+@keyframes appLoaderSpin {
   from {
     transform: rotate(0deg);
   }
@@ -8,289 +8,43 @@
   }
 }
 
-@keyframes appLoaderPulse {
-  0%,
-  100% {
-    transform: scale(0.96);
-    opacity: 0.82;
-  }
-
-  50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-}
-
-@keyframes appLoaderSlide {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(220%);
-  }
-}
-
 .app-loader-screen {
-  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
-  overflow: hidden;
   padding: 24px;
   background:
-    radial-gradient(circle at top right, rgba(175, 239, 221, 0.58), transparent 22%),
-    radial-gradient(circle at left bottom, rgba(253, 136, 99, 0.12), transparent 18%),
+    radial-gradient(circle at top right, rgba(175, 239, 221, 0.48), transparent 20%),
     linear-gradient(180deg, #f8f9fa 0%, #eef2ef 100%);
 }
 
-.app-loader-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(6px);
-  pointer-events: none;
-}
-
-.app-loader-glow-a {
-  top: 9%;
-  right: 8%;
-  width: 240px;
-  height: 240px;
-  background: radial-gradient(circle, rgba(175, 239, 221, 0.48), transparent 68%);
-}
-
-.app-loader-glow-b {
-  left: 6%;
-  bottom: 10%;
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(223, 236, 96, 0.2), transparent 70%);
-}
-
-.app-loader-panel {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 430px);
-  padding: 24px;
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow:
-    0 18px 42px rgba(0, 77, 64, 0.1),
-    0 4px 12px rgba(25, 28, 29, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
-}
-
-.app-loader-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-loader-brand-icon {
-  width: 48px;
-  height: 48px;
+.app-loader-minimal {
   display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 16px;
-  color: #ffffff;
-  background: linear-gradient(145deg, #004d40, #2a6f61);
-  box-shadow: 0 10px 22px rgba(0, 77, 64, 0.16);
-}
-
-.app-loader-brand strong,
-.app-loader-brand span {
-  display: block;
-}
-
-.app-loader-brand strong {
-  color: #113931;
-  font-size: 1rem;
-}
-
-.app-loader-brand span {
-  margin-top: 3px;
-  color: #6a7470;
-  font-size: 0.82rem;
-}
-
-.app-loader-visual {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  margin: 22px auto 18px;
-  display: grid;
-  place-items: center;
-}
-
-.app-loader-visual-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 77, 64, 0.1);
-}
-
-.app-loader-visual-ring-outer {
-  animation: appLoaderOrbit 7s linear infinite;
-}
-
-.app-loader-visual-ring-outer::after,
-.app-loader-visual-ring-middle::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.app-loader-visual-ring-outer::after {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, #004d40 0%, #9ddfca 100%);
-  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.82);
-  margin-top: -58px;
-}
-
-.app-loader-visual-ring-middle {
-  inset: 20px;
-  animation: appLoaderOrbit 5s linear infinite reverse;
-}
-
-.app-loader-visual-ring-middle::after {
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #d8e85b 0%, #3a7a6e 100%);
-  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.84);
-  margin-top: -37px;
-}
-
-.app-loader-visual-core {
-  position: relative;
-  width: 78px;
-  height: 78px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(175, 239, 221, 0.4), rgba(175, 239, 221, 0.08));
-  box-shadow:
-    inset 0 0 0 10px rgba(255, 255, 255, 0.82),
-    0 10px 22px rgba(0, 77, 64, 0.08);
-  animation: appLoaderPulse 2.2s ease-in-out infinite;
-}
-
-.app-loader-visual-core span {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #004d40;
-}
-
-.app-loader-visual-core span:nth-child(1) {
-  transform: translateY(-18px);
-}
-
-.app-loader-visual-core span:nth-child(2) {
-  transform: translateX(-14px);
-  background: #87d5bd;
-}
-
-.app-loader-visual-core span:nth-child(3) {
-  transform: translateX(14px);
-  background: #c3d63d;
-}
-
-.app-loader-copy {
+  justify-items: center;
+  gap: 14px;
   text-align: center;
 }
 
-.app-loader-kicker {
-  display: inline-flex;
-  align-items: center;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: #edf7f2;
-  color: #0f5d4f;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.app-loader-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid rgba(0, 77, 64, 0.12);
+  border-top-color: #004d40;
+  border-right-color: #76d6b6;
+  border-radius: 50%;
+  animation: appLoaderSpin 0.9s linear infinite;
 }
 
-.app-loader-copy h1 {
-  margin: 14px 0 10px;
+.app-loader-minimal h1 {
+  margin: 0;
   color: #113931;
-  font-size: clamp(1.55rem, 4vw, 2rem);
-  line-height: 1.06;
-  letter-spacing: -0.05em;
+  font: 700 clamp(1.35rem, 4vw, 1.8rem) 'Inter', sans-serif;
+  letter-spacing: -0.04em;
 }
 
-.app-loader-copy p {
+.app-loader-minimal p {
+  max-width: 320px;
   margin: 0;
   color: #65716c;
-  font-size: 0.93rem;
-  line-height: 1.65;
-}
-
-.app-loader-progress {
-  margin-top: 22px;
-  height: 10px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #e8ecea;
-}
-
-.app-loader-progress-bar {
-  width: 45%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #004d40 0%, #76d6b6 52%, #d8e85b 100%);
-  animation: appLoaderSlide 1.8s ease-in-out infinite;
-}
-
-.app-loader-status-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.app-loader-status-pill {
-  min-height: 32px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  background: #f1f4f3;
-  color: #65716c;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.app-loader-status-pill.is-live {
-  background: #dff2eb;
-  color: #126454;
-}
-
-@media (max-width: 520px) {
-  .app-loader-panel {
-    padding: 20px;
-    border-radius: 24px;
-  }
-
-  .app-loader-visual {
-    width: 136px;
-    height: 136px;
-  }
-
-  .app-loader-visual-ring-middle {
-    inset: 18px;
-  }
-
-  .app-loader-visual-core {
-    width: 70px;
-    height: 70px;
-  }
+  font: 500 0.92rem/1.6 'Inter', sans-serif;
 }
