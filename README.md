@@ -69,4 +69,3 @@ JFTrack/
 | Personal | personal@teste.com | 123456 |
 | Academia | academia@teste.com | 123456 |
 | Admin | admin.teste@teste.com | 123456 |
-| Admin legado | admin@treino.com | admin123 |
