@@ -27,7 +27,6 @@ Os documentos do projeto estão organizados na pasta `documentacao/`.
 | [Documento de Requisitos](documentacao/requisitos/Documento%20de%20Requisitos%20-%20JFTrack.docx) | Requisitos funcionais, não funcionais, regras de negócio, dados e critérios de aceitação. |
 | [Documento de Arquitetura](documentacao/arquitetura/Documento%20de%20Arquitetura%20-%20JFTrack.docx) | Arquitetura técnica, frontend, backend, banco de dados, segurança, PWA e evolução recomendada. |
 | [Diagramas](documentacao/diagramas/) | Fluxos e materiais visuais de apoio. |
-| [Personas](documentacao/personas/personas_jftrack.html) | Perfis de usuários e contexto de uso. |
 
 ## Estrutura do Repositório
 
