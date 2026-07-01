@@ -207,6 +207,14 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(assessment),
     }),
+    generateWorkoutSuggestion: (payload) => request('/ai/workout-suggestion', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    }),
+    generateAssessmentSummary: (payload) => request('/ai/assessment-summary', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    }),
 };
 
 export const syncPendingOfflineData = () => syncOfflineQueue(API_URL, getAuthToken());

@@ -67,6 +67,17 @@ export default function MyWorkouts() {
   const [filterCategory, setFilterCategory] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRationale, setAiRationale] = useState('');
+  const [aiPrompt, setAiPrompt] = useState({
+    goal: '',
+    level: '',
+    daysPerWeek: '4',
+    sessionMinutes: '60',
+    focusAreas: '',
+    restrictions: '',
+    notes: ''
+  });
   const setError = (message) => message && notify(message);
 
   useEffect(() => {
@@ -114,6 +125,7 @@ export default function MyWorkouts() {
     setDefaultSets(3);
     setEditingTemplateId(null);
     setShowWorkoutCreator(false);
+    setAiRationale('');
   };
 
   const openWorkoutCreator = () => {
@@ -251,6 +263,58 @@ export default function MyWorkouts() {
     }
   };
 
+  const generateWorkoutWithAi = async () => {
+    if (exercises.length === 0) {
+      setError('Cadastre alguns exercícios antes de pedir uma sugestão com IA.');
+      return;
+    }
+
+    if (!aiPrompt.goal.trim()) {
+      setError('Informe o objetivo do treino para gerar a sugestão.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiRationale('');
+    setError(null);
+
+    try {
+      const response = await api.generateWorkoutSuggestion({
+        ...aiPrompt,
+        availableExercises: exercises.map((exercise) => ({
+          id: exercise.id,
+          name: exercise.name,
+          category: exercise.category
+        }))
+      });
+
+      const suggestion = response.suggestion;
+      const suggestedExercises = (suggestion.exercises || [])
+        .map((item) => {
+          const matched = exercises.find((exercise) => Number(exercise.id) === Number(item.id));
+          if (!matched) return null;
+
+          return matched.category === 'Cardio'
+            ? { ...matched, defaultSets: 1, durationMinutes: item.durationMinutes || 20 }
+            : { ...matched, defaultSets: item.defaultSets || 3, durationMinutes: null };
+        })
+        .filter(Boolean);
+
+      if (suggestedExercises.length === 0) {
+        throw new Error('A IA não conseguiu montar um treino válido com a sua biblioteca atual.');
+      }
+
+      setWorkoutName(suggestion.name || 'Treino sugerido');
+      setSelectedExercises(suggestedExercises);
+      setAiRationale(suggestion.rationale || '');
+      notify('Sugestão gerada com IA. Revise os exercícios antes de salvar.');
+    } catch (err) {
+      setError(err.message || 'Não foi possível gerar a sugestão com IA.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const deleteWorkout = async (template) => {
     if (!await confirm({ title: 'Excluir treino?', message: `O treino "${template.name}" será removido permanentemente.`, confirmLabel: 'Excluir treino' })) return;
     setSaving(true);
@@ -359,6 +423,52 @@ export default function MyWorkouts() {
             <div><h3>{editingTemplateId ? 'Editar treino' : 'Criar novo treino'}</h3><p>Defina um nome e monte a sequência de exercícios.</p></div>
             <button type="button" className="workout-text-button" onClick={resetWorkoutForm}>{editingTemplateId ? 'Cancelar edicao' : 'Fechar'}</button>
           </header>
+
+          <section className="workout-ai-card">
+            <div className="workout-ai-heading">
+              <div>
+                <span>Assistente com IA</span>
+                <strong>Gerar sugestão inicial</strong>
+                <small>A IA usa somente os exercícios já disponíveis na sua biblioteca.</small>
+              </div>
+              <button type="button" className="workout-ai-generate" onClick={generateWorkoutWithAi} disabled={aiLoading}>
+                <Icon name="bolt" size={16} /> {aiLoading ? 'Gerando...' : 'Gerar com IA'}
+              </button>
+            </div>
+
+            <div className="workout-ai-grid">
+              <label>
+                <span>Objetivo</span>
+                <input value={aiPrompt.goal} onChange={(event) => setAiPrompt({ ...aiPrompt, goal: event.target.value })} placeholder="Ex.: hipertrofia ou emagrecimento" />
+              </label>
+              <label>
+                <span>Nível</span>
+                <input value={aiPrompt.level} onChange={(event) => setAiPrompt({ ...aiPrompt, level: event.target.value })} placeholder="Ex.: iniciante" />
+              </label>
+              <label>
+                <span>Dias por semana</span>
+                <input value={aiPrompt.daysPerWeek} onChange={(event) => setAiPrompt({ ...aiPrompt, daysPerWeek: event.target.value })} placeholder="4" />
+              </label>
+              <label>
+                <span>Minutos por treino</span>
+                <input value={aiPrompt.sessionMinutes} onChange={(event) => setAiPrompt({ ...aiPrompt, sessionMinutes: event.target.value })} placeholder="60" />
+              </label>
+              <label className="full">
+                <span>Focos principais</span>
+                <input value={aiPrompt.focusAreas} onChange={(event) => setAiPrompt({ ...aiPrompt, focusAreas: event.target.value })} placeholder="Ex.: peito, costas e cardio leve" />
+              </label>
+              <label className="full">
+                <span>Restrições ou cuidados</span>
+                <input value={aiPrompt.restrictions} onChange={(event) => setAiPrompt({ ...aiPrompt, restrictions: event.target.value })} placeholder="Ex.: evitar impacto ou poupar ombro" />
+              </label>
+              <label className="full">
+                <span>Observações extras</span>
+                <input value={aiPrompt.notes} onChange={(event) => setAiPrompt({ ...aiPrompt, notes: event.target.value })} placeholder="Ex.: incluir cardio no final do treino" />
+              </label>
+            </div>
+
+            {aiRationale && <p className="workout-ai-rationale">{aiRationale}</p>}
+          </section>
 
           <label className="workout-name-field"><span>Nome do treino</span><input value={workoutName} onChange={(event) => setWorkoutName(event.target.value)} placeholder="Ex.: Treino A - Peito e tríceps" /></label>
 

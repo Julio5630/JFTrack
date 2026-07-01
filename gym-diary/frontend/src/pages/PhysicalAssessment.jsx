@@ -17,8 +17,11 @@ export default function PhysicalAssessment() {
   const [assessments, setAssessments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSummaries, setAiSummaries] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setErrorState] = useState('');
+
   const setError = (message) => {
     setErrorState(message);
     if (message) notify({ message, type: 'error' });
@@ -106,8 +109,24 @@ export default function PhysicalAssessment() {
   const activity = assessment.activityHistory || {};
   const lifestyle = assessment.lifestyle || {};
   const availability = assessment.availability || {};
-  const medical = assessment.medicalHistory || {};
   const professional = assessment.personal?.name || 'Profissional responsável';
+  const aiSummary = aiSummaries[assessment.id] || null;
+
+  const generateAiSummary = async () => {
+    setAiLoading(true);
+    try {
+      const response = await api.generateAssessmentSummary(assessment);
+      setAiSummaries((current) => ({
+        ...current,
+        [assessment.id]: response.summary
+      }));
+      notify({ message: 'Resumo gerado com IA. Revise as orientações com atenção.', type: 'success' });
+    } catch (requestError) {
+      notify({ message: requestError.message || 'Não foi possível gerar o resumo com IA.', type: 'error' });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   return (
     <main className="assessment-page">
@@ -153,9 +172,48 @@ export default function PhysicalAssessment() {
             <h2>{assessment.goal || 'Avaliação física e funcional'}</h2>
             <p>Realizada por <strong>{professional}</strong>{assessment.gym?.name ? ` na ${assessment.gym.name}` : ''}.</p>
           </div>
-          <div className="assessment-date-block"><span>Data da avaliação</span><strong>{formatDate(assessment.assessmentDate)}</strong></div>
+          <div className="assessment-date-block">
+            <span>Data da avaliação</span>
+            <strong>{formatDate(assessment.assessmentDate)}</strong>
+            <button type="button" className="assessment-ai-button" onClick={generateAiSummary} disabled={aiLoading}>
+              <Icon name="bolt" size={15} /> {aiLoading ? 'Gerando...' : 'Resumo com IA'}
+            </button>
+          </div>
           <i aria-hidden="true"></i>
         </section>
+
+        {aiSummary && (
+          <section className="assessment-ai-summary-card">
+            <div className="assessment-card-heading">
+              <span className="lime"><Icon name="bolt" size={19} /></span>
+              <div>
+                <small>Leitura assistida</small>
+                <h2>{aiSummary.headline || 'Resumo da avaliação'}</h2>
+              </div>
+            </div>
+            {aiSummary.summary && <p className="assessment-ai-summary-text">{aiSummary.summary}</p>}
+            <div className="assessment-ai-grid">
+              {aiSummary.highlights?.length > 0 && (
+                <article>
+                  <strong>Destaques</strong>
+                  <ul>{aiSummary.highlights.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              )}
+              {aiSummary.attentionPoints?.length > 0 && (
+                <article>
+                  <strong>Pontos de atenção</strong>
+                  <ul>{aiSummary.attentionPoints.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              )}
+              {aiSummary.nextSteps?.length > 0 && (
+                <article>
+                  <strong>Próximos passos</strong>
+                  <ul>{aiSummary.nextSteps.map((item) => <li key={item}>{item}</li>)}</ul>
+                </article>
+              )}
+            </div>
+          </section>
+        )}
 
         {assessment.medicalAlert && (
           <section className="assessment-alert-card">

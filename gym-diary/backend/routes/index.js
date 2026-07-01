@@ -9,6 +9,7 @@ const userRoutes = require('./users');
 const gymRoutes = require('./gyms');
 const personalRoutes = require('./personal');
 const bodyMetricsRoutes = require('./bodyMetrics');
+const aiRoutes = require('./ai');
 
 const { authenticateToken, isAdmin } = require('../middlewares/auth');
 const { toUserDto, updateMe } = require('../controllers/authController');
@@ -23,6 +24,7 @@ router.use('/history', authenticateToken, historyRoutes);
 router.use('/gyms', authenticateToken, gymRoutes);
 router.use('/personal', authenticateToken, personalRoutes);
 router.use('/body-metrics', authenticateToken, bodyMetricsRoutes);
+router.use('/ai', authenticateToken, aiRoutes);
 router.use('/users', authenticateToken, isAdmin, userRoutes);
 
 // Usuário logado
