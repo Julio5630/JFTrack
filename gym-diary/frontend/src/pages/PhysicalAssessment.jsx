@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api } from '../services/api';
+import { api, getAiCooldownRemaining } from '../services/api';
 import { useAlert } from '../contexts/AlertContext';
 import Icon from '../components/Icon';
 import './PhysicalAssessment.css';
@@ -18,6 +18,7 @@ export default function PhysicalAssessment() {
   const [selectedId, setSelectedId] = useState(null);
   const [sourceFilter, setSourceFilter] = useState('all');
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiCooldownLeft, setAiCooldownLeft] = useState(() => Math.ceil(getAiCooldownRemaining('assessment-summary') / 1000));
   const [aiSummaries, setAiSummaries] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setErrorState] = useState('');
@@ -45,6 +46,13 @@ export default function PhysicalAssessment() {
       });
 
     return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const syncCooldown = () => setAiCooldownLeft(Math.ceil(getAiCooldownRemaining('assessment-summary') / 1000));
+    syncCooldown();
+    const intervalId = window.setInterval(syncCooldown, 1000);
+    return () => window.clearInterval(intervalId);
   }, []);
 
   const sources = useMemo(() => {
@@ -175,8 +183,8 @@ export default function PhysicalAssessment() {
           <div className="assessment-date-block">
             <span>Data da avaliação</span>
             <strong>{formatDate(assessment.assessmentDate)}</strong>
-            <button type="button" className="assessment-ai-button" onClick={generateAiSummary} disabled={aiLoading}>
-              <Icon name="bolt" size={15} /> {aiLoading ? 'Gerando...' : 'Resumo com IA'}
+            <button type="button" className="assessment-ai-button" onClick={generateAiSummary} disabled={aiLoading || aiCooldownLeft > 0}>
+              <Icon name="bolt" size={15} /> {aiLoading ? 'Gerando...' : aiCooldownLeft > 0 ? `Aguarde ${aiCooldownLeft}s` : 'Resumo com IA'}
             </button>
           </div>
           <i aria-hidden="true"></i>

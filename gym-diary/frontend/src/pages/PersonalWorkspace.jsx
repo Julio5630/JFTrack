@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
-import { api } from '../services/api';
+import { api, getAiCooldownRemaining } from '../services/api';
 import Icon from '../components/Icon';
 import ExerciseCreationModal from '../components/ExerciseCreationModal';
 import './PersonalWorkspace.css';
@@ -65,12 +65,14 @@ const emptyAssessment = {
     hip: '',
     notes: ''
   },
+  coachInsights: '',
+  coachObservations: '',
   workoutSuggestion: '',
   status: 'completed'
 };
 
 const emptyPersonalExercise = { name: '', category: 'Peito', videoUrl: '' };
-const personalExerciseCategories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Core', 'Corpo Inteiro', 'Cardio', 'Outros'];
+const personalExerciseCategories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Abdomen', 'Corpo Inteiro', 'Cardio', 'Outros'];
 
 const medicalAlertMessage = 'Atenção: recomendada liberação médica antes de treinos intensos.';
 const medicalRiskFields = [
@@ -105,6 +107,33 @@ const emptyPreset = {
   frequency: '',
   notes: '',
   workouts: []
+};
+
+const mapTrainingPlanToPreset = (trainingPlan = null) => {
+  if (!trainingPlan || !Array.isArray(trainingPlan.workouts)) return emptyPreset;
+  return {
+    name: trainingPlan.name || '',
+    splitType: trainingPlan.splitType || '',
+    frequency: trainingPlan.frequency || '',
+    notes: trainingPlan.notes || '',
+    workouts: trainingPlan.workouts.map((workout, workoutIndex) => ({
+      name: workout.name || `Treino ${workoutIndex + 1}`,
+      splitType: trainingPlan.splitType || workout.splitType || '',
+      frequency: workout.frequency || `${workoutIndex + 1}/${trainingPlan.workouts.length} da semana`,
+      notes: workout.notes || '',
+      exercises: Array.isArray(workout.exercises)
+        ? workout.exercises.map((exercise) => ({
+            id: exercise.id,
+            name: exercise.name,
+            category: exercise.category,
+            defaultSets: exercise.defaultSets || 1,
+            defaultReps: exercise.defaultReps || '10-12',
+            durationMinutes: exercise.durationMinutes || null,
+            note: exercise.note || ''
+          }))
+        : []
+    }))
+  };
 };
 
 const sleepHourOptions = [
@@ -263,6 +292,9 @@ export default function PersonalWorkspace() {
   const [assessmentStudentEmail, setAssessmentStudentEmail] = useState('');
   const [preset, setPreset] = useState(emptyPreset);
   const [expandedPresetWorkouts, setExpandedPresetWorkouts] = useState({});
+  const [assessmentReviewTab, setAssessmentReviewTab] = useState('insights');
+  const [assessmentAiLoading, setAssessmentAiLoading] = useState(false);
+  const [assessmentAiCooldownLeft, setAssessmentAiCooldownLeft] = useState(() => Math.ceil(getAiCooldownRemaining('assessment-plan') / 1000));
 
   const templates = data?.workoutTemplates || [];
   const exercises = data?.exercises || [];
@@ -286,6 +318,13 @@ export default function PersonalWorkspace() {
       window.removeEventListener('keydown', closeOnEscape);
     };
   }, [viewingAssessment, viewingStudent, organizingStudent, exerciseModalOpen]);
+
+  useEffect(() => {
+    const syncCooldown = () => setAssessmentAiCooldownLeft(Math.ceil(getAiCooldownRemaining('assessment-plan') / 1000));
+    syncCooldown();
+    const intervalId = window.setInterval(syncCooldown, 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const resolvePersonalGymId = (gymList, preferredGymId = '') => {
     if (!gymList.length) return '';
@@ -669,7 +708,7 @@ export default function PersonalWorkspace() {
     };
   };
 
-  const generateSuggestion = () => {
+  const generateLocalSuggestion = () => {
     const goal = assessmentForm.personalData.mainGoal;
     const level = assessmentForm.activityHistory.currentLevel || 'Sedentario';
     const days = getAvailabilityDayCount(assessmentForm.availability.availableDays);
@@ -730,15 +769,55 @@ export default function PersonalWorkspace() {
     setExpandedPresetWorkouts({ 0: true });
     setAssessmentForm((current) => ({
       ...current,
+      coachInsights: `Plano inicial sugerido para ${goal.toLowerCase()} com foco em adaptação progressiva e boa aderência.`,
+      coachObservations: nextPreset.notes,
       workoutSuggestion: `${presetName}\n${frequency}\n${nextPreset.notes}`
     }));
+  };
+
+  const generateAssessmentPlanWithAi = async ({ silent = false } = {}) => {
+    if (exercises.length === 0) {
+      if (!silent) setMessage('Cadastre exercicios antes de gerar o plano com IA.');
+      return;
+    }
+
+    setAssessmentAiLoading(true);
+    try {
+      const response = await api.generateAssessmentPlan({
+        assessment: assessmentForm,
+        availableExercises: exercises.map((exercise) => ({
+          id: exercise.id,
+          name: exercise.name,
+          category: exercise.category
+        }))
+      });
+
+      const plan = response.plan;
+      const nextPreset = mapTrainingPlanToPreset(plan.trainingPlan);
+      setPreset(nextPreset);
+      setExpandedPresetWorkouts(Object.fromEntries(nextPreset.workouts.map((_, index) => [index, index === 0])));
+      setAssessmentForm((current) => ({
+        ...current,
+        coachInsights: plan.insights?.summary || current.coachInsights,
+        coachObservations: Array.isArray(plan.insights?.observations) ? plan.insights.observations.join('\n') : current.coachObservations,
+        workoutSuggestion: [plan.trainingPlan?.name, plan.trainingPlan?.frequency, plan.trainingPlan?.notes].filter(Boolean).join('\n')
+      }));
+      if (!silent) setMessage('Plano final gerado com IA. Agora voce pode revisar e editar tudo.');
+    } catch (error) {
+      generateLocalSuggestion();
+      if (!silent) {
+        setMessage(error.message || 'Nao foi possivel gerar com IA agora. Criei uma sugestao inicial local para voce revisar.');
+      }
+    } finally {
+      setAssessmentAiLoading(false);
+    }
   };
 
   useEffect(() => {
     if (assessmentView !== 'form') return;
     if (assessmentStep !== 7) return;
     if (preset.workouts.length > 0) return;
-    generateSuggestion();
+    generateAssessmentPlanWithAi({ silent: true });
   }, [assessmentView, assessmentStep, preset.workouts.length]);
 
   const updateAssessmentGroup = (group, field, value) => {
@@ -767,6 +846,7 @@ export default function PersonalWorkspace() {
     setAssessmentStep(0);
     setPreset(emptyPreset);
     setExpandedPresetWorkouts({});
+    setAssessmentReviewTab('insights');
     setAssessmentView('list');
   };
 
@@ -784,6 +864,7 @@ export default function PersonalWorkspace() {
     setAssessmentStep(0);
     setPreset(emptyPreset);
     setExpandedPresetWorkouts({});
+    setAssessmentReviewTab('insights');
     setAssessmentView('form');
   };
 
@@ -795,6 +876,9 @@ export default function PersonalWorkspace() {
 
     const assessmentPayload = {
       ...assessmentForm,
+      coachInsights: assessmentForm.coachInsights,
+      coachObservations: assessmentForm.coachObservations,
+      trainingPlan: preset,
       gymId: selectedPersonalGymId,
       status: statusOverride || assessmentForm.status || 'completed'
     };
@@ -819,6 +903,7 @@ export default function PersonalWorkspace() {
 
     setAssessmentForm({ ...emptyAssessment, studentId: assessmentForm.studentId });
     setAssessmentStep(0);
+    setAssessmentReviewTab('insights');
     setAssessmentView('list');
     await refreshData();
     await loadPersonalData();
@@ -1025,6 +1110,7 @@ export default function PersonalWorkspace() {
 
   const editAssessment = (assessment) => {
     setViewingAssessment(null);
+    const loadedPreset = mapTrainingPlanToPreset(assessment.trainingPlan);
     setAssessmentForm({
       id: assessment.id,
       studentId: assessment.studentUserId,
@@ -1041,11 +1127,15 @@ export default function PersonalWorkspace() {
         height: assessment.height || assessment.measurements?.height || '',
         bmi: assessment.bmi || assessment.measurements?.bmi || ''
       },
+      coachInsights: assessment.coachInsights || '',
+      coachObservations: assessment.coachObservations || '',
       workoutSuggestion: assessment.workoutSuggestion || '',
       status: assessment.status || 'completed'
     });
     setAssessmentStep(0);
-    setPreset(emptyPreset);
+    setPreset(loadedPreset);
+    setExpandedPresetWorkouts(Object.fromEntries(loadedPreset.workouts.map((_, index) => [index, index === 0])));
+    setAssessmentReviewTab('insights');
     setAssessmentView('form');
   };
 
@@ -1217,6 +1307,7 @@ export default function PersonalWorkspace() {
     const lifestyle = assessment.lifestyle || {};
     const availability = assessment.availability || {};
     const measurements = assessment.measurements || {};
+    const trainingPlan = assessment.trainingPlan || null;
     const risks = medicalRiskFields.filter((field) => medicalHistory[field]);
     const value = (content, suffix = '') => content !== null && content !== undefined && content !== '' ? `${content}${suffix}` : 'Não informado';
 
@@ -1288,11 +1379,15 @@ export default function PersonalWorkspace() {
               </section>
             </div>
 
-            {(assessment.workoutSuggestion || measurements.notes) && (
+            {(assessment.coachInsights || assessment.coachObservations || assessment.workoutSuggestion || measurements.notes || trainingPlan?.workouts?.length) && (
               <section className="assessment-detail-observations">
                 <h3>Observações e plano sugerido</h3>
+                {assessment.coachInsights && <p><strong>Insight principal:</strong> {assessment.coachInsights}</p>}
+                {assessment.coachObservations && <p>{assessment.coachObservations}</p>}
                 {measurements.notes && <p>{measurements.notes}</p>}
-                {assessment.workoutSuggestion && <p>{assessment.workoutSuggestion}</p>}
+                {!assessment.coachInsights && !assessment.coachObservations && assessment.workoutSuggestion && <p>{assessment.workoutSuggestion}</p>}
+                {trainingPlan?.name && <p><strong>{trainingPlan.name}</strong>{trainingPlan.frequency ? ` · ${trainingPlan.frequency}` : ''}</p>}
+                {trainingPlan?.notes && <p>{trainingPlan.notes}</p>}
               </section>
             )}
           </div>
@@ -1705,103 +1800,134 @@ export default function PersonalWorkspace() {
             </article>
           </div>
 
-          <label className="assessment-review-notes">
-            <span><Icon name="bolt" size={17} /> Insight e observações do personal</span>
-            <textarea
-              value={assessmentForm.workoutSuggestion}
-              onChange={(event) => setAssessmentForm({ ...assessmentForm, workoutSuggestion: event.target.value })}
-              placeholder="Registre recomendações, cuidados e observações importantes para este aluno."
-            />
-          </label>
+          <div className="assessment-review-generator">
+            <div>
+              <strong>Finalização com IA</strong>
+              <span>Gere insights profissionais e um plano inicial de treino, depois ajuste tudo manualmente.</span>
+            </div>
+            <button type="button" className="assessment-review-generate" onClick={() => generateAssessmentPlanWithAi()} disabled={assessmentAiLoading || assessmentAiCooldownLeft > 0}>
+              <Icon name="bolt" size={16} /> {assessmentAiLoading ? 'Gerando...' : assessmentAiCooldownLeft > 0 ? `Aguarde ${assessmentAiCooldownLeft}s` : 'Gerar com IA'}
+            </button>
+          </div>
         </div>
 
-        <div className="preset-review embedded">
-          <div className="panel-title-row">
-            <div>
-              <h3>{preset.name || 'Plano semanal sugerido'}</h3>
-              <small>Revise a divisão, os exercícios e as orientações.</small>
-            </div>
-            <span>{preset.workouts.length}x na semana</span>
-          </div>
-          {preset.workouts.length === 0 ? (
-            <p className="empty-state">O preset sera gerado automaticamente a partir da avaliacao quando esta etapa for aberta.</p>
-          ) : (
-            <>
-              <input value={preset.name} onChange={(event) => setPreset({ ...preset, name: event.target.value })} placeholder="Nome do preset" />
-              <div className="form-split">
-                <input value={preset.splitType} onChange={(event) => setPreset({ ...preset, splitType: event.target.value })} placeholder="Divisao" />
-                <label className="preset-count-field">
-                  <span>Quantidade de treinos na semana</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="7"
-                    value={preset.workouts.length}
-                    onChange={(event) => updatePresetWorkoutCount(event.target.value)}
-                  />
-                </label>
-              </div>
-              <textarea value={preset.notes} onChange={(event) => setPreset({ ...preset, notes: event.target.value })} placeholder="Notas de revisao" />
-              <div className="preset-workout-list">
-                {preset.workouts.map((workout, workoutIndex) => {
-                  const isExpanded = Boolean(expandedPresetWorkouts[workoutIndex]);
-                  return (
-                    <article className={`preset-workout-card ${isExpanded ? 'expanded' : 'collapsed'}`} key={`${workout.name}-${workoutIndex}`}>
-                      <button className="preset-workout-toggle" type="button" onClick={() => togglePresetWorkout(workoutIndex)}>
-                        <span className="preset-day-letter">{String.fromCharCode(65 + workoutIndex)}</span>
-                        <div>
-                          <strong>{workout.name || `Treino ${workoutIndex + 1}`}</strong>
-                          <span>{workout.frequency || 'Frequência livre'} · {workout.exercises?.length || 0} exercícios</span>
-                        </div>
-                        <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={18} />
-                      </button>
-                      {isExpanded && (
-                        <div className="preset-workout-body">
-                          <div className="preset-workout-header">
-                            <input
-                              value={workout.name}
-                              onChange={(event) => updatePresetWorkout(workoutIndex, { name: event.target.value })}
-                              placeholder={`Treino ${workoutIndex + 1}`}
-                            />
-                            <input
-                              value={workout.frequency}
-                              onChange={(event) => updatePresetWorkout(workoutIndex, { frequency: event.target.value })}
-                              placeholder="Frequencia"
-                            />
-                          </div>
-                          <textarea
-                            value={workout.notes}
-                            onChange={(event) => updatePresetWorkout(workoutIndex, { notes: event.target.value })}
-                            placeholder="Notas especificas deste treino"
-                          />
-                          <select value="" onChange={(event) => addPresetExercise(workoutIndex, event.target.value)}>
-                            <option value="">Adicionar exercicio neste treino</option>
-                            {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name}</option>)}
-                          </select>
-                          <div className="preset-exercise-list">
-                            {workout.exercises.map((exercise, exerciseIndex) => (
-                              <div className="preset-exercise-row" key={`${exercise.id}-${exerciseIndex}`}>
-                                <strong>{exercise.name}</strong>
-                                {exercise.category === 'Cardio' ? (
-                                  <input type="number" min="1" max="180" step="5" value={exercise.durationMinutes || 20} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'durationMinutes', parseInt(event.target.value) || 1)} aria-label={`Minutos de ${exercise.name}`} />
-                                ) : <>
-                                  <input type="number" value={exercise.defaultSets} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'defaultSets', parseInt(event.target.value) || 1)} />
-                                  <input value={exercise.defaultReps} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'defaultReps', event.target.value)} />
-                                </>}
-                                <input value={exercise.note || ''} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'note', event.target.value)} placeholder="Observacao" />
-                                <button onClick={() => removePresetExercise(workoutIndex, exerciseIndex)} aria-label="Remover exercicio"><Icon name="trash" size={16} /></button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
-            </>
-          )}
+        <div className="assessment-review-tabs" role="tablist" aria-label="Finalização da avaliação">
+          <button type="button" className={assessmentReviewTab === 'insights' ? 'active' : ''} onClick={() => setAssessmentReviewTab('insights')}>
+            <Icon name="bolt" size={16} /> Insights
+          </button>
+          <button type="button" className={assessmentReviewTab === 'plan' ? 'active' : ''} onClick={() => setAssessmentReviewTab('plan')}>
+            <Icon name="dumbbell" size={16} /> Plano de treino
+          </button>
         </div>
+
+        {assessmentReviewTab === 'insights' ? (
+          <div className="assessment-review-notes assessment-review-notes-split">
+            <label>
+              <span><Icon name="bolt" size={17} /> Insight principal</span>
+              <textarea
+                value={assessmentForm.coachInsights}
+                onChange={(event) => setAssessmentForm({ ...assessmentForm, coachInsights: event.target.value })}
+                placeholder="Resumo profissional sobre o aluno, adaptação inicial e foco recomendado."
+              />
+            </label>
+            <label>
+              <span><Icon name="clipboard" size={17} /> Observações do personal</span>
+              <textarea
+                value={assessmentForm.coachObservations}
+                onChange={(event) => setAssessmentForm({ ...assessmentForm, coachObservations: event.target.value })}
+                placeholder="Registre cuidados, limitações, orientações e observações importantes."
+              />
+            </label>
+          </div>
+        ) : (
+          <div className="preset-review embedded">
+            <div className="panel-title-row">
+              <div>
+                <h3>{preset.name || 'Plano semanal sugerido'}</h3>
+                <small>Revise a divisão, os exercícios e as orientações.</small>
+              </div>
+              <span>{preset.workouts.length}x na semana</span>
+            </div>
+            {preset.workouts.length === 0 ? (
+              <p className="empty-state">Gere o plano com IA para montar a rotina inicial do aluno.</p>
+            ) : (
+              <>
+                <input value={preset.name} onChange={(event) => setPreset({ ...preset, name: event.target.value })} placeholder="Nome do preset" />
+                <div className="form-split">
+                  <input value={preset.splitType} onChange={(event) => setPreset({ ...preset, splitType: event.target.value })} placeholder="Divisao" />
+                  <label className="preset-count-field">
+                    <span>Quantidade de treinos na semana</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="7"
+                      value={preset.workouts.length}
+                      onChange={(event) => updatePresetWorkoutCount(event.target.value)}
+                    />
+                  </label>
+                </div>
+                <textarea value={preset.notes} onChange={(event) => setPreset({ ...preset, notes: event.target.value })} placeholder="Notas de revisao" />
+                <div className="preset-workout-list">
+                  {preset.workouts.map((workout, workoutIndex) => {
+                    const isExpanded = Boolean(expandedPresetWorkouts[workoutIndex]);
+                    return (
+                      <article className={`preset-workout-card ${isExpanded ? 'expanded' : 'collapsed'}`} key={`${workout.name}-${workoutIndex}`}>
+                        <button className="preset-workout-toggle" type="button" onClick={() => togglePresetWorkout(workoutIndex)}>
+                          <span className="preset-day-letter">{String.fromCharCode(65 + workoutIndex)}</span>
+                          <div>
+                            <strong>{workout.name || `Treino ${workoutIndex + 1}`}</strong>
+                            <span>{workout.frequency || 'Frequência livre'} · {workout.exercises?.length || 0} exercícios</span>
+                          </div>
+                          <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={18} />
+                        </button>
+                        {isExpanded && (
+                          <div className="preset-workout-body">
+                            <div className="preset-workout-header">
+                              <input
+                                value={workout.name}
+                                onChange={(event) => updatePresetWorkout(workoutIndex, { name: event.target.value })}
+                                placeholder={`Treino ${workoutIndex + 1}`}
+                              />
+                              <input
+                                value={workout.frequency}
+                                onChange={(event) => updatePresetWorkout(workoutIndex, { frequency: event.target.value })}
+                                placeholder="Frequencia"
+                              />
+                            </div>
+                            <textarea
+                              value={workout.notes}
+                              onChange={(event) => updatePresetWorkout(workoutIndex, { notes: event.target.value })}
+                              placeholder="Notas especificas deste treino"
+                            />
+                            <select value="" onChange={(event) => addPresetExercise(workoutIndex, event.target.value)}>
+                              <option value="">Adicionar exercicio neste treino</option>
+                              {exercises.map((exercise) => <option key={exercise.id} value={exercise.id}>{exercise.name}</option>)}
+                            </select>
+                            <div className="preset-exercise-list">
+                              {workout.exercises.map((exercise, exerciseIndex) => (
+                                <div className="preset-exercise-row" key={`${exercise.id}-${exerciseIndex}`}>
+                                  <strong>{exercise.name}</strong>
+                                  {exercise.category === 'Cardio' ? (
+                                    <input type="number" min="1" max="180" step="5" value={exercise.durationMinutes || 20} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'durationMinutes', parseInt(event.target.value) || 1)} aria-label={`Minutos de ${exercise.name}`} />
+                                  ) : <>
+                                    <input type="number" value={exercise.defaultSets} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'defaultSets', parseInt(event.target.value) || 1)} />
+                                    <input value={exercise.defaultReps} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'defaultReps', event.target.value)} />
+                                  </>}
+                                  <input value={exercise.note || ''} onChange={(event) => updatePresetWorkoutExercise(workoutIndex, exerciseIndex, 'note', event.target.value)} placeholder="Observacao" />
+                                  <button onClick={() => removePresetExercise(workoutIndex, exerciseIndex)} aria-label="Remover exercicio"><Icon name="trash" size={16} /></button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     );
   };

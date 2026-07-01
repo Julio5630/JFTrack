@@ -3,6 +3,34 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 import { cacheApiResponse, getCachedApiResponse, queueOfflineMutation, syncOfflineQueue } from './offlineApi';
 
 let authToken = null;
+const AI_REQUEST_COOLDOWN_MS = Number(import.meta.env.VITE_AI_REQUEST_COOLDOWN_MS || 20000);
+const AI_COOLDOWN_PREFIX = 'aiCooldown:';
+
+const getAiCooldownStorageKey = (key) => `${AI_COOLDOWN_PREFIX}${key}`;
+
+const readAiCooldownUntil = (key) => {
+    const storedValue = localStorage.getItem(getAiCooldownStorageKey(key));
+    const until = Number(storedValue || 0);
+    return Number.isFinite(until) ? until : 0;
+};
+
+export const getAiCooldownRemaining = (key) => Math.max(0, readAiCooldownUntil(key) - Date.now());
+
+const setAiCooldown = (key, retryAfterMs = AI_REQUEST_COOLDOWN_MS) => {
+    const duration = Math.max(0, Number(retryAfterMs) || 0);
+    localStorage.setItem(getAiCooldownStorageKey(key), String(Date.now() + duration));
+};
+
+const ensureAiCooldown = (key) => {
+    const remainingMs = getAiCooldownRemaining(key);
+    if (remainingMs <= 0) return;
+
+    const seconds = Math.ceil(remainingMs / 1000);
+    const requestError = new Error(`Aguarde ${seconds}s antes de pedir outra geração com IA.`);
+    requestError.retryAfterMs = remainingMs;
+    requestError.code = 'AI_COOLDOWN';
+    throw requestError;
+};
 
 export const setAuthToken = (token) => {
     authToken = token;
@@ -64,6 +92,8 @@ async function request(endpoint, options = {}) {
             const errorData = await response.json().catch(() => ({}));
             const requestError = new Error(errorData.error || `Erro ${response.status}`);
             requestError.isHttpError = true;
+             requestError.retryAfterMs = Number(errorData.retryAfterMs) || 0;
+             requestError.code = errorData.code || '';
             throw requestError;
         }
 
@@ -82,6 +112,24 @@ async function request(endpoint, options = {}) {
         throw error;
     } finally {
         if (timeoutId) window.clearTimeout(timeoutId);
+    }
+}
+
+async function requestAi(endpoint, payload, cooldownKey) {
+    ensureAiCooldown(cooldownKey);
+
+    try {
+        const response = await request(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        setAiCooldown(cooldownKey);
+        return response;
+    } catch (error) {
+        if (error.retryAfterMs) {
+            setAiCooldown(cooldownKey, error.retryAfterMs);
+        }
+        throw error;
     }
 }
 
@@ -207,14 +255,9 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(assessment),
     }),
-    generateWorkoutSuggestion: (payload) => request('/ai/workout-suggestion', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-    }),
-    generateAssessmentSummary: (payload) => request('/ai/assessment-summary', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-    }),
+    generateWorkoutSuggestion: (payload) => requestAi('/ai/workout-suggestion', payload, 'workout-suggestion'),
+    generateAssessmentSummary: (payload) => requestAi('/ai/assessment-summary', payload, 'assessment-summary'),
+    generateAssessmentPlan: (payload) => requestAi('/ai/assessment-plan', payload, 'assessment-plan'),
 };
 
 export const syncPendingOfflineData = () => syncOfflineQueue(API_URL, getAuthToken());

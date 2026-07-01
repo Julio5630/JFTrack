@@ -1609,6 +1609,18 @@
 .assessment-review-notes { display: grid; gap: 9px; padding: 16px; border-radius: 17px; color: #596100; background: rgba(223,236,96,.17); }
 .assessment-review-notes > span { display: flex; align-items: center; gap: 7px; font-size: .72rem; font-weight: 800; }
 .personal-container .assessment-review-notes textarea { min-height: 92px; padding: 12px 13px; border: 0; border-radius: 13px; color: #26302c; background: rgba(255,255,255,.72); font: .8rem 'Inter',sans-serif; resize: vertical; }
+.assessment-review-generator { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; border-radius: 18px; color: #174c42; background: #e9f4ef; box-shadow: 0 7px 18px rgba(0,77,64,.06); }
+.assessment-review-generator strong, .assessment-review-generator span { display: block; }
+.assessment-review-generator strong { font-size: .82rem; }
+.assessment-review-generator span { margin-top: 4px; color: #68716d; font-size: .71rem; line-height: 1.5; }
+.assessment-review-generate { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border: 0; border-radius: 13px; color: #fff; background: #004d40; box-shadow: 0 9px 20px rgba(0,77,64,.18); font: 800 .74rem 'Inter',sans-serif; cursor: pointer; }
+.assessment-review-generate:disabled { opacity: .55; cursor: wait; }
+.assessment-review-tabs { display: inline-flex; gap: 6px; padding: 5px; border-radius: 16px; background: #e5ece9; }
+.assessment-review-tabs button { min-height: 40px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; border: 0; border-radius: 12px; color: #59635f; background: transparent; font: 800 .74rem 'Inter',sans-serif; cursor: pointer; }
+.assessment-review-tabs button.active { color: #fff; background: #004d40; box-shadow: 0 7px 15px rgba(0,77,64,.16); }
+.assessment-review-notes-split { grid-template-columns: repeat(2, minmax(0,1fr)); background: #eef5d6; }
+.assessment-review-notes-split label { display: grid; gap: 8px; }
+.assessment-review-notes-split label > span { display: flex; align-items: center; gap: 7px; font-size: .72rem; font-weight: 800; }
 
 .personal-container .preset-review.embedded { padding: 20px; border-radius: 22px; background: #f0f3f1; }
 .personal-container .preset-review .panel-title-row { align-items: flex-start; }
@@ -1633,6 +1645,10 @@
   .assessment-action.subtle { display: none; }
   .assessment-review-bento { grid-template-columns: 1fr; }
   .personal-container .assessment-review-layout { gap: 16px; }
+  .assessment-review-generator,
+  .assessment-review-notes-split { grid-template-columns: 1fr; display: grid; }
+  .assessment-review-tabs { width: 100%; display: grid; grid-template-columns: repeat(2,1fr); }
+  .assessment-review-tabs button { justify-content: center; }
   .personal-container .preset-workout-body { padding-left: 12px; }
 }
 

@@ -18,7 +18,7 @@ INSERT INTO exercises (user_id, name, category) VALUES
 (1, 'Desenvolvimento', 'Ombros'),
 (1, 'Elevação Lateral', 'Ombros'),
 (1, 'Abdominal', 'Abdômen'),
-(1, 'Prancha', 'Core')
+(1, 'Prancha', 'Abdomen')
 ON DUPLICATE KEY UPDATE id=id;
 
 -- Inserir templates de treino

@@ -123,10 +123,30 @@
 .student-workout-studio .workout-studio-grid.creator-closed { grid-template-columns: 1fr; }
 .workout-ai-card {
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 12px;
   border-radius: 18px;
-  background: #f4f7f5;
+  background: #f7faf8;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+.workout-ai-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 2px 0;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+.workout-ai-toggle > svg {
+  color: #5a6c66;
+  flex: 0 0 auto;
+}
+.workout-ai-toggle.open > svg {
+  color: #004d40;
 }
 .workout-ai-heading {
   display: flex;
@@ -177,6 +197,12 @@
   opacity: .6;
   cursor: wait;
 }
+.workout-ai-description {
+  margin: 10px 0 14px;
+  color: #71807b;
+  font-size: .74rem;
+  line-height: 1.5;
+}
 .workout-ai-grid {
   display: grid;
   grid-template-columns: repeat(2,minmax(0,1fr));
@@ -210,6 +236,11 @@
 }
 .workout-ai-grid input:focus {
   box-shadow: 0 0 0 3px rgba(148,211,193,.4);
+}
+.workout-ai-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
 }
 .workout-ai-rationale {
   margin: 12px 0 0;
@@ -261,6 +292,9 @@
   }
   .workout-ai-heading {
     display: grid;
+  }
+  .workout-ai-actions {
+    justify-content: stretch;
   }
   .workout-ai-generate {
     width: 100%;

@@ -27,7 +27,7 @@ export default function ExerciseLibrary() {
     'Biceps',
     'Triceps',
     'Antebraco',
-    'Core',
+    'Abdomen',
     'Corpo Inteiro',
     'Cardio',
     'Outros'

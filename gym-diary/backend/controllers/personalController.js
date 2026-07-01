@@ -113,6 +113,111 @@ const parseJsonField = (value, fallback = {}) => {
 
 const stringifyField = (value) => JSON.stringify(value || {});
 
+const normalizeStoredTrainingPlan = (trainingPlan = {}) => ({
+    name: String(trainingPlan?.name || '').trim(),
+    splitType: String(trainingPlan?.splitType || '').trim(),
+    frequency: String(trainingPlan?.frequency || '').trim(),
+    notes: String(trainingPlan?.notes || '').trim(),
+    workouts: Array.isArray(trainingPlan?.workouts)
+        ? trainingPlan.workouts.map((workout, workoutIndex) => ({
+            name: String(workout?.name || `Treino ${workoutIndex + 1}`).trim(),
+            frequency: String(workout?.frequency || '').trim(),
+            notes: String(workout?.notes || '').trim(),
+            exercises: Array.isArray(workout?.exercises)
+                ? workout.exercises.map((exercise) => ({
+                    id: Number(exercise?.id) || 0,
+                    name: String(exercise?.name || '').trim(),
+                    category: String(exercise?.category || '').trim(),
+                    defaultSets: Number(exercise?.defaultSets) || 1,
+                    defaultReps: String(exercise?.defaultReps || '').trim(),
+                    durationMinutes: exercise?.durationMinutes === null || exercise?.durationMinutes === undefined
+                        ? null
+                        : Number(exercise.durationMinutes) || null,
+                    note: String(exercise?.note || '').trim()
+                })).filter((exercise) => exercise.id > 0)
+                : []
+        })).filter((workout) => workout.name || workout.exercises.length > 0)
+        : []
+});
+
+const buildLegacyWorkoutSuggestion = ({
+    workoutSuggestion = '',
+    coachInsights = '',
+    coachObservations = '',
+    trainingPlan = null
+}) => {
+    const blocks = [
+        String(coachInsights || '').trim(),
+        String(coachObservations || '').trim(),
+        String(workoutSuggestion || '').trim()
+    ].filter(Boolean);
+
+    if (trainingPlan?.name) {
+        blocks.push(trainingPlan.name);
+    }
+
+    if (trainingPlan?.frequency) {
+        blocks.push(trainingPlan.frequency);
+    }
+
+    if (trainingPlan?.notes) {
+        blocks.push(trainingPlan.notes);
+    }
+
+    return blocks.filter(Boolean).join('\n\n').trim();
+};
+
+const parseWorkoutSuggestionPayload = (value) => {
+    const fallbackText = String(value || '').trim();
+    const parsed = parseJsonField(value, null);
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.version !== 2) {
+        return {
+            legacyText: fallbackText,
+            coachInsights: '',
+            coachObservations: fallbackText,
+            trainingPlan: null
+        };
+    }
+
+    const trainingPlan = parsed.trainingPlan ? normalizeStoredTrainingPlan(parsed.trainingPlan) : null;
+    const legacyText = String(parsed.legacyText || '').trim() || buildLegacyWorkoutSuggestion({
+        coachInsights: parsed.coachInsights,
+        coachObservations: parsed.coachObservations,
+        trainingPlan
+    });
+
+    return {
+        legacyText,
+        coachInsights: String(parsed.coachInsights || '').trim(),
+        coachObservations: String(parsed.coachObservations || '').trim(),
+        trainingPlan
+    };
+};
+
+const serializeWorkoutSuggestionPayload = ({
+    workoutSuggestion = '',
+    coachInsights = '',
+    coachObservations = '',
+    trainingPlan = null
+}) => {
+    const normalizedTrainingPlan = trainingPlan ? normalizeStoredTrainingPlan(trainingPlan) : null;
+    const legacyText = buildLegacyWorkoutSuggestion({
+        workoutSuggestion,
+        coachInsights,
+        coachObservations,
+        trainingPlan: normalizedTrainingPlan
+    });
+
+    return JSON.stringify({
+        version: 2,
+        legacyText,
+        coachInsights: String(coachInsights || '').trim(),
+        coachObservations: String(coachObservations || '').trim(),
+        trainingPlan: normalizedTrainingPlan
+    });
+};
+
 const toNumberOrNull = (value) => {
     if (value === '' || value === null || value === undefined) return null;
     const number = Number(value);
@@ -297,36 +402,43 @@ const toAssignmentDto = (assignment) => ({
     } : null
 });
 
-const toAssessmentDto = (assessment) => ({
-    id: assessment.id,
-    personalUserId: assessment.personal_user_id,
-    studentUserId: assessment.student_user_id,
-    gymId: assessment.gym_id,
-    assessmentDate: assessment.assessment_date,
-    weight: assessment.weight !== null ? Number(assessment.weight) : null,
-    height: assessment.height !== null ? Number(assessment.height) : null,
-    bodyFat: assessment.body_fat !== null ? Number(assessment.body_fat) : null,
-    goal: assessment.goal || '',
-    questionnaire: assessment.questionnaire || '',
-    workoutSuggestion: assessment.workout_suggestion || '',
-    personalData: parseJsonField(assessment.personal_data),
-    medicalHistory: parseJsonField(assessment.medical_history),
-    activityHistory: parseJsonField(assessment.activity_history),
-    lifestyle: parseJsonField(assessment.lifestyle),
-    availability: parseJsonField(assessment.availability),
-    measurements: parseJsonField(assessment.measurements),
-    bmi: assessment.bmi !== null ? Number(assessment.bmi) : null,
-    medicalAlert: Boolean(assessment.medical_alert),
-    medicalAlertMessage: assessment.medical_alert_message || '',
-    status: assessment.status,
-    createdAt: assessment.created_at,
-    updatedAt: assessment.updated_at,
-    student: assessment.student_name ? {
-        id: assessment.student_user_id,
-        name: assessment.student_name,
-        email: assessment.student_email
-    } : null
-});
+const toAssessmentDto = (assessment) => {
+    const suggestionPayload = parseWorkoutSuggestionPayload(assessment.workout_suggestion);
+
+    return {
+        id: assessment.id,
+        personalUserId: assessment.personal_user_id,
+        studentUserId: assessment.student_user_id,
+        gymId: assessment.gym_id,
+        assessmentDate: assessment.assessment_date,
+        weight: assessment.weight !== null ? Number(assessment.weight) : null,
+        height: assessment.height !== null ? Number(assessment.height) : null,
+        bodyFat: assessment.body_fat !== null ? Number(assessment.body_fat) : null,
+        goal: assessment.goal || '',
+        questionnaire: assessment.questionnaire || '',
+        workoutSuggestion: suggestionPayload.legacyText,
+        coachInsights: suggestionPayload.coachInsights,
+        coachObservations: suggestionPayload.coachObservations,
+        trainingPlan: suggestionPayload.trainingPlan,
+        personalData: parseJsonField(assessment.personal_data),
+        medicalHistory: parseJsonField(assessment.medical_history),
+        activityHistory: parseJsonField(assessment.activity_history),
+        lifestyle: parseJsonField(assessment.lifestyle),
+        availability: parseJsonField(assessment.availability),
+        measurements: parseJsonField(assessment.measurements),
+        bmi: assessment.bmi !== null ? Number(assessment.bmi) : null,
+        medicalAlert: Boolean(assessment.medical_alert),
+        medicalAlertMessage: assessment.medical_alert_message || '',
+        status: assessment.status,
+        createdAt: assessment.created_at,
+        updatedAt: assessment.updated_at,
+        student: assessment.student_name ? {
+            id: assessment.student_user_id,
+            name: assessment.student_name,
+            email: assessment.student_email
+        } : null
+    };
+};
 
 const getAssignments = async (personalUserId, gymId = null) => {
     const params = [personalUserId];
@@ -736,6 +848,9 @@ const createAssessment = async (req, res) => {
             availability = {},
             measurements = {},
             workoutSuggestion = '',
+            coachInsights = '',
+            coachObservations = '',
+            trainingPlan = null,
             status = 'completed'
         } = req.body;
 
@@ -790,7 +905,12 @@ const createAssessment = async (req, res) => {
                 bodyFat,
                 String(goal || '').trim(),
                 questionnaire,
-                String(workoutSuggestion || '').trim(),
+                serializeWorkoutSuggestionPayload({
+                    workoutSuggestion,
+                    coachInsights,
+                    coachObservations,
+                    trainingPlan
+                }),
                 stringifyField(personalData),
                 stringifyField(medicalHistory),
                 stringifyField(activityHistory),
@@ -831,6 +951,9 @@ const updateAssessment = async (req, res) => {
             availability = {},
             measurements = {},
             workoutSuggestion = '',
+            coachInsights = '',
+            coachObservations = '',
+            trainingPlan = null,
             status = 'completed'
         } = req.body;
 
@@ -866,7 +989,12 @@ const updateAssessment = async (req, res) => {
                 bodyFat,
                 String(goal || '').trim(),
                 questionnaire,
-                String(workoutSuggestion || '').trim(),
+                serializeWorkoutSuggestionPayload({
+                    workoutSuggestion,
+                    coachInsights,
+                    coachObservations,
+                    trainingPlan
+                }),
                 stringifyField(personalData),
                 stringifyField(medicalHistory),
                 stringifyField(activityHistory),

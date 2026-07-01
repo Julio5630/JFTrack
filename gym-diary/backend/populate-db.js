@@ -36,7 +36,7 @@ async function populateDatabase() {
             ['Desenvolvimento', 'Ombros'],
             ['Elevação Lateral', 'Ombros'],
             ['Abdominal', 'Abdômen'],
-            ['Prancha', 'Core']
+            ['Prancha', 'Abdomen']
         ];
 
         for (const [name, category] of exercises) {

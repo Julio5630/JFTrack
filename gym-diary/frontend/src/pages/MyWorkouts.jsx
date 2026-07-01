@@ -3,14 +3,14 @@ import { createPortal } from 'react-dom';
 import { Reorder, useDragControls } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
 import { useAlert } from '../contexts/AlertContext';
-import { api } from '../services/api';
+import { api, getAiCooldownRemaining } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import ExerciseCreationModal from '../components/ExerciseCreationModal';
 import './MyWorkouts.css';
 
 const emptyExerciseForm = { name: '', category: 'Peito', videoUrl: '' };
-const categories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Core', 'Corpo Inteiro', 'Cardio', 'Outros'];
+const categories = ['Peito', 'Costas', 'Perna', 'Gluteos', 'Panturrilha', 'Ombro', 'Biceps', 'Triceps', 'Antebraco', 'Abdomen', 'Corpo Inteiro', 'Cardio', 'Outros'];
 
 function StudentWorkoutOrderCard({ exercise, index, onMove, onSetsChange, onDurationChange, onRemove }) {
   const controls = useDragControls();
@@ -68,7 +68,9 @@ export default function MyWorkouts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiCooldownLeft, setAiCooldownLeft] = useState(() => Math.ceil(getAiCooldownRemaining('workout-suggestion') / 1000));
   const [aiRationale, setAiRationale] = useState('');
+  const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [aiPrompt, setAiPrompt] = useState({
     goal: '',
     level: '',
@@ -93,6 +95,13 @@ export default function MyWorkouts() {
       window.removeEventListener('keydown', closeOnEscape);
     };
   }, [exerciseModalOpen]);
+
+  useEffect(() => {
+    const syncCooldown = () => setAiCooldownLeft(Math.ceil(getAiCooldownRemaining('workout-suggestion') / 1000));
+    syncCooldown();
+    const intervalId = window.setInterval(syncCooldown, 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (!showWorkoutCreator) return;
@@ -425,49 +434,62 @@ export default function MyWorkouts() {
           </header>
 
           <section className="workout-ai-card">
-            <div className="workout-ai-heading">
+            <button
+              type="button"
+              className={`workout-ai-toggle ${showAiAssistant ? 'open' : ''}`}
+              onClick={() => setShowAiAssistant((current) => !current)}
+              aria-expanded={showAiAssistant}
+            >
               <div>
                 <span>Assistente com IA</span>
                 <strong>Gerar sugestão inicial</strong>
-                <small>A IA usa somente os exercícios já disponíveis na sua biblioteca.</small>
+                <small>{showAiAssistant ? 'Ocultar assistente' : 'Abrir assistente opcional'}</small>
               </div>
-              <button type="button" className="workout-ai-generate" onClick={generateWorkoutWithAi} disabled={aiLoading}>
-                <Icon name="bolt" size={16} /> {aiLoading ? 'Gerando...' : 'Gerar com IA'}
-              </button>
-            </div>
+              <Icon name={showAiAssistant ? 'chevronDown' : 'chevronRight'} size={18} />
+            </button>
 
-            <div className="workout-ai-grid">
-              <label>
-                <span>Objetivo</span>
-                <input value={aiPrompt.goal} onChange={(event) => setAiPrompt({ ...aiPrompt, goal: event.target.value })} placeholder="Ex.: hipertrofia ou emagrecimento" />
-              </label>
-              <label>
-                <span>Nível</span>
-                <input value={aiPrompt.level} onChange={(event) => setAiPrompt({ ...aiPrompt, level: event.target.value })} placeholder="Ex.: iniciante" />
-              </label>
-              <label>
-                <span>Dias por semana</span>
-                <input value={aiPrompt.daysPerWeek} onChange={(event) => setAiPrompt({ ...aiPrompt, daysPerWeek: event.target.value })} placeholder="4" />
-              </label>
-              <label>
-                <span>Minutos por treino</span>
-                <input value={aiPrompt.sessionMinutes} onChange={(event) => setAiPrompt({ ...aiPrompt, sessionMinutes: event.target.value })} placeholder="60" />
-              </label>
-              <label className="full">
-                <span>Focos principais</span>
-                <input value={aiPrompt.focusAreas} onChange={(event) => setAiPrompt({ ...aiPrompt, focusAreas: event.target.value })} placeholder="Ex.: peito, costas e cardio leve" />
-              </label>
-              <label className="full">
-                <span>Restrições ou cuidados</span>
-                <input value={aiPrompt.restrictions} onChange={(event) => setAiPrompt({ ...aiPrompt, restrictions: event.target.value })} placeholder="Ex.: evitar impacto ou poupar ombro" />
-              </label>
-              <label className="full">
-                <span>Observações extras</span>
-                <input value={aiPrompt.notes} onChange={(event) => setAiPrompt({ ...aiPrompt, notes: event.target.value })} placeholder="Ex.: incluir cardio no final do treino" />
-              </label>
-            </div>
+            {showAiAssistant && <>
+              <p className="workout-ai-description">A IA usa somente os exercícios já disponíveis na sua biblioteca.</p>
 
-            {aiRationale && <p className="workout-ai-rationale">{aiRationale}</p>}
+              <div className="workout-ai-grid">
+                <label>
+                  <span>Objetivo</span>
+                  <input value={aiPrompt.goal} onChange={(event) => setAiPrompt({ ...aiPrompt, goal: event.target.value })} placeholder="Ex.: hipertrofia ou emagrecimento" />
+                </label>
+                <label>
+                  <span>Nível</span>
+                  <input value={aiPrompt.level} onChange={(event) => setAiPrompt({ ...aiPrompt, level: event.target.value })} placeholder="Ex.: iniciante" />
+                </label>
+                <label>
+                  <span>Dias por semana</span>
+                  <input value={aiPrompt.daysPerWeek} onChange={(event) => setAiPrompt({ ...aiPrompt, daysPerWeek: event.target.value })} placeholder="4" />
+                </label>
+                <label>
+                  <span>Minutos por treino</span>
+                  <input value={aiPrompt.sessionMinutes} onChange={(event) => setAiPrompt({ ...aiPrompt, sessionMinutes: event.target.value })} placeholder="60" />
+                </label>
+                <label className="full">
+                  <span>Focos principais</span>
+                  <input value={aiPrompt.focusAreas} onChange={(event) => setAiPrompt({ ...aiPrompt, focusAreas: event.target.value })} placeholder="Ex.: peito, costas e cardio leve" />
+                </label>
+                <label className="full">
+                  <span>Restrições ou cuidados</span>
+                  <input value={aiPrompt.restrictions} onChange={(event) => setAiPrompt({ ...aiPrompt, restrictions: event.target.value })} placeholder="Ex.: evitar impacto ou poupar ombro" />
+                </label>
+                <label className="full">
+                  <span>Observações extras</span>
+                  <input value={aiPrompt.notes} onChange={(event) => setAiPrompt({ ...aiPrompt, notes: event.target.value })} placeholder="Ex.: incluir cardio no final do treino" />
+                </label>
+              </div>
+
+              <div className="workout-ai-actions">
+                <button type="button" className="workout-ai-generate" onClick={generateWorkoutWithAi} disabled={aiLoading || aiCooldownLeft > 0}>
+                  <Icon name="bolt" size={16} /> {aiLoading ? 'Gerando...' : aiCooldownLeft > 0 ? `Aguarde ${aiCooldownLeft}s` : 'Gerar com IA'}
+                </button>
+              </div>
+
+              {aiRationale && <p className="workout-ai-rationale">{aiRationale}</p>}
+            </>}
           </section>
 
           <label className="workout-name-field"><span>Nome do treino</span><input value={workoutName} onChange={(event) => setWorkoutName(event.target.value)} placeholder="Ex.: Treino A - Peito e tríceps" /></label>

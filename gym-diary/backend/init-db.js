@@ -192,6 +192,12 @@ async function initDatabase() {
         }
 
         await connection.query(`
+            UPDATE exercises
+            SET category = 'Abdomen'
+            WHERE category = 'Core'
+        `);
+
+        await connection.query(`
             CREATE TABLE IF NOT EXISTS workout_templates (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 user_id INT NOT NULL,
